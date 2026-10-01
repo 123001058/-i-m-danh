@@ -6,20 +6,22 @@
     <title>Điểm Danh Trực Tuyến</title>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f4f9; text-align: center; margin: 0; padding: 20px; }
-        .container { background: white; padding: 30px; border-radius: 10px; max-width: 500px; margin: auto; box-shadow: 0 4px 15px rgba(0,0,0,0.1); box-sizing: border-box; }
+        .container { background: white; padding: 30px; border-radius: 10px; max-width: 600px; margin: auto; box-shadow: 0 4px 15px rgba(0,0,0,0.1); box-sizing: border-box; }
         input, select, textarea, button { padding: 12px; margin: 8px 0; font-size: 15px; width: 100%; box-sizing: border-box; border-radius: 6px; border: 1px solid #ccc; }
-        textarea { resize: vertical; height: 80px; }
+        textarea { resize: vertical; height: 70px; }
         button { background: #28a745; color: white; border: none; cursor: pointer; font-weight: bold; }
         button:hover { background: #218838; }
-        .btn-export { background: #007bff; margin-top: 15px; }
-        .btn-clear { background: #dc3545; margin-top: 5px; font-size: 13px; padding: 8px; }
-        .admin-section { margin-top: 30px; border-top: 2px dashed #ddd; padding-top: 15px; display: none; }
+        .btn-export { background: #007bff; width: auto; padding: 10px 20px; display: inline-block; margin-right: 10px; }
+        .btn-clear { background: #dc3545; width: auto; padding: 10px 20px; display: inline-block; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 13px; }
+        th, td { padding: 10px; border-bottom: 1px solid #ddd; text-align: left; }
+        th { background: #343a40; color: white; }
+        .admin-actions { margin-top: 20px; text-align: left; }
     </style>
 </head>
 <body>
     <div class="container">
-        <!-- Bấm 5 lần vào tiêu đề để mở khu vực tải file / xóa dữ liệu cho Admin -->
-        <h2 id="adminTrigger" style="cursor: pointer; user-select: none;" title="Bấm 5 lần để mở quản lý">Điểm Danh Trực Tuyến</h2>
+        <h2>Điểm Danh Trực Tuyến</h2>
 
         <!-- Form điểm danh -->
         <form id="attendanceForm">
@@ -39,17 +41,54 @@
         </form>
         <p id="message" style="font-weight: bold; margin-top: 10px;"></p>
 
-        <!-- KHU VỰC QUẢN TRỊ ẨN (Bấm 5 lần vào tiêu đề mới hiện ra) -->
-        <div id="adminPanel" class="admin-section">
-            <p style="font-size: 13px; color: #555; margin-bottom: 5px;">Đã lưu: <b id="count">0</b> người</p>
+        <hr style="margin: 30px 0; border: 0; border-top: 1px solid #eee;">
+
+        <!-- Bảng danh sách hiển thị trực tiếp -->
+        <h3>Danh sách đã điểm danh (<span id="count">0</span> người)</h3>
+        
+        <div style="overflow-x: auto; max-height: 350px;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>STT</th>
+                        <th>Họ Tên</th>
+                        <th>Lĩnh Vực</th>
+                        <th>Ghi Chú</th>
+                        <th>Thời Gian</th>
+                    </tr>
+                </thead>
+                <tbody id="listBody">
+                    <!-- Dữ liệu hiện ở đây -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Các nút quản lý bên dưới bảng -->
+        <div class="admin-actions">
             <button type="button" class="btn-export" onclick="exportToCSV()">📥 Tải file Excel (CSV)</button>
-            <button type="button" class="btn-clear" onclick="clearData()">🗑️ Xóa toàn bộ dữ liệu</button>
+            <button type="button" class="btn-clear" onclick="clearData()">🗑️ Xóa toàn bộ</button>
         </div>
     </div>
 
     <script>
         let attendanceList = JSON.parse(localStorage.getItem('attendanceList')) || [];
-        document.getElementById('count').innerText = attendanceList.length;
+
+        function updateUI() {
+            const listBody = document.getElementById('listBody');
+            document.getElementById('count').innerText = attendanceList.length;
+            listBody.innerHTML = '';
+            
+            attendanceList.forEach((item, index) => {
+                listBody.innerHTML += `<tr>
+                    <td>${index + 1}</td>
+                    <td><b>${item.name}</b></td>
+                    <td>${item.category}</td>
+                    <td>${item.note}</td>
+                    <td>${item.time}</td>
+                </tr>`;
+            });
+        }
+        updateUI();
 
         // Xử lý khi bấm gửi điểm danh
         document.getElementById('attendanceForm').addEventListener('submit', function(e) {
@@ -62,32 +101,17 @@
 
             attendanceList.push({ name, category, note, time });
             localStorage.setItem('attendanceList', JSON.stringify(attendanceList));
-            document.getElementById('count').innerText = attendanceList.length;
 
             const msg = document.getElementById('message');
             msg.style.color = 'green';
             msg.innerText = `Cảm ơn ${name}, điểm danh thành công!`;
             
+            // Reset form
             document.getElementById('studentName').value = '';
             document.getElementById('category').selectedIndex = 0;
             document.getElementById('note').value = '';
-        });
-
-        // BÍ MẬT: Bấm 5 lần vào chữ "Điểm Danh Trực Tuyến" để hiện nút tải file/xóa
-        let clickCount = 0;
-        document.getElementById('adminTrigger').addEventListener('click', function() {
-            clickCount++;
-            if (clickCount >= 5) {
-                const panel = document.getElementById('adminPanel');
-                if (panel.style.display === 'block') {
-                    panel.style.display = 'none';
-                    alert('Đã ẩn khu vực quản trị!');
-                } else {
-                    panel.style.display = 'block';
-                    alert('Đã mở khu vực quản trị!');
-                }
-                clickCount = 0;
-            }
+            
+            updateUI();
         });
 
         // Tải danh sách thành file Excel (CSV)
@@ -116,8 +140,7 @@
             if (confirm('Bạn có chắc chắn muốn xóa toàn bộ danh sách điểm danh này không?')) {
                 attendanceList = [];
                 localStorage.removeItem('attendanceList');
-                document.getElementById('count').innerText = 0;
-                alert('Đã xóa sạch dữ liệu!');
+                updateUI();
             }
         }
     </script>
