@@ -3,102 +3,117 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Điểm Danh Trực Tuyến</title>
+    <title>Điểm Danh Trực Tuyến - Xác Thực Thiết Bị</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f8fafc; text-align: center; margin: 0; padding: 20px; }
-        .container { background: white; padding: 25px; border-radius: 12px; max-width: 550px; margin: auto; box-shadow: 0 4px 20px rgba(0,0,0,0.08); box-sizing: border-box; }
-        .badge { background: #e0f2fe; color: #0369a1; padding: 6px 12px; border-radius: 20px; font-weight: bold; font-size: 14px; display: inline-block; margin-bottom: 12px; }
-        input, select, textarea, button { padding: 12px; margin: 8px 0; font-size: 15px; width: 100%; box-sizing: border-box; border-radius: 8px; border: 1px solid #cbd5e1; outline: none; }
-        input:focus, select:focus, textarea:focus { border-color: #2563eb; }
-        input[readonly] { background-color: #f1f5f9; cursor: not-allowed; }
-        textarea { resize: vertical; height: 65px; }
-        button { background: #16a34a; color: white; border: none; cursor: pointer; font-weight: bold; font-size: 16px; margin-top: 15px; }
-        button:hover { background: #15803d; }
-        .error-msg { color: #b91c1c; font-size: 14px; font-weight: bold; margin: 10px 0; padding: 12px; background: #fee2e2; border-radius: 6px; display: none; text-align: left; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 13px; }
-        th, td { padding: 10px; border-bottom: 1px solid #e2e8f0; text-align: left; }
-        th { background: #0f172a; color: white; }
+        :root {
+            --primary: #4f46e5;
+            --success: #10b981;
+            --danger: #ef4444;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            text-align: center;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+
+        .container {
+            background: var(--card-bg);
+            padding: 35px;
+            border-radius: 20px;
+            width: 100%;
+            max-width: 480px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+            box-sizing: border-box;
+            border: 1px solid var(--border);
+            text-align: left;
+        }
+
+        h2 { margin-top: 0; font-size: 22px; color: var(--text); text-align: center; }
+        .badge { background: #e0f2fe; color: #0369a1; padding: 6px 14px; border-radius: 20px; font-weight: 600; font-size: 13px; display: block; text-align: center; margin-bottom: 20px; }
+
+        label { font-size: 13px; font-weight: 600; color: var(--text-muted); display: block; margin-top: 12px; margin-bottom: 4px; }
+        input, select, textarea {
+            padding: 12px 14px; font-size: 15px; width: 100%; box-sizing: border-box; border-radius: 10px; border: 1px solid var(--border); outline: none; background: #fff; color: var(--text);
+        }
+        input:focus, select:focus, textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15); }
+        input[readonly] { background-color: #f1f5f9; color: #64748b; cursor: not-allowed; }
+        textarea { resize: vertical; height: 60px; }
+
+        button { background: var(--primary); color: white; border: none; cursor: pointer; font-weight: 600; font-size: 16px; width: 100%; padding: 14px; border-radius: 10px; margin-top: 20px; transition: 0.2s; }
+        button:hover { background: #4338ca; }
+        button:disabled { background: #cbd5e1; cursor: not-allowed; }
+
+        .error-msg { color: var(--danger); font-size: 14px; font-weight: 600; margin: 15px 0; padding: 12px; background: #fee2e2; border-radius: 10px; display: none; text-align: center; }
+        .success-msg { color: var(--success); font-size: 15px; font-weight: 600; margin-top: 15px; text-align: center; }
     </style>
 </head>
 <body>
     <div class="container">
         <h2>🎓 Điểm Danh Trực Tuyến</h2>
-        <div id="sessionBadge" class="badge">Phiên: Đang kiểm tra...</div>
+        <div id="sessionBadge" class="badge">Đang kết nối phiên học...</div>
 
         <div id="errorMsg" class="error-msg"></div>
 
         <form id="attendanceForm">
-            <input type="text" id="mssv" placeholder="Nhập Mã số sinh viên (MSSV)..." required autocomplete="off">
-            <input type="text" id="studentName" placeholder="Họ và tên (Tự động điền)" readonly required>
+            <label>Mã số sinh viên (MSSV)</label>
+            <input type="text" id="mssv" placeholder="Nhập MSSV của bạn..." required autocomplete="off">
             
+            <label>Họ và Tên</label>
+            <input type="text" id="studentName" placeholder="Tự động điền theo MSSV" readonly required>
+
+            <label>Lĩnh vực / Bộ phận</label>
             <select id="category" required>
-                <option value="" disabled selected>-- Chọn lĩnh vực / bộ phận --</option>
+                <option value="" disabled selected>-- Chọn lĩnh vực --</option>
                 <option value="Thiết kế">Thiết kế</option>
                 <option value="Cơ khí">Cơ khí</option>
                 <option value="Điện">Điện</option>
                 <option value="Lập trình">Lập trình</option>
             </select>
 
-            <textarea id="note" placeholder="Ghi chú nội dung làm việc hôm nay..." required></textarea>
+            <label>Ghi chú công việc</label>
+            <textarea id="note" placeholder="Nhập ngắn gọn nội dung..." required></textarea>
 
             <button type="submit" id="submitBtn">✓ Xác nhận điểm danh</button>
         </form>
 
-        <p id="message" style="font-weight: bold; margin-top: 15px;"></p>
-
-        <hr style="margin: 30px 0; border: 0; border-top: 1px solid #e2e8f0;">
-
-        <h3>📋 Đã điểm danh trên máy này (<span id="count">0</span>)</h3>
-        <div style="overflow-x: auto; max-height: 300px;">
-            <table>
-                <thead>
-                    <tr>
-                        <th>STT</th>
-                        <th>MSSV</th>
-                        <th>Họ Tên</th>
-                        <th>Lĩnh Vực</th>
-                        <th>Thời Gian</th>
-                    </tr>
-                </thead>
-                <tbody id="listBody"></tbody>
-            </table>
-        </div>
+        <div id="message" class="success-msg"></div>
     </div>
 
     <script>
-        const scriptURL = 'https://script.google.com/macros/s/AKfycbxSJOmYyjOb3kMYClZmHmL9kuxpFBMQKbrBL0G9YekKrrwHK8C6-eWdXjsCkQqVEyahIQ/exec';
+        const scriptURL = 'https://script.google.com/macros/s/AKfycbzXk3mDTkl06P5t_urONvf2wq8a1WRoXes9q57Byp3Oq9sQAdI0lR4WNd2GmXTRUOmINA/exec';
 
         const validStudents = [
-            { mssv: '123000555', name: 'Nguyễn Lê Vũ Duy' },
-            { mssv: '123000078', name: 'Trần Hải Nam' },
-            { mssv: '125001579', name: 'Nguyễn Thiện Nhân' },
-            { mssv: '124000534', name: 'Nguyễn Ngọc Bình An' },
-            { mssv: '125001875', name: 'Nguyễn Hoàng Phi Hùng' },
-            { mssv: '124000737', name: 'Phạm tuấn phát' },
-            { mssv: '125001809', name: 'Nguyễn Thanh Thái' },
-            { mssv: '124001238', name: 'Nguyễn Đức Huy' },
-            { mssv: '124001851', name: 'Nguyễn Thị Thùy' },
-            { mssv: '124000354', name: 'Phan Công Thịnh' },
-            { mssv: '124001589', name: 'Nguyễn Hồng Hiệp' },
-            { mssv: '125000568', name: 'Phan Quốc Bảo' },
-            { mssv: '125002381', name: 'Cao thế phi' },
-            { mssv: '123000651', name: 'Cao Thanh Nghĩa' },
-            { mssv: '125001648', name: 'Nguyễn Thanh Tiến' },
-            { mssv: '125000372', name: 'Nguyễn Huỳnh Minh Thông' },
-            { mssv: '123000722', name: 'Bùi Trần Thanh Sang' },
-            { mssv: '125000287', name: 'Nguyễn Duy Phúc' },
-            { mssv: '123001058', name: 'Nguyễn Khánh Hoà' },
-            { mssv: '123000185', name: 'Lê Văn Minh' },
-            { mssv: '123000872', name: 'Nguyễn Đình Hậu' },
-            { mssv: '125000798', name: 'Nguyễn Minh Khang' },
-            { mssv: '123001188', name: 'Phạm Anh Tuấn' },
-            { mssv: '125000550', name: 'Nguyễn Duy Tiến' },
-            { mssv: '123000432', name: 'Trần Thành Long' },
-            { mssv: '123000375', name: 'Phạm Đinh Tài Lộc' },
+            { mssv: '123000555', name: 'Nguyễn Lê Vũ Duy' }, { mssv: '123000078', name: 'Trần Hải Nam' },
+            { mssv: '125001579', name: 'Nguyễn Thiện Nhân' }, { mssv: '124000534', name: 'Nguyễn Ngọc Bình An' },
+            { mssv: '125001875', name: 'Nguyễn Hoàng Phi Hùng' }, { mssv: '124000737', name: 'Phạm tuấn phát' },
+            { mssv: '125001809', name: 'Nguyễn Thanh Thái' }, { mssv: '124001238', name: 'Nguyễn Đức Huy' },
+            { mssv: '124001851', name: 'Nguyễn Thị Thùy' }, { mssv: '124000354', name: 'Phan Công Thịnh' },
+            { mssv: '124001589', name: 'Nguyễn Hồng Hiệp' }, { mssv: '125000568', name: 'Phan Quốc Bảo' },
+            { mssv: '125002381', name: 'Cao thế phi' }, { mssv: '123000651', name: 'Cao Thanh Nghĩa' },
+            { mssv: '125001648', name: 'Nguyễn Thanh Tiến' }, { mssv: '125000372', name: 'Nguyễn Huỳnh Minh Thông' },
+            { mssv: '123000722', name: 'Bùi Trần Thanh Sang' }, { mssv: '125000287', name: 'Nguyễn Duy Phúc' },
+            { mssv: '123001058', name: 'Nguyễn Khánh Hoà' }, { mssv: '123000185', name: 'Lê Văn Minh' },
+            { mssv: '123000872', name: 'Nguyễn Đình Hậu' }, { mssv: '125000798', name: 'Nguyễn Minh Khang' },
+            { mssv: '123001188', name: 'Phạm Anh Tuấn' }, { mssv: '125000550', name: 'Nguyễn Duy Tiến' },
+            { mssv: '123000432', name: 'Trần Thành Long' }, { mssv: '123000375', name: 'Phạm Đinh Tài Lộc' },
             { mssv: '123001394', name: 'Đỗ Văn Quyền' }
         ];
 
-        // 1. Kiểm tra tham số từ URL
         const urlParams = new URLSearchParams(window.location.search);
         const currentSession = urlParams.get('phien');
         const qrToken = parseInt(urlParams.get('token'), 10);
@@ -106,21 +121,21 @@
         const submitBtn = document.getElementById('submitBtn');
 
         if (currentSession) {
-            document.getElementById('sessionBadge').innerText = "Buổi học: " + currentSession;
+            document.getElementById('sessionBadge').innerText = "Phiên: " + currentSession;
         } else {
-            document.getElementById('sessionBadge').innerText = "Chưa chọn buổi học";
+            document.getElementById('sessionBadge').innerText = "⚠️ Chưa chọn phiên học từ máy chiếu";
         }
 
-        // 2. Kiểm tra hạn mã QR (Cho phép chênh lệch +-1 chu kỳ để tránh lag mạng)
+        // Kiểm tra Token QR hết hạn (sau 20 giây)
         function verifyToken() {
             if (!qrToken) {
-                showError("⚠️ Đường link không hợp lệ! Vui lòng quét mã trực tiếp trên màn hình máy chiếu.");
+                showError("⚠️ Vui lòng quét mã QR trực tiếp trên màn hình máy chiếu!");
                 submitBtn.disabled = true;
                 return false;
             }
             const currentToken = Math.floor(Date.now() / 20000);
             if (Math.abs(currentToken - qrToken) > 1) {
-                showError("⚠️ Mã QR đã hết hạn! Vui lòng quét lại mã trực tiếp trên máy chiếu.");
+                showError("⚠️ Mã QR đã hết hạn! Vui lòng quét mã mới trên màn hình.");
                 submitBtn.disabled = true;
                 return false;
             }
@@ -134,37 +149,29 @@
 
         verifyToken();
 
-        // 3. Tự động điền Họ Tên khi nhập MSSV
+        // Chống quét 2 lần / Điểm danh hộ trên cùng 1 thiết bị
         document.getElementById('mssv').addEventListener('input', function() {
             const val = this.value.trim();
             const student = validStudents.find(s => s.mssv === val);
+            
             if (student) {
                 document.getElementById('studentName').value = student.name;
                 errorBox.style.display = 'none';
+
+                // Kiểm tra xem thiết bị này đã điểm danh cho phiên này chưa
+                let localHistory = JSON.parse(localStorage.getItem('checked_sessions') || "{}");
+                if (currentSession && localHistory[currentSession]) {
+                    showError(`⚠️ Thiết bị này đã dùng để điểm danh cho MSSV (${localHistory[currentSession]}) trong phiên này. Không thể điểm danh hộ!`);
+                    submitBtn.disabled = true;
+                } else {
+                    submitBtn.disabled = false;
+                }
             } else {
                 document.getElementById('studentName').value = '';
             }
         });
 
-        // 4. Quản lý danh sách LocalStorage
-        let attendanceList = JSON.parse(localStorage.getItem('attendanceList')) || [];
-        function updateUI() {
-            const listBody = document.getElementById('listBody');
-            document.getElementById('count').innerText = attendanceList.length;
-            listBody.innerHTML = '';
-            attendanceList.forEach((item, index) => {
-                listBody.innerHTML += `<tr>
-                    <td>${index + 1}</td>
-                    <td><b>${item.mssv}</b></td>
-                    <td>${item.name}</td>
-                    <td>${item.category}</td>
-                    <td>${item.time}</td>
-                </tr>`;
-            });
-        }
-        updateUI();
-
-        // 5. Submit Form + Lấy vị trí GPS
+        // Submit form
         document.getElementById('attendanceForm').addEventListener('submit', function(e) {
             e.preventDefault();
             if (!verifyToken()) return;
@@ -176,60 +183,35 @@
             const msg = document.getElementById('message');
 
             if (!inputName) {
-                showError("❌ MSSV không có trong danh sách được phép điểm danh!");
+                showError("❌ MSSV không hợp lệ hoặc không có trong danh sách lớp!");
                 return;
             }
 
             submitBtn.disabled = true;
-            submitBtn.innerText = 'Đang lấy vị trí & gửi...';
+            submitBtn.innerText = 'Đang xử lý...';
 
-            // Xin quyền vị trí GPS của điện thoại
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(
-                    (pos) => sendData(pos.coords.latitude + ',' + pos.coords.longitude),
-                    () => sendData('Không cho phép GPS') // Vẫn gửi nếu không bật GPS
-                );
-            } else {
-                sendData('Thiết bị không hỗ trợ GPS');
-            }
+            // Gửi dữ liệu lên Apps Script
+            fetch(scriptURL, { 
+                method: 'POST', 
+                mode: 'no-cors',
+                body: JSON.stringify({ phien: currentSession || 'Mặc định', mssv: inputMssv, name: inputName, category, note }) 
+            })
+            .then(() => {
+                // Lưu lại trạng thái thiết bị đã điểm danh phiên này để khóa máy
+                let localHistory = JSON.parse(localStorage.getItem('checked_sessions') || "{}");
+                if(currentSession) {
+                    localHistory[currentSession] = inputMssv;
+                    localStorage.setItem('checked_sessions', JSON.stringify(localHistory));
+                }
 
-            function sendData(locationInfo) {
-                const time = new Date().toLocaleTimeString('vi-VN') + ' ' + new Date().toLocaleDateString('vi-VN');
-
-                fetch(scriptURL, { 
-                    method: 'POST', 
-                    mode: 'no-cors',
-                    body: JSON.stringify({ 
-                        phien: currentSession || 'Không rõ',
-                        mssv: inputMssv, 
-                        name: inputName, 
-                        category: category, 
-                        note: note,
-                        location: locationInfo
-                    }) 
-                })
-                .then(() => {
-                    attendanceList.push({ mssv: inputMssv, name: inputName, category, time });
-                    localStorage.setItem('attendanceList', JSON.stringify(attendanceList));
-                    updateUI();
-
-                    msg.style.color = '#16a34a';
-                    msg.innerText = `✓ Cảm ơn ${inputName}, bạn đã điểm danh thành công!`;
-                    
-                    // Reset Form
-                    document.getElementById('mssv').value = '';
-                    document.getElementById('studentName').value = '';
-                    document.getElementById('category').selectedIndex = 0;
-                    document.getElementById('note').value = '';
-                    submitBtn.innerText = '✓ Xác nhận điểm danh';
-                })
-                .catch(error => {
-                    msg.style.color = '#dc2626';
-                    msg.innerText = '⚠️ Lỗi kết nối, vui lòng thử lại!';
-                    submitBtn.disabled = false;
-                    submitBtn.innerText = '✓ Xác nhận điểm danh';
-                });
-            }
+                msg.innerText = `✓ Tuyệt vời! ${inputName} đã điểm danh thành công.`;
+                document.getElementById('attendanceForm').style.display = 'none';
+            })
+            .catch(() => {
+                showError("⚠️ Lỗi kết nối mạng, vui lòng thử lại!");
+                submitBtn.disabled = false;
+                submitBtn.innerText = '✓ Xác nhận điểm danh';
+            });
         });
     </script>
 </body>
