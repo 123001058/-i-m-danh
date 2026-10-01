@@ -14,11 +14,44 @@
         .btn-on:hover { background: #218838; }
         .btn-off { background: #dc3545; color: white; }
         .btn-off:hover { background: #c82333; }
+        .btn-fullscreen { background: #007bff; color: white; display: none; margin: 20px auto; }
+        .btn-fullscreen:hover { background: #0056b3; }
+        
         #qrArea { margin-top: 30px; min-height: 300px; }
-        #qrImage { width: 300px; height: 300px; display: none; margin: auto; border: 10px solid white; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+        
+        /* Cấu hình vùng chứa QR */
+        #qrWrapper { background: white; padding: 20px; border-radius: 10px; display: inline-block; }
+        #qrImage { width: 300px; height: 300px; display: none; margin: auto; border: 10px solid white; box-shadow: 0 5px 15px rgba(0,0,0,0.2); cursor: zoom-in; }
+        
         .status { font-size: 18px; font-weight: bold; margin-top: 15px; color: #dc3545; }
+
+        /* Cấu hình khi vào chế độ Toàn màn hình */
+        #qrWrapper:fullscreen {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background-color: white;
+            width: 100vw;
+            height: 100vh;
+        }
+        #qrWrapper:fullscreen #qrImage {
+            width: 70vh; /* Phóng to theo chiều cao màn hình */
+            height: 70vh;
+            max-width: 90vw;
+            max-height: 90vw;
+            box-shadow: none;
+            cursor: zoom-out;
+        }
+        #qrWrapper:fullscreen .fs-title {
+            display: block !important;
+            font-size: 40px;
+            color: #333;
+            margin-bottom: 30px;
+            font-weight: bold;
+        }
     </style>
-</head> 
+</head>
 <body>
     <div class="dashboard">
         <h1>Bảng Điều Khiển Điểm Danh</h1>
@@ -34,12 +67,16 @@
         <div class="status" id="statusText">Trạng thái: ĐÃ ĐÓNG</div>
 
         <div id="qrArea">
-            <img id="qrImage" src="" alt="Mã QR Điểm Danh">
+            <div id="qrWrapper">
+                <div class="fs-title" id="fsSessionName" style="display: none;"></div>
+                <!-- Bấm vào ảnh cũng tự động phóng to/thu nhỏ -->
+                <img id="qrImage" src="" alt="Mã QR Điểm Danh" onclick="toggleFullScreen()" title="Bấm để phóng to/thu nhỏ">
+            </div>
+            <button id="fsBtn" class="btn-fullscreen" onclick="toggleFullScreen()">🔲 Phóng To QR</button>
         </div>
     </div>
 
     <script>
-        // THAY LINK NÀY BẰNG LINK TRANG WEB INDEX.HTML CỦA BẠN (VD: https://123001058.github.io/DiemDanh/)
         const BASE_LINK = "https://123001058.github.io/DIEM_DANH/"; 
 
         function turnOn() {
@@ -49,29 +86,56 @@
                 return; 
             }
 
-            // Gắn tên phiên vào đuôi link web
             let fullLink = BASE_LINK + "?phien=" + encodeURIComponent(session);
             
-            // Dùng API miễn phí để tạo mã QR từ cái link đó
-            let qrUrl = "https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=" + encodeURIComponent(fullLink);
+            // Dùng API tạo mã QR kích thước lớn để không bị mờ khi phóng to (600x600)
+            let qrUrl = "https://api.qrserver.com/v1/create-qr-code/?size=600x600&data=" + encodeURIComponent(fullLink);
             
-            // Hiển thị mã QR
             document.getElementById('qrImage').src = qrUrl;
             document.getElementById('qrImage').style.display = "block";
+            document.getElementById('fsBtn').style.display = "inline-block";
             
             let statusText = document.getElementById('statusText');
             statusText.innerText = "Trạng thái: ĐANG MỞ KẾT NỐI (" + session + ")";
             statusText.style.color = "#28a745";
+
+            // Cập nhật tiêu đề khi vào chế độ toàn màn hình
+            document.getElementById('fsSessionName').innerText = "Điểm Danh: " + session;
         }
 
         function turnOff() {
-            // Tắt mã QR đi
             document.getElementById('qrImage').style.display = "none";
             document.getElementById('qrImage').src = "";
+            document.getElementById('fsBtn').style.display = "none";
             
             let statusText = document.getElementById('statusText');
             statusText.innerText = "Trạng thái: ĐÃ ĐÓNG";
             statusText.style.color = "#dc3545";
+
+            // Thoát toàn màn hình nếu đang bật
+            if (document.fullscreenElement) {
+                document.exitFullscreen();
+            }
+        }
+
+        // Hàm xử lý Phóng to / Thu nhỏ
+        function toggleFullScreen() {
+            let elem = document.getElementById("qrWrapper");
+            if (!document.fullscreenElement) {
+                // Yêu cầu bật toàn màn hình
+                if (elem.requestFullscreen) {
+                    elem.requestFullscreen();
+                } else if (elem.webkitRequestFullscreen) { /* Safari */
+                    elem.webkitRequestFullscreen();
+                } else if (elem.msRequestFullscreen) { /* IE11 */
+                    elem.msRequestFullscreen();
+                }
+            } else {
+                // Thoát toàn màn hình
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                }
+            }
         }
     </script>
 </body>
