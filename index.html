@@ -14,6 +14,11 @@
         table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 13px; }
         th, td { padding: 10px; border-bottom: 1px solid #ddd; text-align: left; }
         th { background: #343a40; color: white; }
+        .admin-actions { margin-top: 20px; text-align: left; }
+        .btn-action { display: inline-block; padding: 10px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; border: none; margin: 5px 5px 0 0; text-decoration: none; font-size: 14px; }
+        .btn-export { background: #007bff; color: white; }
+        .btn-import { background: #ffc107; color: black; }
+        .btn-clear { background: #dc3545; color: white; }
     </style>
 </head>
 <body>
@@ -42,7 +47,7 @@
         <hr style="margin: 30px 0; border: 0; border-top: 1px solid #eee;">
 
         <!-- Bảng hiển thị trực tiếp trên web -->
-        <h3>Danh sách đã điểm danh (<span id="count">0</span> người)</h3>
+        <h3>Danh sách trên Web (<span id="count">0</span> người)</h3>
         <div style="overflow-x: auto; max-height: 350px;">
             <table>
                 <thead>
@@ -59,6 +64,17 @@
                     <!-- Dữ liệu hiển thị ở đây -->
                 </tbody>
             </table>
+        </div>
+
+        <!-- Các nút quản lý -->
+        <div class="admin-actions">
+            <button type="button" class="btn-action btn-export" onclick="exportToCSV()">📥 Tải Excel</button>
+            
+            <label class="btn-action btn-import">
+                📂 Nạp danh sách <input type="file" accept=".csv" style="display: none;" onchange="importFromCSV(event)">
+            </label>
+
+            <button type="button" class="btn-action btn-clear" onclick="clearData()">🗑️ Xóa dữ liệu web</button>
         </div>
     </div>
 
@@ -85,6 +101,49 @@
             });
         }
         updateUI();
+
+        // Nạp file thông_tin_sv.csv vào web
+        function importFromCSV(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const text = e.target.result;
+                const rows = text.split('\n');
+                let addedCount = 0;
+
+                // Bỏ qua dòng tiêu đề đầu tiên
+                for (let i = 1; i < rows.length; i++) {
+                    const row = rows[i].trim();
+                    if (!row) continue;
+                    
+                    const cols = row.split(',');
+                    // Cột 0: stt, Cột 1: tên, Cột 2: mssv
+                    if (cols.length >= 3) {
+                        const ten = cols[1].replace(/^"|"$/g, '').trim();
+                        const mssv = cols[2].replace(/^"|"$/g, '').trim();
+                        
+                        if (ten && mssv) {
+                            attendanceList.push({ 
+                                mssv: mssv,
+                                name: ten, 
+                                category: "Danh sách gốc", 
+                                note: "", 
+                                time: "Chưa điểm danh" 
+                            });
+                            addedCount++;
+                        }
+                    }
+                }
+
+                localStorage.setItem('attendanceList', JSON.stringify(attendanceList));
+                updateUI();
+                alert(`Đã nạp thành công ${addedCount} sinh viên vào bảng!`);
+                event.target.value = ''; 
+            };
+            reader.readAsText(file, 'UTF-8');
+        }
 
         document.getElementById('attendanceForm').addEventListener('submit', function(e) {
             e.preventDefault();
@@ -115,7 +174,6 @@
                 msg.style.color = 'green';
                 msg.innerText = `Cảm ơn ${name} (${mssv}), điểm danh thành công!`;
                 
-                // Reset form
                 document.getElementById('mssv').value = '';
                 document.getElementById('studentName').value = '';
                 document.getElementById('category').selectedIndex = 0;
@@ -131,6 +189,34 @@
                 submitBtn.innerText = 'Xác nhận điểm danh';
             });
         });
+
+        function clearData() {
+            if (confirm('Xóa sạch dữ liệu hiển thị trên trang web này? (Dữ liệu trên Google Sheets sẽ KHÔNG bị xóa)')) {
+                attendanceList = [];
+                localStorage.removeItem('attendanceList');
+                updateUI();
+            }
+        }
+
+        function exportToCSV() {
+            if (attendanceList.length === 0) {
+                alert('Chưa có dữ liệu điểm danh nào!');
+                return;
+            }
+            let csvContent = "\uFEFFSTT,MSSV,Họ Tên,Lĩnh Vực,Ghi Chú,Thời Gian\n";
+            attendanceList.forEach((item, index) => {
+                csvContent += `${index + 1},"${item.mssv}","${item.name}","${item.category}","${item.note.replace(/(\r\n|\n|\r)/gm, " ")}","${item.time}"\n`;
+            });
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `DanhSachDiemDanh.csv`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
     </script>
 </body>
 </html>
