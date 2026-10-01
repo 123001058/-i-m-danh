@@ -12,14 +12,9 @@
         button { background: #28a745; color: white; border: none; cursor: pointer; font-weight: bold; }
         button:hover { background: #218838; }
         .error-msg { color: #dc3545; font-size: 14px; font-weight: bold; margin: 10px 0; padding: 10px; background: #f8d7da; border-radius: 5px; display: none; }
-        .success-msg { color: #155724; font-size: 14px; font-weight: bold; margin: 10px 0; padding: 10px; background: #d4edda; border-radius: 5px; display: none; }
         table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 13px; }
         th, td { padding: 10px; border-bottom: 1px solid #ddd; text-align: left; }
         th { background: #343a40; color: white; }
-        .button-group { display: flex; gap: 10px; margin-top: 20px; }
-        .button-group button { flex: 1; }
-        .btn-danger { background: #dc3545; }
-        .btn-danger:hover { background: #c82333; }
     </style>
 </head>
 <body>
@@ -28,7 +23,6 @@
 
         <!-- Thông báo lỗi -->
         <div id="errorMsg" class="error-msg"></div>
-        <div id="successMsg" class="success-msg"></div>
 
         <!-- Form nhập dữ liệu -->
         <form id="attendanceForm">
@@ -69,11 +63,6 @@
                     <!-- Dữ liệu hiển thị ở đây -->
                 </tbody>
             </table>
-        </div>
-
-        <!-- Nút xóa dữ liệu -->
-        <div class="button-group">
-            <button type="button" id="clearBtn" class="btn-danger">🗑️ Xóa tất cả</button>
         </div>
     </div>
 
@@ -199,16 +188,6 @@
                 submitBtn.disabled = false;
                 submitBtn.innerText = '✓ Xác nhận điểm danh';
             });
-        });
-
-        // ===== NÚT XÓA TẤT CẢ DỮ LIỆU =====
-        document.getElementById('clearBtn').addEventListener('click', function() {
-            if (confirm('⚠️ Bạn chắc chắn muốn xóa TẤT CẢ dữ liệu điểm danh? Hành động này không thể hoàn tác!')) {
-                localStorage.removeItem('attendanceList');
-                attendanceList = [];
-                updateUI();
-                alert('✓ Đã xóa tất cả dữ liệu!');
-            }
         });
     </script>
 </body>
