@@ -11,8 +11,9 @@
         textarea { resize: vertical; height: 70px; }
         button { background: #28a745; color: white; border: none; cursor: pointer; font-weight: bold; }
         button:hover { background: #218838; }
-        .btn-export { background: #007bff; width: auto; padding: 10px 20px; display: inline-block; margin-right: 10px; }
-        .btn-clear { background: #dc3545; width: auto; padding: 10px 20px; display: inline-block; }
+        .btn-export { background: #007bff; width: auto; padding: 10px 15px; display: inline-block; margin-right: 5px; margin-top: 5px; }
+        .btn-import { background: #ffc107; color: #000; width: auto; padding: 10px 15px; display: inline-block; margin-right: 5px; margin-top: 5px; cursor: pointer; }
+        .btn-clear { background: #dc3545; width: auto; padding: 10px 15px; display: inline-block; margin-top: 5px; }
         table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 13px; }
         th, td { padding: 10px; border-bottom: 1px solid #ddd; text-align: left; }
         th { background: #343a40; color: white; }
@@ -65,8 +66,14 @@
 
         <!-- Các nút quản lý bên dưới bảng -->
         <div class="admin-actions">
-            <button type="button" class="btn-export" onclick="exportToCSV()">📥 Tải file Excel (CSV)</button>
-            <button type="button" class="btn-clear" onclick="clearData()">🗑️ Xóa toàn bộ</button>
+            <button type="button" class="btn-export" onclick="exportToCSV()">📥 Tải Excel</button>
+            
+            <!-- Nút chọn file Excel để nạp danh sách vào -->
+            <label class="btn-import">
+                📂 Nạp Excel vào <input type="file" id="importFile" accept=".csv" style="display: none;" onchange="importFromCSV(event)">
+            </label>
+
+            <button type="button" class="btn-clear" onclick="clearData()">🗑️ Xóa hết</button>
         </div>
     </div>
 
@@ -90,7 +97,7 @@
         }
         updateUI();
 
-        // Xử lý khi bấm gửi điểm danh
+        // Xử lý khi bấm gửi điểm danh cá nhân
         document.getElementById('attendanceForm').addEventListener('submit', function(e) {
             e.preventDefault();
 
@@ -106,13 +113,50 @@
             msg.style.color = 'green';
             msg.innerText = `Cảm ơn ${name}, điểm danh thành công!`;
             
-            // Reset form
             document.getElementById('studentName').value = '';
             document.getElementById('category').selectedIndex = 0;
             document.getElementById('note').value = '';
             
             updateUI();
         });
+
+        // TÍNH NĂNG NẠP DANH SÁCH TỪ FILE EXCEL (CSV) VÀO TRANG WEB
+        function importFromCSV(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const text = e.target.result;
+                const rows = text.split('\n');
+                let addedCount = 0;
+
+                for (let i = 1; i < rows.length; i++) {
+                    const row = rows[i].trim();
+                    if (!row) continue;
+                    
+                    // Xử lý tách cột đơn giản (nếu tên nằm ở cột đầu tiên)
+                    const cols = row.split(',');
+                    let name = cols[0] ? cols[0].replace(/^"|"$/g, '').trim() : '';
+                    
+                    if (name) {
+                        attendanceList.push({ 
+                            name: name, 
+                            category: "Nạp sẵn", 
+                            note: "Danh sách nạp từ Excel", 
+                            time: "Chưa điểm danh" 
+                        });
+                        addedCount++;
+                    }
+                }
+
+                localStorage.setItem('attendanceList', JSON.stringify(attendanceList));
+                updateUI();
+                alert(`Đã nạp thành công ${addedCount} tên vào danh sách!`);
+                event.target.value = ''; // Reset file input
+            };
+            reader.readAsText(file, 'UTF-8');
+        }
 
         // Tải danh sách thành file Excel (CSV)
         function exportToCSV() {
