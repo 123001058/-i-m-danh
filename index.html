@@ -19,7 +19,8 @@
 
         <!-- Form điểm danh -->
         <form id="attendanceForm">
-            <input type="text" id="studentName" placeholder="Họ tên / Mã sinh viên của bạn" required>
+            <input type="text" id="mssv" placeholder="Mã số sinh viên (MSSV)" required>
+            <input type="text" id="studentName" placeholder="Họ và tên của bạn" required>
             
             <select id="category" required>
                 <option value="" disabled selected>-- Chọn lĩnh vực / bộ phận --</option>
@@ -43,6 +44,7 @@
         document.getElementById('attendanceForm').addEventListener('submit', function(e) {
             e.preventDefault();
 
+            const mssv = document.getElementById('mssv').value.trim();
             const name = document.getElementById('studentName').value.trim();
             const category = document.getElementById('category').value;
             const note = document.getElementById('note').value.trim();
@@ -56,13 +58,14 @@
             fetch(scriptURL, { 
                 method: 'POST', 
                 mode: 'no-cors',
-                body: JSON.stringify({ name: name, category: category, note: note }) 
+                body: JSON.stringify({ mssv: mssv, name: name, category: category, note: note }) 
             })
             .then(() => {
                 msg.style.color = 'green';
-                msg.innerText = `Cảm ơn ${name}, điểm danh thành công!`;
+                msg.innerText = `Cảm ơn ${name} (${mssv}), điểm danh thành công!`;
                 
                 // Reset form
+                document.getElementById('mssv').value = '';
                 document.getElementById('studentName').value = '';
                 document.getElementById('category').selectedIndex = 0;
                 document.getElementById('note').value = '';
