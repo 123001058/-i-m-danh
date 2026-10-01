@@ -37,7 +37,7 @@
             border-radius: 20px;
             width: 100%;
             max-width: 480px;
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
             box-sizing: border-box;
             border: 1px solid var(--border);
             text-align: left;
@@ -126,7 +126,6 @@
             document.getElementById('sessionBadge').innerText = "⚠️ Chưa chọn phiên học từ máy chiếu";
         }
 
-        // Kiểm tra Token QR hết hạn (sau 20 giây)
         function verifyToken() {
             if (!qrToken) {
                 showError("⚠️ Vui lòng quét mã QR trực tiếp trên màn hình máy chiếu!");
@@ -149,7 +148,6 @@
 
         verifyToken();
 
-        // Chống quét 2 lần / Điểm danh hộ trên cùng 1 thiết bị
         document.getElementById('mssv').addEventListener('input', function() {
             const val = this.value.trim();
             const student = validStudents.find(s => s.mssv === val);
@@ -158,7 +156,6 @@
                 document.getElementById('studentName').value = student.name;
                 errorBox.style.display = 'none';
 
-                // Kiểm tra xem thiết bị này đã điểm danh cho phiên này chưa
                 let localHistory = JSON.parse(localStorage.getItem('checked_sessions') || "{}");
                 if (currentSession && localHistory[currentSession]) {
                     showError(`⚠️ Thiết bị này đã dùng để điểm danh cho MSSV (${localHistory[currentSession]}) trong phiên này. Không thể điểm danh hộ!`);
@@ -171,7 +168,6 @@
             }
         });
 
-        // Submit form
         document.getElementById('attendanceForm').addEventListener('submit', function(e) {
             e.preventDefault();
             if (!verifyToken()) return;
@@ -190,14 +186,12 @@
             submitBtn.disabled = true;
             submitBtn.innerText = 'Đang xử lý...';
 
-            // Gửi dữ liệu lên Apps Script
             fetch(scriptURL, { 
                 method: 'POST', 
                 mode: 'no-cors',
                 body: JSON.stringify({ phien: currentSession || 'Mặc định', mssv: inputMssv, name: inputName, category, note }) 
             })
             .then(() => {
-                // Lưu lại trạng thái thiết bị đã điểm danh phiên này để khóa máy
                 let localHistory = JSON.parse(localStorage.getItem('checked_sessions') || "{}");
                 if(currentSession) {
                     localHistory[currentSession] = inputMssv;
