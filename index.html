@@ -6,18 +6,21 @@
     <title>Điểm Danh Trực Tuyến</title>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f4f9; text-align: center; margin: 0; padding: 20px; }
-        .container { background: white; padding: 30px; border-radius: 10px; max-width: 500px; margin: auto; box-shadow: 0 4px 15px rgba(0,0,0,0.1); box-sizing: border-box; }
+        .container { background: white; padding: 30px; border-radius: 10px; max-width: 600px; margin: auto; box-shadow: 0 4px 15px rgba(0,0,0,0.1); box-sizing: border-box; }
         input, select, textarea, button { padding: 12px; margin: 8px 0; font-size: 15px; width: 100%; box-sizing: border-box; border-radius: 6px; border: 1px solid #ccc; }
-        textarea { resize: vertical; height: 80px; }
+        textarea { resize: vertical; height: 70px; }
         button { background: #28a745; color: white; border: none; cursor: pointer; font-weight: bold; }
         button:hover { background: #218838; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 13px; }
+        th, td { padding: 10px; border-bottom: 1px solid #ddd; text-align: left; }
+        th { background: #343a40; color: white; }
     </style>
 </head>
 <body>
     <div class="container">
         <h2>Điểm Danh Trực Tuyến</h2>
 
-        <!-- Form điểm danh -->
+        <!-- Form điểm danh: MSSV lên trước, Họ tên xuống sau -->
         <form id="attendanceForm">
             <input type="text" id="mssv" placeholder="Mã số sinh viên (MSSV)" required>
             <input type="text" id="studentName" placeholder="Họ và tên của bạn" required>
@@ -35,11 +38,53 @@
             <button type="submit" id="submitBtn">Xác nhận điểm danh</button>
         </form>
         <p id="message" style="font-weight: bold; margin-top: 10px;"></p>
+
+        <hr style="margin: 30px 0; border: 0; border-top: 1px solid #eee;">
+
+        <!-- Bảng danh sách hiển thị trực tiếp trên web -->
+        <h3>Danh sách đã điểm danh (<span id="count">0</span> người)</h3>
+        <div style="overflow-x: auto; max-height: 350px;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>STT</th>
+                        <th>MSSV</th>
+                        <th>Họ Tên</th>
+                        <th>Lĩnh Vực</th>
+                        <th>Ghi Chú</th>
+                        <th>Thời Gian</th>
+                    </tr>
+                </thead>
+                <tbody id="listBody">
+                    <!-- Dữ liệu sẽ tự động hiện ở đây -->
+                </tbody>
+            </table>
+        </div>
     </div>
 
     <script>
         // URL Google Apps Script của bạn
         const scriptURL = 'https://script.google.com/macros/s/AKfycbwI34cLhrB-TiDx5enQBje9Rv5IvzgZqpw7Zh7FSNdZ1dASXdNgB9TGGgheZwo_NjAWQA/exec';
+
+        let attendanceList = JSON.parse(localStorage.getItem('attendanceList')) || [];
+
+        function updateUI() {
+            const listBody = document.getElementById('listBody');
+            document.getElementById('count').innerText = attendanceList.length;
+            listBody.innerHTML = '';
+            
+            attendanceList.forEach((item, index) => {
+                listBody.innerHTML += `<tr>
+                    <td>${index + 1}</td>
+                    <td><b>${item.mssv}</b></td>
+                    <td>${item.name}</td>
+                    <td>${item.category}</td>
+                    <td>${item.note}</td>
+                    <td>${item.time}</td>
+                </tr>`;
+            });
+        }
+        updateUI();
 
         document.getElementById('attendanceForm').addEventListener('submit', function(e) {
             e.preventDefault();
@@ -48,19 +93,25 @@
             const name = document.getElementById('studentName').value.trim();
             const category = document.getElementById('category').value;
             const note = document.getElementById('note').value.trim();
+            const time = new Date().toLocaleTimeString('vi-VN') + ' ' + new Date().toLocaleDateString('vi-VN');
             const submitBtn = document.getElementById('submitBtn');
             const msg = document.getElementById('message');
 
             submitBtn.disabled = true;
             submitBtn.innerText = 'Đang gửi...';
 
-            // Gửi dữ liệu ngầm về Google Sheets
+            // 1. Gửi dữ liệu ngầm về Google Sheets
             fetch(scriptURL, { 
                 method: 'POST', 
                 mode: 'no-cors',
                 body: JSON.stringify({ mssv: mssv, name: name, category: category, note: note }) 
             })
             .then(() => {
+                // 2. Thêm vào danh sách hiển thị trực tiếp trên trang web
+                attendanceList.push({ mssv, name, category, note, time });
+                localStorage.setItem('attendanceList', JSON.stringify(attendanceList));
+                updateUI();
+
                 msg.style.color = 'green';
                 msg.innerText = `Cảm ơn ${name} (${mssv}), điểm danh thành công!`;
                 
