@@ -20,7 +20,7 @@
     <div class="container">
         <h2>Điểm Danh Trực Tuyến</h2>
 
-        <!-- Form điểm danh: MSSV lên trước, Họ tên xuống sau -->
+        <!-- Form nhập dữ liệu -->
         <form id="attendanceForm">
             <input type="text" id="mssv" placeholder="Mã số sinh viên (MSSV)" required>
             <input type="text" id="studentName" placeholder="Họ và tên của bạn" required>
@@ -41,7 +41,7 @@
 
         <hr style="margin: 30px 0; border: 0; border-top: 1px solid #eee;">
 
-        <!-- Bảng danh sách hiển thị trực tiếp trên web -->
+        <!-- Bảng hiển thị trực tiếp trên web -->
         <h3>Danh sách đã điểm danh (<span id="count">0</span> người)</h3>
         <div style="overflow-x: auto; max-height: 350px;">
             <table>
@@ -56,7 +56,7 @@
                     </tr>
                 </thead>
                 <tbody id="listBody">
-                    <!-- Dữ liệu sẽ tự động hiện ở đây -->
+                    <!-- Dữ liệu hiển thị ở đây -->
                 </tbody>
             </table>
         </div>
@@ -100,14 +100,14 @@
             submitBtn.disabled = true;
             submitBtn.innerText = 'Đang gửi...';
 
-            // 1. Gửi dữ liệu ngầm về Google Sheets
+            // Gửi dữ liệu về Google Sheets
             fetch(scriptURL, { 
                 method: 'POST', 
                 mode: 'no-cors',
                 body: JSON.stringify({ mssv: mssv, name: name, category: category, note: note }) 
             })
             .then(() => {
-                // 2. Thêm vào danh sách hiển thị trực tiếp trên trang web
+                // Cập nhật lên bảng trên web
                 attendanceList.push({ mssv, name, category, note, time });
                 localStorage.setItem('attendanceList', JSON.stringify(attendanceList));
                 updateUI();
