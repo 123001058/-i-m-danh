@@ -126,7 +126,6 @@
         .status-off { background: rgba(239, 68, 68, 0.15); color: var(--danger); }
         .status-on { background: rgba(16, 185, 129, 0.15); color: var(--success); }
 
-        /* Bảng danh sách */
         .table-card { padding: 25px; }
         .table-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px; }
         .table-header h3 { margin: 0; font-size: 18px; }
@@ -162,14 +161,12 @@
             <div class="control-group">
                 <input type="text" id="sessionName" placeholder="Tên phiên (VD: Thực hành CNC)">
                 
-                <!-- Cấu hình thời gian đổi QR -->
                 <select id="qrRefreshTime" title="Thời gian đổi mã QR">
                     <option value="15">QR đổi mỗi 15 giây</option>
                     <option value="20" selected>QR đổi mỗi 20 giây</option>
                     <option value="30">QR đổi mỗi 30 giây</option>
                 </select>
 
-                <!-- Cấu hình thời gian tổng của buổi điểm danh -->
                 <select id="sessionDuration" title="Thời gian mở điểm danh">
                     <option value="3">Mở trong 3 phút</option>
                     <option value="5" selected>Mở trong 5 phút</option>
@@ -183,7 +180,6 @@
         </div>
 
         <div class="main-grid">
-            <!-- Cột QR Code -->
             <div class="card" id="qrContainerCard" style="display: none;">
                 <h3 style="margin-top:0; font-size: 16px;">Mã QR & Thời Gian</h3>
                 <div id="qrWrapper">
@@ -197,7 +193,6 @@
                 <button class="btn-fullscreen" onclick="toggleFullScreen()">🔲 Phóng To Máy Chiếu</button>
             </div>
 
-            <!-- Cột Bảng trạng thái học sinh -->
             <div class="card table-card" style="text-align: left;" id="fullTableContainer">
                 <div class="table-header">
                     <h3>📋 Danh Sách Điểm Danh Lớp</h3>
@@ -260,10 +255,6 @@
             const tbody = document.getElementById('adminStudentList');
             tbody.innerHTML = '';
             classStudents.forEach((s, idx) => {
-                let badgeClass = 'badge-absent';
-                if (s.status === 'Có mặt') badgeClass = 'badge-present';
-                else if (s.status === 'Vắng có phép') badgeClass = 'badge-excused';
-
                 tbody.innerHTML += `
                     <tr>
                         <td><b>${s.mssv}</b></td>
@@ -323,7 +314,6 @@
             secondsRemaining = refreshSec;
             generateQR(refreshSec);
 
-            // Vòng lặp đổi QR
             progressInterval = setInterval(() => {
                 secondsRemaining--;
                 document.getElementById('secondsLeft').innerText = secondsRemaining;
@@ -334,7 +324,6 @@
                 }
             }, 1000);
 
-            // Đồng hồ tổng đếm ngược thời gian mở điểm danh của phiên
             if (durationMin !== 999) {
                 sessionSecondsLeft = durationMin * 60;
                 sessionTimerInterval = setInterval(() => {
