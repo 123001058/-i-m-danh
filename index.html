@@ -11,35 +11,83 @@
         button { background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; }
         button:hover { background: #218838; }
         #message { font-weight: bold; margin-top: 15px; }
+        
+        /* Khu vực Admin ẩn đi cho gọn */
+        .admin-panel { margin-top: 30px; border-top: 1px dashed #ccc; padding-top: 15px; font-size: 14px; text-align: left; }
+        .status-box { font-weight: bold; padding: 5px; text-align: center; margin-bottom: 10px; border-radius: 4px; }
+        .open { background: #d4edda; color: #155724; }
+        .closed { background: #f8d7da; color: #721c24; }
     </style>
 </head>
 <body>
     <div class="container">
         <h2>Điểm Danh Trực Tuyến</h2>
+        
+        <!-- Trạng thái hiển thị cho mọi người thấy -->
+        <div id="statusIndicator" class="status-box open">Cổng đang MỞ</div>
+
         <form id="attendanceForm">
             <input type="text" id="studentId" placeholder="Nhập mã sinh viên / tên của bạn" required><br>
             <button type="submit" id="submitBtn">Xác nhận điểm danh</button>
         </form>
         <p id="message"></p>
+
+        <!-- KHU VỰC QUẢN TRỊ VIÊN -->
+        <div class="admin-panel">
+            <details>
+                <summary style="cursor: pointer; color: #007bff; font-weight: bold;">Dành cho Quản trị viên (Admin)</summary>
+                <p style="margin-top: 10px; font-size: 12px; color: #666;">Nhập mật khẩu để bật/tắt cổng điểm danh:</p>
+                <input type="password" id="adminPassword" placeholder="Nhập mật khẩu admin">
+                <button type="button" onclick="toggleAttendance()" style="background: #007bff; margin-top: 5px;">Đổi Trạng Thái Mở/Đóng</button>
+            </details>
+        </div>
     </div>
 
     <script>
-        // === QUẢN TRỊ VIÊN ===
-        // Đổi thành true để MỞ điểm danh, đổi thành false để ĐÓNG điểm danh
-        const isAttendanceOpen = true; 
-        
         // URL Google Apps Script của bạn
         const scriptURL = 'https://script.google.com/macros/s/AKfycbwKnUATrVs4xIXN-deWsYkcu1x3S_Jptbshkw5a36y-DQZ-3LNtjfTtH3sFo82zEzwtxA/exec';
 
+        // Mật khẩu Admin của bạn (Bạn có thể đổi chữ '123456' thành mật khẩu riêng của bạn)
+        const ADMIN_PASS = '123456'; 
+
+        // Lấy trạng thái từ bộ nhớ trình duyệt (mặc định là true - mở)
+        let isAttendanceOpen = localStorage.getItem('isAttendanceOpen') !== 'false';
+
+        function updateUI() {
+            const indicator = document.getElementById('statusIndicator');
+            if (isAttendanceOpen) {
+                indicator.className = 'status-box open';
+                indicator.innerText = 'Cổng đang MỞ';
+            } else {
+                indicator.className = 'status-box closed';
+                indicator.innerText = 'Cổng đã ĐÓNG';
+            }
+        }
+        updateUI();
+
+        // Hàm đổi trạng thái dành cho Admin
+        function toggleAttendance() {
+            const pass = document.getElementById('adminPassword').value;
+            if (pass !== ADMIN_PASS) {
+                alert('Sai mật khẩu Admin!');
+                return;
+            }
+            isAttendanceOpen = !isAttendanceOpen;
+            localStorage.setItem('isAttendanceOpen', isAttendanceOpen);
+            updateUI();
+            alert('Đã đổi trạng thái thành công! Cổng hiện tại: ' + (isAttendanceOpen ? 'MỞ' : 'ĐÓNG'));
+            document.getElementById('adminPassword').value = '';
+        }
+
+        // Xử lý khi bấm điểm danh
         document.getElementById('attendanceForm').addEventListener('submit', function(e) {
             e.preventDefault();
             const messageEl = document.getElementById('message');
             const submitBtn = document.getElementById('submitBtn');
 
-            // Kiểm tra trạng thái đóng/mở cổng điểm danh
             if (!isAttendanceOpen) {
                 messageEl.style.color = 'red';
-                messageEl.innerText = 'Cổng điểm danh đã ĐÓNG! Vui lòng liên hệ quản trị viên.';
+                messageEl.innerText = 'Cổng điểm danh đã ĐÓNG! Không thể điểm danh lúc này.';
                 return;
             }
 
@@ -47,7 +95,6 @@
             submitBtn.disabled = true;
             submitBtn.innerText = 'Đang gửi...';
 
-            // Gửi dữ liệu về Google Sheets
             fetch(scriptURL, { 
                 method: 'POST', 
                 mode: 'no-cors',
