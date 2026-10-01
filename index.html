@@ -6,10 +6,11 @@
     <title>Trang Điểm Danh</title>
     <style>
         body { font-family: Arial, sans-serif; text-align: center; margin-top: 50px; background: #f4f4f9; }
-        .container { background: white; padding: 30px; border-radius: 8px; display: inline-block; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
-        input, button { padding: 10px; margin: 10px; font-size: 16px; width: 80%; }
+        .container { background: white; padding: 30px; border-radius: 8px; display: inline-block; box-shadow: 0 0 10px rgba(0,0,0,0.1); width: 90%; max-width: 400px; }
+        input, button { padding: 10px; margin: 10px 0; font-size: 16px; width: 100%; box-sizing: border-box; }
         button { background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; }
         button:hover { background: #218838; }
+        #message { font-weight: bold; margin-top: 15px; }
     </style>
 </head>
 <body>
@@ -19,17 +20,32 @@
             <input type="text" id="studentId" placeholder="Nhập mã sinh viên / tên của bạn" required><br>
             <button type="submit">Xác nhận điểm danh</button>
         </form>
-        <p id="message" style="color: green; font-weight: bold;"></p>
+        <p id="message"></p>
     </div>
 
     <script>
+        // === KHU VỰC QUẢN TRỊ VIÊN ===
+        // Đổi thành true để MỞ điểm danh, đổi thành false để ĐÓNG điểm danh
+        const isAttendanceOpen = true; 
+        // ============================
+
         document.getElementById('attendanceForm').addEventListener('submit', function(e) {
             e.preventDefault();
+            const messageEl = document.getElementById('message');
+
+            // Kiểm tra trạng thái đóng/mở cổng điểm danh
+            if (!isAttendanceOpen) {
+                messageEl.style.color = 'red';
+                messageEl.innerText = 'Cổng điểm danh đã ĐÓNG! Vui lòng liên hệ giảng viên/quản trị viên.';
+                return;
+            }
+
             const studentId = document.getElementById('studentId').value;
             const time = new Date().toLocaleString();
             
-            // Hiện thông báo thành công (Bạn có thể kết nối Google Sheets API ở đây để lưu dữ liệu)
-            document.getElementById('message').innerText = `Cảm ơn ${studentId}, điểm danh thành công lúc ${time}!`;
+            // Xử lý khi điểm danh thành công
+            messageEl.style.color = 'green';
+            messageEl.innerText = `Cảm ơn ${studentId}, điểm danh thành công lúc ${time}!`;
             document.getElementById('studentId').value = '';
         });
     </script>
