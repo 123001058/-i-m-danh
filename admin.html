@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Màn Hình Máy Chiếu Điểm Danh</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; text-align: center; background: #2c3e50; color: white; margin: 0; padding: 50px; }
+        .dashboard { background: white; color: #333; padding: 40px; border-radius: 15px; max-width: 600px; margin: auto; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        h1 { margin-top: 0; color: #2c3e50; }
+        input { padding: 15px; font-size: 18px; width: 90%; margin-bottom: 20px; border: 2px solid #bdc3c7; border-radius: 8px; text-align: center; }
+        button { padding: 15px 30px; font-size: 18px; margin: 10px; cursor: pointer; border: none; border-radius: 8px; font-weight: bold; transition: 0.2s; }
+        .btn-on { background: #28a745; color: white; }
+        .btn-on:hover { background: #218838; }
+        .btn-off { background: #dc3545; color: white; }
+        .btn-off:hover { background: #c82333; }
+        #qrArea { margin-top: 30px; min-height: 300px; }
+        #qrImage { width: 300px; height: 300px; display: none; margin: auto; border: 10px solid white; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+        .status { font-size: 18px; font-weight: bold; margin-top: 15px; color: #dc3545; }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <h1>Bảng Điều Khiển Điểm Danh</h1>
+        <p>Gõ tên buổi học và bật mã QR lên máy chiếu</p>
+
+        <input type="text" id="sessionName" placeholder="VD: Buổi 1 - Thực hành CNC (10/10)">
+        
+        <div>
+            <button class="btn-on" onclick="turnOn()">🟢 Mở Điểm Danh</button>
+            <button class="btn-off" onclick="turnOff()">🔴 Tắt Điểm Danh</button>
+        </div>
+
+        <div class="status" id="statusText">Trạng thái: ĐÃ ĐÓNG</div>
+
+        <div id="qrArea">
+            <img id="qrImage" src="" alt="Mã QR Điểm Danh">
+        </div>
+    </div>
+
+    <script>
+        // THAY LINK NÀY BẰNG LINK TRANG WEB INDEX.HTML CỦA BẠN (VD: https://123001058.github.io/DiemDanh/)
+        const BASE_LINK = "LINK_TRANG_WEB_CUA_BAN/index.html"; 
+
+        function turnOn() {
+            let session = document.getElementById('sessionName').value.trim();
+            if(!session) { 
+                alert("Bạn phải nhập tên phiên điểm danh trước khi mở!"); 
+                return; 
+            }
+
+            // Gắn tên phiên vào đuôi link web
+            let fullLink = BASE_LINK + "?phien=" + encodeURIComponent(session);
+            
+            // Dùng API miễn phí để tạo mã QR từ cái link đó
+            let qrUrl = "https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=" + encodeURIComponent(fullLink);
+            
+            // Hiển thị mã QR
+            document.getElementById('qrImage').src = qrUrl;
+            document.getElementById('qrImage').style.display = "block";
+            
+            let statusText = document.getElementById('statusText');
+            statusText.innerText = "Trạng thái: ĐANG MỞ KẾT NỐI (" + session + ")";
+            statusText.style.color = "#28a745";
+        }
+
+        function turnOff() {
+            // Tắt mã QR đi
+            document.getElementById('qrImage').style.display = "none";
+            document.getElementById('qrImage').src = "";
+            
+            let statusText = document.getElementById('statusText');
+            statusText.innerText = "Trạng thái: ĐÃ ĐÓNG";
+            statusText.style.color = "#dc3545";
+        }
+    </script>
+</body>
+</html>
