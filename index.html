@@ -6,26 +6,21 @@
     <title>Điểm Danh Trực Tuyến</title>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f4f9; text-align: center; margin: 0; padding: 20px; }
-        .container { background: white; padding: 30px; border-radius: 10px; max-width: 600px; margin: auto; box-shadow: 0 4px 15px rgba(0,0,0,0.1); box-sizing: border-box; }
+        .container { background: white; padding: 30px; border-radius: 10px; max-width: 500px; margin: auto; box-shadow: 0 4px 15px rgba(0,0,0,0.1); box-sizing: border-box; }
         input, select, textarea, button { padding: 12px; margin: 8px 0; font-size: 15px; width: 100%; box-sizing: border-box; border-radius: 6px; border: 1px solid #ccc; }
         textarea { resize: vertical; height: 70px; }
         button { background: #28a745; color: white; border: none; cursor: pointer; font-weight: bold; }
         button:hover { background: #218838; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 13px; }
-        th, td { padding: 10px; border-bottom: 1px solid #ddd; text-align: left; }
-        th { background: #343a40; color: white; }
-        .admin-actions { margin-top: 20px; text-align: left; }
-        .btn-action { display: inline-block; padding: 10px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; border: none; margin: 5px 5px 0 0; text-decoration: none; font-size: 14px; }
-        .btn-export { background: #007bff; color: white; }
-        .btn-import { background: #ffc107; color: black; }
-        .btn-clear { background: #dc3545; color: white; }
+        .error-msg { color: #dc3545; font-size: 14px; font-weight: bold; margin-bottom: 10px; display: none; }
     </style>
 </head>
 <body>
     <div class="container">
         <h2>Điểm Danh Trực Tuyến</h2>
 
-        <!-- Form nhập dữ liệu -->
+        <!-- Khung thông báo lỗi khi nhập sai -->
+        <div id="errorMsg" class="error-msg">❌ Thông tin không hợp lệ! Vui lòng kiểm tra lại MSSV và Họ tên.</div>
+
         <form id="attendanceForm">
             <input type="text" id="mssv" placeholder="Mã số sinh viên (MSSV)" required>
             <input type="text" id="studentName" placeholder="Họ và tên của bạn" required>
@@ -38,142 +33,92 @@
                 <option value="Lập trình">Lập trình</option>
             </select>
 
-            <textarea id="note" placeholder="Ghi chú..." required></textarea>
+            <textarea id="note" placeholder="Ghi chú (Tóm tắt công việc)..." required></textarea>
 
             <button type="submit" id="submitBtn">Xác nhận điểm danh</button>
         </form>
         <p id="message" style="font-weight: bold; margin-top: 10px;"></p>
-
-        <hr style="margin: 30px 0; border: 0; border-top: 1px solid #eee;">
-
-        <!-- Bảng hiển thị trực tiếp trên web -->
-        <h3>Danh sách trên Web (<span id="count">0</span> người)</h3>
-        <div style="overflow-x: auto; max-height: 350px;">
-            <table>
-                <thead>
-                    <tr>
-                        <th>STT</th>
-                        <th>MSSV</th>
-                        <th>Họ Tên</th>
-                        <th>Lĩnh Vực</th>
-                        <th>Ghi Chú</th>
-                        <th>Thời Gian</th>
-                    </tr>
-                </thead>
-                <tbody id="listBody">
-                    <!-- Dữ liệu hiển thị ở đây -->
-                </tbody>
-            </table>
-        </div>
-
-        <!-- Các nút quản lý -->
-        <div class="admin-actions">
-            <button type="button" class="btn-action btn-export" onclick="exportToCSV()">📥 Tải Excel</button>
-            
-            <label class="btn-action btn-import">
-                📂 Nạp danh sách <input type="file" accept=".csv" style="display: none;" onchange="importFromCSV(event)">
-            </label>
-
-            <button type="button" class="btn-action btn-clear" onclick="clearData()">🗑️ Xóa dữ liệu web</button>
-        </div>
     </div>
 
     <script>
         // URL Google Apps Script của bạn
         const scriptURL = 'https://script.google.com/macros/s/AKfycbwI34cLhrB-TiDx5enQBje9Rv5IvzgZqpw7Zh7FSNdZ1dASXdNgB9TGGgheZwo_NjAWQA/exec';
 
-        let attendanceList = JSON.parse(localStorage.getItem('attendanceList')) || [];
+        let validStudents = [];
 
-        function updateUI() {
-            const listBody = document.getElementById('listBody');
-            document.getElementById('count').innerText = attendanceList.length;
-            listBody.innerHTML = '';
-            
-            attendanceList.forEach((item, index) => {
-                listBody.innerHTML += `<tr>
-                    <td>${index + 1}</td>
-                    <td><b>${item.mssv}</b></td>
-                    <td>${item.name}</td>
-                    <td>${item.category}</td>
-                    <td>${item.note}</td>
-                    <td>${item.time}</td>
-                </tr>`;
-            });
-        }
-        updateUI();
-
-        // Nạp file thông_tin_sv.csv vào web
-        function importFromCSV(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const text = e.target.result;
-                const rows = text.split('\n');
-                let addedCount = 0;
-
-                // Bỏ qua dòng tiêu đề đầu tiên
-                for (let i = 1; i < rows.length; i++) {
-                    const row = rows[i].trim();
-                    if (!row) continue;
-                    
-                    const cols = row.split(',');
-                    // Cột 0: stt, Cột 1: tên, Cột 2: mssv
-                    if (cols.length >= 3) {
-                        const ten = cols[1].replace(/^"|"$/g, '').trim();
-                        const mssv = cols[2].replace(/^"|"$/g, '').trim();
+        // TỰ ĐỘNG NẠP DANH SÁCH TỪ GITHUB (đọc ngầm file thông_tin_sv.csv)
+        function loadStudentList() {
+            // Thêm tham số thời gian để tránh bị trình duyệt lưu cache file cũ
+            fetch('thông_tin_sv.csv?v=' + new Date().getTime())
+                .then(response => {
+                    if (!response.ok) throw new Error("Không tìm thấy file danh sách trên GitHub");
+                    return response.text();
+                })
+                .then(csvText => {
+                    const rows = csvText.split('\n');
+                    // Bỏ qua dòng tiêu đề (stt, tên, mssv)
+                    for (let i = 1; i < rows.length; i++) {
+                        const row = rows[i].trim();
+                        if (!row) continue;
                         
-                        if (ten && mssv) {
-                            attendanceList.push({ 
-                                mssv: mssv,
-                                name: ten, 
-                                category: "Danh sách gốc", 
-                                note: "", 
-                                time: "Chưa điểm danh" 
-                            });
-                            addedCount++;
+                        const cols = row.split(',');
+                        if (cols.length >= 3) {
+                            // Cột 1 là Tên, Cột 2 là MSSV (theo cấu trúc file của bạn)
+                            const ten = cols[1].replace(/^"|"$/g, '').trim().toLowerCase();
+                            const mssv = cols[2].replace(/^"|"$/g, '').trim();
+                            
+                            validStudents.push({ mssv: mssv, name: ten });
                         }
                     }
-                }
-
-                localStorage.setItem('attendanceList', JSON.stringify(attendanceList));
-                updateUI();
-                alert(`Đã nạp thành công ${addedCount} sinh viên vào bảng!`);
-                event.target.value = ''; 
-            };
-            reader.readAsText(file, 'UTF-8');
+                    console.log("Đã tải xong danh sách sinh viên hợp lệ từ GitHub.");
+                })
+                .catch(error => console.error("Lỗi khi tải danh sách:", error));
         }
+
+        // Chạy hàm nạp danh sách ngay khi mở web
+        loadStudentList();
 
         document.getElementById('attendanceForm').addEventListener('submit', function(e) {
             e.preventDefault();
 
-            const mssv = document.getElementById('mssv').value.trim();
-            const name = document.getElementById('studentName').value.trim();
+            const inputMssv = document.getElementById('mssv').value.trim();
+            const inputName = document.getElementById('studentName').value.trim();
             const category = document.getElementById('category').value;
             const note = document.getElementById('note').value.trim();
-            const time = new Date().toLocaleTimeString('vi-VN') + ' ' + new Date().toLocaleDateString('vi-VN');
+            
             const submitBtn = document.getElementById('submitBtn');
             const msg = document.getElementById('message');
+            const errorBox = document.getElementById('errorMsg');
 
+            errorBox.style.display = 'none'; // Ẩn thông báo lỗi cũ
+            msg.innerText = '';
+
+            // BƯỚC KIỂM TRA QUAN TRỌNG: Dò tìm trong danh sách
+            // So sánh MSSV và Tên (Tên không phân biệt chữ hoa chữ thường)
+            const isMatch = validStudents.some(sv => 
+                sv.mssv === inputMssv && sv.name === inputName.toLowerCase()
+            );
+
+            if (!isMatch) {
+                // Nếu nhập sai, chặn lại luôn không cho gửi
+                errorBox.style.display = 'block';
+                return;
+            }
+
+            // Nếu đúng thông tin thì mới cho gửi lên Google Sheets
             submitBtn.disabled = true;
             submitBtn.innerText = 'Đang gửi...';
 
-            // Gửi dữ liệu về Google Sheets
             fetch(scriptURL, { 
                 method: 'POST', 
                 mode: 'no-cors',
-                body: JSON.stringify({ mssv: mssv, name: name, category: category, note: note }) 
+                body: JSON.stringify({ mssv: inputMssv, name: inputName, category: category, note: note }) 
             })
             .then(() => {
-                // Cập nhật lên bảng trên web
-                attendanceList.push({ mssv, name, category, note, time });
-                localStorage.setItem('attendanceList', JSON.stringify(attendanceList));
-                updateUI();
-
                 msg.style.color = 'green';
-                msg.innerText = `Cảm ơn ${name} (${mssv}), điểm danh thành công!`;
+                msg.innerText = `Cảm ơn ${inputName} (${inputMssv}), điểm danh thành công!`;
                 
+                // Reset form
                 document.getElementById('mssv').value = '';
                 document.getElementById('studentName').value = '';
                 document.getElementById('category').selectedIndex = 0;
@@ -182,41 +127,13 @@
                 submitBtn.innerText = 'Xác nhận điểm danh';
             })
             .catch(error => {
-                console.error('Error!', error.message);
+                console.error('Lỗi khi gửi!', error.message);
                 msg.style.color = 'red';
-                msg.innerText = 'Có lỗi xảy ra, vui lòng thử lại!';
+                msg.innerText = 'Có lỗi xảy ra do mạng lưới, vui lòng thử lại!';
                 submitBtn.disabled = false;
                 submitBtn.innerText = 'Xác nhận điểm danh';
             });
         });
-
-        function clearData() {
-            if (confirm('Xóa sạch dữ liệu hiển thị trên trang web này? (Dữ liệu trên Google Sheets sẽ KHÔNG bị xóa)')) {
-                attendanceList = [];
-                localStorage.removeItem('attendanceList');
-                updateUI();
-            }
-        }
-
-        function exportToCSV() {
-            if (attendanceList.length === 0) {
-                alert('Chưa có dữ liệu điểm danh nào!');
-                return;
-            }
-            let csvContent = "\uFEFFSTT,MSSV,Họ Tên,Lĩnh Vực,Ghi Chú,Thời Gian\n";
-            attendanceList.forEach((item, index) => {
-                csvContent += `${index + 1},"${item.mssv}","${item.name}","${item.category}","${item.note.replace(/(\r\n|\n|\r)/gm, " ")}","${item.time}"\n`;
-            });
-
-            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `DanhSachDiemDanh.csv`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-        }
     </script>
 </body>
 </html>
