@@ -1,114 +1,143 @@
 <!DOCTYPE html>
 <html lang="vi">
-<head> 
+<head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Điểm Danh Trực Tuyến</title>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f4f9; text-align: center; margin: 0; padding: 20px; }
-        .container { background: white; padding: 30px; border-radius: 10px; max-width: 500px; margin: auto; box-shadow: 0 4px 15px rgba(0,0,0,0.1); box-sizing: border-box; }
-        input, button { padding: 12px; margin: 10px 0; font-size: 16px; width: 100%; box-sizing: border-box; border-radius: 6px; border: 1px solid #ccc; }
+        .container { background: white; padding: 30px; border-radius: 10px; max-width: 600px; margin: auto; box-shadow: 0 4px 15px rgba(0,0,0,0.1); box-sizing: border-box; }
+        input, select, textarea, button { padding: 10px; margin: 8px 0; font-size: 15px; width: 100%; box-sizing: border-box; border-radius: 6px; border: 1px solid #ccc; }
+        textarea { resize: vertical; height: 70px; }
         button { background: #28a745; color: white; border: none; cursor: pointer; font-weight: bold; }
         button:hover { background: #218838; }
-        .status-box { font-weight: bold; padding: 10px; margin-bottom: 15px; border-radius: 6px; }
-        .open { background: #d4edda; color: #155724; }
-        .closed { background: #f8d7da; color: #721c24; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 14px; }
+        .btn-export { background: #007bff; margin-bottom: 15px; }
+        .btn-export:hover { background: #0056b3; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 13px; }
         th, td { padding: 8px; border-bottom: 1px solid #ddd; text-align: left; }
-        th { background: #007bff; color: white; }
+        th { background: #343a40; color: white; }
     </style>
 </head>
 <body>
     <div class="container">
         <h2>Điểm Danh Trực Tuyến</h2>
 
-        <!-- Hiển thị trạng thái cổng -->
-        <div id="statusIndicator" class="status-box" style="background: #e2e8f0; color: #475569;">Đang kiểm tra trạng thái...</div>
-
         <!-- Form điểm danh -->
         <form id="attendanceForm">
-            <input type="text" id="studentId" placeholder="Nhập mã sinh viên / tên của bạn" required>
+            <input type="text" id="studentName" placeholder="Họ tên / Mã sinh viên của bạn" required>
+            
+            <select id="category" required>
+                <option value="" disabled selected>-- Chọn lĩnh vực / bộ phận --</option>
+                <option value="Thiết kế">Thiết kế</option>
+                <option value="Cơ khí">Cơ khí</option>
+                <option value="Điện">Điện</option>
+                <option value="Lập trình">Lập trình</option>
+            </select>
+
+            <textarea id="note" placeholder="Ghi chú: Ngày hôm đấy làm gì..." required></textarea>
+
             <button type="submit" id="submitBtn">Xác nhận điểm danh</button>
         </form>
         <p id="message" style="font-weight: bold; margin-top: 10px;"></p>
 
-        <!-- Danh sách hiển thị -->
-        <h3 style="margin-top: 25px;">Danh sách đã điểm danh (<span id="count">0</span>)</h3>
-        <table>
-            <thead>
-                <tr>
-                    <th>STT</th>
-                    <th>Tên / MSSV</th>
-                    <th>Thời gian</th>
-                </tr>
-            </thead>
-            <tbody id="listBody"></tbody>
-        </table>
+        <hr style="margin: 25px 0; border: 0; border-top: 1px solid #eee;">
+
+        <!-- Khu vực quản lý lịch sử cho Admin -->
+        <h3>Danh sách đã điểm danh (<span id="count">0</span>)</h3>
+        <button type="button" class="btn-export" onclick="exportToCSV()">📥 Tải danh sách về máy (File Excel/CSV)</button>
+        <button type="button" onclick="clearData()" style="background: #dc3545; font-size: 13px; padding: 6px; width: auto; float: right;">Xóa lịch sử</button>
+        <div style="clear: both;"></div>
+
+        <div style="overflow-x: auto;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>STT</th>
+                        <th>Họ Tên</th>
+                        <th>Lĩnh Vực</th>
+                        <th>Ghi Chú Công Việc</th>
+                        <th>Thời Gian</th>
+                    </tr>
+                </thead>
+                <tbody id="listBody"></tbody>
+            </table>
+        </div>
     </div>
 
     <script>
-        let isGateOpen = false;
+        let isGateOpen = true; // Mặc định mở, hoặc đọc từ status.json nếu dùng file status
         let attendanceList = JSON.parse(localStorage.getItem('attendanceList')) || [];
 
-        // Tự động kiểm tra trạng thái từ file status.json trên GitHub mỗi khi có người quét QR
-        async function checkGateStatus() {
-            try {
-                // Lấy link file status.json trực tiếp từ GitHub của bạn (Thay đường dẫn raw của bạn vào đây nếu cần, hoặc dùng đường dẫn tương đối)
-                const response = await fetch('./status.json?t=' + new Date().getTime());
-                const data = await response.json();
-                isGateOpen = data.isOpen;
-                updateUI();
-            } catch (error) {
-                console.error('Không tải được trạng thái cổng');
-            }
-        }
-
         function updateUI() {
-            const indicator = document.getElementById('statusIndicator');
-            const studentInput = document.getElementById('studentId');
-            const submitBtn = document.getElementById('submitBtn');
-
-            if (isGateOpen) {
-                indicator.className = 'status-box open';
-                indicator.innerText = 'Cổng điểm danh đang MỞ';
-                studentInput.disabled = false;
-                submitBtn.disabled = false;
-            } else {
-                indicator.className = 'status-box closed';
-                indicator.innerText = 'Cổng điểm danh đã ĐÓNG';
-                studentInput.disabled = true;
-                submitBtn.disabled = true;
-            }
-
-            // Hiển thị danh sách
             const listBody = document.getElementById('listBody');
             document.getElementById('count').innerText = attendanceList.length;
             listBody.innerHTML = '';
+            
             attendanceList.forEach((item, index) => {
-                listBody.innerHTML += `<tr><td>${index + 1}</td><td>${item.name}</td><td>${item.time}</td></tr>`;
+                listBody.innerHTML += `<tr>
+                    <td>${index + 1}</td>
+                    <td><b>${item.name}</b></td>
+                    <td>${item.category}</td>
+                    <td>${item.note}</td>
+                    <td>${item.time}</td>
+                </tr>`;
             });
         }
-
-        // Kiểm tra trạng thái ngay khi mở trang
-        checkGateStatus();
+        updateUI();
 
         // Xử lý khi bấm gửi điểm danh
         document.getElementById('attendanceForm').addEventListener('submit', function(e) {
             e.preventDefault();
-            if (!isGateOpen) return;
 
-            const name = document.getElementById('studentId').value.trim();
-            const time = new Date().toLocaleTimeString() + ' ' + new Date().toLocaleDateString();
+            const name = document.getElementById('studentName').value.trim();
+            const category = document.getElementById('category').value;
+            const note = document.getElementById('note').value.trim();
+            const time = new Date().toLocaleTimeString('vi-VN') + ' ' + new Date().toLocaleDateString('vi-VN');
 
-            attendanceList.push({ name, time });
+            attendanceList.push({ name, category, note, time });
             localStorage.setItem('attendanceList', JSON.stringify(attendanceList));
 
             const msg = document.getElementById('message');
             msg.style.color = 'green';
-            msg.innerText = `Điểm danh thành công cho: ${name}!`;
-            document.getElementById('studentId').value = '';
+            msg.innerText = `Cảm ơn ${name}, điểm danh thành công!`;
+            
+            // Reset form
+            document.getElementById('studentName').value = '';
+            document.getElementById('category').selectedIndex = 0;
+            document.getElementById('note').value = '';
+            
             updateUI();
         });
+
+        // Tính năng tải danh sách thành file Excel/CSV để xem trên máy tính điện thoại dễ dàng
+        function exportToCSV() {
+            if (attendanceList.length === 0) {
+                alert('Chưa có dữ liệu điểm danh nào!');
+                return;
+            }
+            let csvContent = "\uFEFFSTT,Họ Tên,Lĩnh Vực,Ghi Chú,Thời Gian\n";
+            attendanceList.forEach((item, index) => {
+                csvContent += `${index + 1},"${item.name}","${item.category}","${item.note.replace(/(\r\n|\n|\r)/gm, " ")}","${item.time}"\n`;
+            });
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `DanhSachDiemDanh_${new Date().toLocaleDateString('vi-VN').replace(/\//g, '-')}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+
+        // Xóa lịch sử cũ nếu cần làm buổi mới
+        function clearData() {
+            if (confirm('Bạn có chắc chắn muốn xóa toàn bộ danh sách điểm danh này không?')) {
+                attendanceList = [];
+                localStorage.removeItem('attendanceList');
+                updateUI();
+            }
+        }
     </script>
 </body>
 </html>
