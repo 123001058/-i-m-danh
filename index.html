@@ -6,21 +6,31 @@
     <title>Điểm Danh Trực Tuyến</title>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f4f9; text-align: center; margin: 0; padding: 20px; }
-        .container { background: white; padding: 30px; border-radius: 10px; max-width: 500px; margin: auto; box-shadow: 0 4px 15px rgba(0,0,0,0.1); box-sizing: border-box; }
+        .container { background: white; padding: 30px; border-radius: 10px; max-width: 600px; margin: auto; box-shadow: 0 4px 15px rgba(0,0,0,0.1); box-sizing: border-box; }
         input, select, textarea, button { padding: 12px; margin: 8px 0; font-size: 15px; width: 100%; box-sizing: border-box; border-radius: 6px; border: 1px solid #ccc; }
         textarea { resize: vertical; height: 70px; }
         button { background: #28a745; color: white; border: none; cursor: pointer; font-weight: bold; }
         button:hover { background: #218838; }
-        .error-msg { color: #dc3545; font-size: 14px; font-weight: bold; margin-bottom: 10px; display: none; }
+        .error-msg { color: #dc3545; font-size: 14px; font-weight: bold; margin: 10px 0; padding: 10px; background: #f8d7da; border-radius: 5px; display: none; }
+        .success-msg { color: #155724; font-size: 14px; font-weight: bold; margin: 10px 0; padding: 10px; background: #d4edda; border-radius: 5px; display: none; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 13px; }
+        th, td { padding: 10px; border-bottom: 1px solid #ddd; text-align: left; }
+        th { background: #343a40; color: white; }
+        .button-group { display: flex; gap: 10px; margin-top: 20px; }
+        .button-group button { flex: 1; }
+        .btn-danger { background: #dc3545; }
+        .btn-danger:hover { background: #c82333; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h2>Điểm Danh Trực Tuyến</h2>
+        <h2>🎓 Điểm Danh Trực Tuyến</h2>
 
-        <!-- Khung thông báo lỗi khi nhập sai -->
-        <div id="errorMsg" class="error-msg">❌ Thông tin không hợp lệ! Vui lòng kiểm tra lại MSSV và Họ tên.</div>
+        <!-- Thông báo lỗi -->
+        <div id="errorMsg" class="error-msg"></div>
+        <div id="successMsg" class="success-msg"></div>
 
+        <!-- Form nhập dữ liệu -->
         <form id="attendanceForm">
             <input type="text" id="mssv" placeholder="Mã số sinh viên (MSSV)" required>
             <input type="text" id="studentName" placeholder="Họ và tên của bạn" required>
@@ -33,51 +43,96 @@
                 <option value="Lập trình">Lập trình</option>
             </select>
 
-            <textarea id="note" placeholder="Ghi chú (Tóm tắt công việc)..." required></textarea>
+            <textarea id="note" placeholder="Ghi chú..." required></textarea>
 
-            <button type="submit" id="submitBtn">Xác nhận điểm danh</button>
+            <button type="submit" id="submitBtn">✓ Xác nhận điểm danh</button>
         </form>
         <p id="message" style="font-weight: bold; margin-top: 10px;"></p>
+
+        <hr style="margin: 30px 0; border: 0; border-top: 1px solid #eee;">
+
+        <!-- Bảng hiển thị trực tiếp trên web -->
+        <h3>📋 Danh sách đã điểm danh (<span id="count">0</span> người)</h3>
+        <div style="overflow-x: auto; max-height: 400px;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>STT</th>
+                        <th>MSSV</th>
+                        <th>Họ Tên</th>
+                        <th>Lĩnh Vực</th>
+                        <th>Ghi Chú</th>
+                        <th>Thời Gian</th>
+                    </tr>
+                </thead>
+                <tbody id="listBody">
+                    <!-- Dữ liệu hiển thị ở đây -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Nút xóa dữ liệu -->
+        <div class="button-group">
+            <button type="button" id="clearBtn" class="btn-danger">🗑️ Xóa tất cả</button>
+        </div>
     </div>
 
     <script>
         // URL Google Apps Script của bạn
-        const scriptURL = 'https://script.google.com/macros/s/AKfycbwRLsnaZteTCPRHGWUHlOXv4uxHZ6pEOTygAioGQJdI8bmvju9WVJJCGTvQSFNmzjiF2A/exec';
+        const scriptURL = 'https://script.google.com/macros/s/AKfycbwI34cLhrB-TiDx5enQBje9Rv5IvzgZqpw7Zh7FSNdZ1dASXdNgB9TGGgheZwo_NjAWQA/exec';
 
-        let validStudents = [];
+        // ===== DANH SÁCH SINH VIÊN TỪ FILE CSV =====
+        const validStudents = [
+            { mssv: '123000555', name: 'Nguyễn Lê Văn Duy' },
+            { mssv: '123000078', name: 'Trần Hải Nam' },
+            { mssv: '125001579', name: 'Nguyễn Thiện Nhân' },
+            { mssv: '124000534', name: 'Nguyễn Ngọc Bình An' },
+            { mssv: '125001875', name: 'Nguyễn Hoàng Phi Hằng' },
+            { mssv: '124000737', name: 'Phạm Tuấn Phát' },
+            { mssv: '125001809', name: 'Nguyễn Thanh Thới' },
+            { mssv: '124001238', name: 'Nguyễn Đức Huy' },
+            { mssv: '124001851', name: 'Nguyễn Thị Thủy' },
+            { mssv: '124000354', name: 'Phan Công Thành' },
+            { mssv: '124001589', name: 'Nguyễn Hồng Hiệp' },
+            { mssv: '125000568', name: 'Phan Quốc Bảo' },
+            { mssv: '125002381', name: 'Cao Thị Phi' },
+            { mssv: '123000651', name: 'Cao Thanh Nghĩa' },
+            { mssv: '125001648', name: 'Nguyễn Thanh Tiến' },
+            { mssv: '125000372', name: 'Nguyễn Huỳnh Minh Thông' },
+            { mssv: '123000722', name: 'Bùi Trần Thanh Sang' },
+            { mssv: '125000287', name: 'Nguyễn Duy Phúc' },
+            { mssv: '123001058', name: 'Nguyễn Khánh Hoà' },
+            { mssv: '123000185', name: 'Lê Văn Minh' },
+            { mssv: '123000872', name: 'Nguyễn Đình Hậu' },
+            { mssv: '125000798', name: 'Nguyễn Minh Khang' },
+            { mssv: '123001188', name: 'Phạm Anh Tuấn' },
+            { mssv: '125000550', name: 'Nguyễn Duy Tiến' },
+            { mssv: '123000432', name: 'Trương Thành Long' },
+            { mssv: '123000375', name: 'Phạm Đình Tài Lực' },
+            { mssv: '123000872', name: 'Độ Văn Quyến' }
+        ];
 
-        // TỰ ĐỘNG NẠP DANH SÁCH TỪ GITHUB (đọc ngầm file thông_tin_sv.csv)
-        function loadStudentList() {
-            // Thêm tham số thời gian để tránh bị trình duyệt lưu cache file cũ
-            fetch('thông_tin_sv.csv?v=' + new Date().getTime())
-                .then(response => {
-                    if (!response.ok) throw new Error("Không tìm thấy file danh sách trên GitHub");
-                    return response.text();
-                })
-                .then(csvText => {
-                    const rows = csvText.split('\n');
-                    // Bỏ qua dòng tiêu đề (stt, tên, mssv)
-                    for (let i = 1; i < rows.length; i++) {
-                        const row = rows[i].trim();
-                        if (!row) continue;
-                        
-                        const cols = row.split(',');
-                        if (cols.length >= 3) {
-                            // Cột 1 là Tên, Cột 2 là MSSV (theo cấu trúc file của bạn)
-                            const ten = cols[1].replace(/^"|"$/g, '').trim().toLowerCase();
-                            const mssv = cols[2].replace(/^"|"$/g, '').trim();
-                            
-                            validStudents.push({ mssv: mssv, name: ten });
-                        }
-                    }
-                    console.log("Đã tải xong danh sách sinh viên hợp lệ từ GitHub.");
-                })
-                .catch(error => console.error("Lỗi khi tải danh sách:", error));
+        let attendanceList = JSON.parse(localStorage.getItem('attendanceList')) || [];
+
+        function updateUI() {
+            const listBody = document.getElementById('listBody');
+            document.getElementById('count').innerText = attendanceList.length;
+            listBody.innerHTML = '';
+            
+            attendanceList.forEach((item, index) => {
+                listBody.innerHTML += `<tr>
+                    <td>${index + 1}</td>
+                    <td><b>${item.mssv}</b></td>
+                    <td>${item.name}</td>
+                    <td>${item.category}</td>
+                    <td>${item.note}</td>
+                    <td>${item.time}</td>
+                </tr>`;
+            });
         }
+        updateUI();
 
-        // Chạy hàm nạp danh sách ngay khi mở web
-        loadStudentList();
-
+        // ===== XỬ LÝ FORM SUBMIT =====
         document.getElementById('attendanceForm').addEventListener('submit', function(e) {
             e.preventDefault();
 
@@ -87,36 +142,47 @@
             const note = document.getElementById('note').value.trim();
             
             const submitBtn = document.getElementById('submitBtn');
-            const msg = document.getElementById('message');
             const errorBox = document.getElementById('errorMsg');
+            const msg = document.getElementById('message');
 
-            errorBox.style.display = 'none'; // Ẩn thông báo lỗi cũ
+            errorBox.style.display = 'none';
             msg.innerText = '';
 
-            // BƯỚC KIỂM TRA QUAN TRỌNG: Dò tìm trong danh sách
-            // So sánh MSSV và Tên (Tên không phân biệt chữ hoa chữ thường)
-            const isMatch = validStudents.some(sv => 
-                sv.mssv === inputMssv && sv.name === inputName.toLowerCase()
+            // ===== KIỂM TRA MSSV VÀ TÊN TRONG DANH SÁCH =====
+            const foundStudent = validStudents.find(sv => 
+                sv.mssv === inputMssv && sv.name.toLowerCase() === inputName.toLowerCase()
             );
 
-            if (!isMatch) {
-                // Nếu nhập sai, chặn lại luôn không cho gửi
+            if (!foundStudent) {
+                errorBox.innerText = '❌ MSSV hoặc Họ tên không chính xác! Vui lòng kiểm tra lại danh sách sinh viên.';
                 errorBox.style.display = 'block';
                 return;
             }
 
-            // Nếu đúng thông tin thì mới cho gửi lên Google Sheets
+            // ===== GỬI DỮ LIỆU LÊN GOOGLE SHEETS =====
             submitBtn.disabled = true;
             submitBtn.innerText = 'Đang gửi...';
+
+            const time = new Date().toLocaleTimeString('vi-VN') + ' ' + new Date().toLocaleDateString('vi-VN');
 
             fetch(scriptURL, { 
                 method: 'POST', 
                 mode: 'no-cors',
-                body: JSON.stringify({ mssv: inputMssv, name: inputName, category: category, note: note }) 
+                body: JSON.stringify({ 
+                    mssv: inputMssv, 
+                    name: inputName, 
+                    category: category, 
+                    note: note 
+                }) 
             })
             .then(() => {
+                // Cập nhật lên bảng trên web
+                attendanceList.push({ mssv: inputMssv, name: inputName, category, note, time });
+                localStorage.setItem('attendanceList', JSON.stringify(attendanceList));
+                updateUI();
+
                 msg.style.color = 'green';
-                msg.innerText = `Cảm ơn ${inputName} (${inputMssv}), điểm danh thành công!`;
+                msg.innerText = `✓ Cảm ơn ${inputName} (${inputMssv}), điểm danh thành công!`;
                 
                 // Reset form
                 document.getElementById('mssv').value = '';
@@ -124,15 +190,25 @@
                 document.getElementById('category').selectedIndex = 0;
                 document.getElementById('note').value = '';
                 submitBtn.disabled = false;
-                submitBtn.innerText = 'Xác nhận điểm danh';
+                submitBtn.innerText = '✓ Xác nhận điểm danh';
             })
             .catch(error => {
-                console.error('Lỗi khi gửi!', error.message);
+                console.error('Error!', error.message);
                 msg.style.color = 'red';
-                msg.innerText = 'Có lỗi xảy ra do mạng lưới, vui lòng thử lại!';
+                msg.innerText = '⚠️ Có lỗi xảy ra, vui lòng thử lại!';
                 submitBtn.disabled = false;
-                submitBtn.innerText = 'Xác nhận điểm danh';
+                submitBtn.innerText = '✓ Xác nhận điểm danh';
             });
+        });
+
+        // ===== NÚT XÓA TẤT CẢ DỮ LIỆU =====
+        document.getElementById('clearBtn').addEventListener('click', function() {
+            if (confirm('⚠️ Bạn chắc chắn muốn xóa TẤT CẢ dữ liệu điểm danh? Hành động này không thể hoàn tác!')) {
+                localStorage.removeItem('attendanceList');
+                attendanceList = [];
+                updateUI();
+                alert('✓ Đã xóa tất cả dữ liệu!');
+            }
         });
     </script>
 </body>
