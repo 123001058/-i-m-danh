@@ -5,29 +5,31 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Điểm Danh Trực Tuyến</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f4f9; text-align: center; margin: 0; padding: 20px; }
-        .container { background: white; padding: 30px; border-radius: 10px; max-width: 600px; margin: auto; box-shadow: 0 4px 15px rgba(0,0,0,0.1); box-sizing: border-box; }
-        input, select, textarea, button { padding: 12px; margin: 8px 0; font-size: 15px; width: 100%; box-sizing: border-box; border-radius: 6px; border: 1px solid #ccc; }
-        textarea { resize: vertical; height: 70px; }
-        button { background: #28a745; color: white; border: none; cursor: pointer; font-weight: bold; }
-        button:hover { background: #218838; }
-        .error-msg { color: #dc3545; font-size: 14px; font-weight: bold; margin: 10px 0; padding: 10px; background: #f8d7da; border-radius: 5px; display: none; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f8fafc; text-align: center; margin: 0; padding: 20px; }
+        .container { background: white; padding: 25px; border-radius: 12px; max-width: 550px; margin: auto; box-shadow: 0 4px 20px rgba(0,0,0,0.08); box-sizing: border-box; }
+        .badge { background: #e0f2fe; color: #0369a1; padding: 6px 12px; border-radius: 20px; font-weight: bold; font-size: 14px; display: inline-block; margin-bottom: 12px; }
+        input, select, textarea, button { padding: 12px; margin: 8px 0; font-size: 15px; width: 100%; box-sizing: border-box; border-radius: 8px; border: 1px solid #cbd5e1; outline: none; }
+        input:focus, select:focus, textarea:focus { border-color: #2563eb; }
+        input[readonly] { background-color: #f1f5f9; cursor: not-allowed; }
+        textarea { resize: vertical; height: 65px; }
+        button { background: #16a34a; color: white; border: none; cursor: pointer; font-weight: bold; font-size: 16px; margin-top: 15px; }
+        button:hover { background: #15803d; }
+        .error-msg { color: #b91c1c; font-size: 14px; font-weight: bold; margin: 10px 0; padding: 12px; background: #fee2e2; border-radius: 6px; display: none; text-align: left; }
         table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 13px; }
-        th, td { padding: 10px; border-bottom: 1px solid #ddd; text-align: left; }
-        th { background: #343a40; color: white; }
+        th, td { padding: 10px; border-bottom: 1px solid #e2e8f0; text-align: left; }
+        th { background: #0f172a; color: white; }
     </style>
 </head>
 <body>
     <div class="container">
         <h2>🎓 Điểm Danh Trực Tuyến</h2>
+        <div id="sessionBadge" class="badge">Phiên: Đang kiểm tra...</div>
 
-        <!-- Thông báo lỗi -->
         <div id="errorMsg" class="error-msg"></div>
 
-        <!-- Form nhập dữ liệu -->
         <form id="attendanceForm">
-            <input type="text" id="mssv" placeholder="Mã số sinh viên (MSSV)" required>
-            <input type="text" id="studentName" placeholder="Họ và tên của bạn" required>
+            <input type="text" id="mssv" placeholder="Nhập Mã số sinh viên (MSSV)..." required autocomplete="off">
+            <input type="text" id="studentName" placeholder="Họ và tên (Tự động điền)" readonly required>
             
             <select id="category" required>
                 <option value="" disabled selected>-- Chọn lĩnh vực / bộ phận --</option>
@@ -37,17 +39,17 @@
                 <option value="Lập trình">Lập trình</option>
             </select>
 
-            <textarea id="note" placeholder="Ghi chú..." required></textarea>
+            <textarea id="note" placeholder="Ghi chú nội dung làm việc hôm nay..." required></textarea>
 
             <button type="submit" id="submitBtn">✓ Xác nhận điểm danh</button>
         </form>
-        <p id="message" style="font-weight: bold; margin-top: 10px;"></p>
 
-        <hr style="margin: 30px 0; border: 0; border-top: 1px solid #eee;">
+        <p id="message" style="font-weight: bold; margin-top: 15px;"></p>
 
-        <!-- Bảng hiển thị trực tiếp trên web -->
-        <h3>📋 Danh sách đã điểm danh (<span id="count">0</span> người)</h3>
-        <div style="overflow-x: auto; max-height: 400px;">
+        <hr style="margin: 30px 0; border: 0; border-top: 1px solid #e2e8f0;">
+
+        <h3>📋 Đã điểm danh trên máy này (<span id="count">0</span>)</h3>
+        <div style="overflow-x: auto; max-height: 300px;">
             <table>
                 <thead>
                     <tr>
@@ -55,22 +57,17 @@
                         <th>MSSV</th>
                         <th>Họ Tên</th>
                         <th>Lĩnh Vực</th>
-                        <th>Ghi Chú</th>
                         <th>Thời Gian</th>
                     </tr>
                 </thead>
-                <tbody id="listBody">
-                    <!-- Dữ liệu hiển thị ở đây -->
-                </tbody>
+                <tbody id="listBody"></tbody>
             </table>
         </div>
     </div>
 
     <script>
-        // URL Google Apps Script của bạn
         const scriptURL = 'https://script.google.com/macros/s/AKfycbzXk3mDTkl06P5t_urONvf2wq8a1WRoXes9q57Byp3Oq9sQAdI0lR4WNd2GmXTRUOmINA/exec';
 
-        // ===== DANH SÁCH SINH VIÊN TỪ FILE CSV =====
         const validStudents = [
             { mssv: '123000555', name: 'Nguyễn Lê Vũ Duy' },
             { mssv: '123000078', name: 'Trần Hải Nam' },
@@ -90,7 +87,7 @@
             { mssv: '125000372', name: 'Nguyễn Huỳnh Minh Thông' },
             { mssv: '123000722', name: 'Bùi Trần Thanh Sang' },
             { mssv: '125000287', name: 'Nguyễn Duy Phúc' },
-            { mssv: '123001058', name: 'Nguyễn Khánh Hoà' },
+            { mssv: '123001058', name: 'Nguyễn Khánh Hoà' },
             { mssv: '123000185', name: 'Lê Văn Minh' },
             { mssv: '123000872', name: 'Nguyễn Đình Hậu' },
             { mssv: '125000798', name: 'Nguyễn Minh Khang' },
@@ -101,93 +98,138 @@
             { mssv: '123001394', name: 'Đỗ Văn Quyền' }
         ];
 
-        let attendanceList = JSON.parse(localStorage.getItem('attendanceList')) || [];
+        // 1. Kiểm tra tham số từ URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const currentSession = urlParams.get('phien');
+        const qrToken = parseInt(urlParams.get('token'), 10);
+        const errorBox = document.getElementById('errorMsg');
+        const submitBtn = document.getElementById('submitBtn');
 
+        if (currentSession) {
+            document.getElementById('sessionBadge').innerText = "Buổi học: " + currentSession;
+        } else {
+            document.getElementById('sessionBadge').innerText = "Chưa chọn buổi học";
+        }
+
+        // 2. Kiểm tra hạn mã QR (Cho phép chênh lệch +-1 chu kỳ để tránh lag mạng)
+        function verifyToken() {
+            if (!qrToken) {
+                showError("⚠️ Đường link không hợp lệ! Vui lòng quét mã trực tiếp trên màn hình máy chiếu.");
+                submitBtn.disabled = true;
+                return false;
+            }
+            const currentToken = Math.floor(Date.now() / 20000);
+            if (Math.abs(currentToken - qrToken) > 1) {
+                showError("⚠️ Mã QR đã hết hạn! Vui lòng quét lại mã trực tiếp trên máy chiếu.");
+                submitBtn.disabled = true;
+                return false;
+            }
+            return true;
+        }
+
+        function showError(msg) {
+            errorBox.innerText = msg;
+            errorBox.style.display = 'block';
+        }
+
+        verifyToken();
+
+        // 3. Tự động điền Họ Tên khi nhập MSSV
+        document.getElementById('mssv').addEventListener('input', function() {
+            const val = this.value.trim();
+            const student = validStudents.find(s => s.mssv === val);
+            if (student) {
+                document.getElementById('studentName').value = student.name;
+                errorBox.style.display = 'none';
+            } else {
+                document.getElementById('studentName').value = '';
+            }
+        });
+
+        // 4. Quản lý danh sách LocalStorage
+        let attendanceList = JSON.parse(localStorage.getItem('attendanceList')) || [];
         function updateUI() {
             const listBody = document.getElementById('listBody');
             document.getElementById('count').innerText = attendanceList.length;
             listBody.innerHTML = '';
-            
             attendanceList.forEach((item, index) => {
                 listBody.innerHTML += `<tr>
                     <td>${index + 1}</td>
                     <td><b>${item.mssv}</b></td>
                     <td>${item.name}</td>
                     <td>${item.category}</td>
-                    <td>${item.note}</td>
                     <td>${item.time}</td>
                 </tr>`;
             });
         }
         updateUI();
 
-        // ===== XỬ LÝ FORM SUBMIT =====
+        // 5. Submit Form + Lấy vị trí GPS
         document.getElementById('attendanceForm').addEventListener('submit', function(e) {
             e.preventDefault();
+            if (!verifyToken()) return;
 
             const inputMssv = document.getElementById('mssv').value.trim();
             const inputName = document.getElementById('studentName').value.trim();
             const category = document.getElementById('category').value;
             const note = document.getElementById('note').value.trim();
-            
-            const submitBtn = document.getElementById('submitBtn');
-            const errorBox = document.getElementById('errorMsg');
             const msg = document.getElementById('message');
 
-            errorBox.style.display = 'none';
-            msg.innerText = '';
-
-            // ===== KIỂM TRA MSSV VÀ TÊN TRONG DANH SÁCH =====
-            const foundStudent = validStudents.find(sv => 
-                sv.mssv === inputMssv && sv.name.toLowerCase() === inputName.toLowerCase()
-            );
-
-            if (!foundStudent) {
-                errorBox.innerText = '❌ MSSV hoặc Họ tên không chính xác! Vui lòng kiểm tra lại danh sách sinh viên.';
-                errorBox.style.display = 'block';
+            if (!inputName) {
+                showError("❌ MSSV không có trong danh sách được phép điểm danh!");
                 return;
             }
 
-            // ===== GỬI DỮ LIỆU LÊN GOOGLE SHEETS =====
             submitBtn.disabled = true;
-            submitBtn.innerText = 'Đang gửi...';
+            submitBtn.innerText = 'Đang lấy vị trí & gửi...';
 
-            const time = new Date().toLocaleTimeString('vi-VN') + ' ' + new Date().toLocaleDateString('vi-VN');
+            // Xin quyền vị trí GPS của điện thoại
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (pos) => sendData(pos.coords.latitude + ',' + pos.coords.longitude),
+                    () => sendData('Không cho phép GPS') // Vẫn gửi nếu không bật GPS
+                );
+            } else {
+                sendData('Thiết bị không hỗ trợ GPS');
+            }
 
-            fetch(scriptURL, { 
-                method: 'POST', 
-                mode: 'no-cors',
-                body: JSON.stringify({ 
-                    mssv: inputMssv, 
-                    name: inputName, 
-                    category: category, 
-                    note: note 
-                }) 
-            })
-            .then(() => {
-                // Cập nhật lên bảng trên web
-                attendanceList.push({ mssv: inputMssv, name: inputName, category, note, time });
-                localStorage.setItem('attendanceList', JSON.stringify(attendanceList));
-                updateUI();
+            function sendData(locationInfo) {
+                const time = new Date().toLocaleTimeString('vi-VN') + ' ' + new Date().toLocaleDateString('vi-VN');
 
-                msg.style.color = 'green';
-                msg.innerText = `✓ Cảm ơn ${inputName} (${inputMssv}), điểm danh thành công!`;
-                
-                // Reset form
-                document.getElementById('mssv').value = '';
-                document.getElementById('studentName').value = '';
-                document.getElementById('category').selectedIndex = 0;
-                document.getElementById('note').value = '';
-                submitBtn.disabled = false;
-                submitBtn.innerText = '✓ Xác nhận điểm danh';
-            })
-            .catch(error => {
-                console.error('Error!', error.message);
-                msg.style.color = 'red';
-                msg.innerText = '⚠️ Có lỗi xảy ra, vui lòng thử lại!';
-                submitBtn.disabled = false;
-                submitBtn.innerText = '✓ Xác nhận điểm danh';
-            });
+                fetch(scriptURL, { 
+                    method: 'POST', 
+                    mode: 'no-cors',
+                    body: JSON.stringify({ 
+                        phien: currentSession || 'Không rõ',
+                        mssv: inputMssv, 
+                        name: inputName, 
+                        category: category, 
+                        note: note,
+                        location: locationInfo
+                    }) 
+                })
+                .then(() => {
+                    attendanceList.push({ mssv: inputMssv, name: inputName, category, time });
+                    localStorage.setItem('attendanceList', JSON.stringify(attendanceList));
+                    updateUI();
+
+                    msg.style.color = '#16a34a';
+                    msg.innerText = `✓ Cảm ơn ${inputName}, bạn đã điểm danh thành công!`;
+                    
+                    // Reset Form
+                    document.getElementById('mssv').value = '';
+                    document.getElementById('studentName').value = '';
+                    document.getElementById('category').selectedIndex = 0;
+                    document.getElementById('note').value = '';
+                    submitBtn.innerText = '✓ Xác nhận điểm danh';
+                })
+                .catch(error => {
+                    msg.style.color = '#dc2626';
+                    msg.innerText = '⚠️ Lỗi kết nối, vui lòng thử lại!';
+                    submitBtn.disabled = false;
+                    submitBtn.innerText = '✓ Xác nhận điểm danh';
+                });
+            }
         });
     </script>
 </body>
