@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hệ Thống Điểm Danh Trực Tuyến</title>
+    <title>Điểm Danh Trực Tuyến</title>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f4f9; text-align: center; margin: 0; padding: 20px; }
         .container { background: white; padding: 30px; border-radius: 10px; max-width: 500px; margin: auto; box-shadow: 0 4px 15px rgba(0,0,0,0.1); box-sizing: border-box; }
@@ -16,107 +16,83 @@
         table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 14px; }
         th, td { padding: 8px; border-bottom: 1px solid #ddd; text-align: left; }
         th { background: #007bff; color: white; }
-        .hidden { display: none; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h2>Hệ Thống Điểm Danh</h2>
+        <h2>Điểm Danh Trực Tuyến</h2>
 
-        <!-- BƯỚC 1: NHẬP MẬT KHẨU ĐỂ MỞ TRANG -->
-        <div id="authScreen">
-            <p style="color: #555;">Vui lòng nhập mật khẩu quản trị để truy cập trang điểm danh:</p>
-            <input type="password" id="accessPass" placeholder="Nhập mật khẩu...">
-            <button type="button" onclick="checkPassword()" style="background: #007bff;">Truy Cập</button>
-            <p id="errorMsg" style="color: red; font-size: 14px; font-weight: bold;"></p>
-        </div>
+        <!-- Hiển thị trạng thái cổng -->
+        <div id="statusIndicator" class="status-box" style="background: #e2e8f0; color: #475569;">Đang kiểm tra trạng thái...</div>
 
-        <!-- BƯỚC 2: GIAO DIỆN CHÍNH (ẨN ĐẾN KHI NHẬP ĐÚNG MẬT KHẨU) -->
-        <div id="mainContent" class="hidden">
-            <div id="statusIndicator" class="status-box open">Cổng đang MỞ</div>
-            
-            <!-- Nút bật/tắt nhanh trạng thái mở/đóng cổng -->
-            <button type="button" id="toggleGateBtn" onclick="toggleGateState()" style="background: #ffc107; color: #000; margin-bottom: 15px;">Đóng Cổng Điểm Danh</button>
+        <!-- Form điểm danh -->
+        <form id="attendanceForm">
+            <input type="text" id="studentId" placeholder="Nhập mã sinh viên / tên của bạn" required>
+            <button type="submit" id="submitBtn">Xác nhận điểm danh</button>
+        </form>
+        <p id="message" style="font-weight: bold; margin-top: 10px;"></p>
 
-            <form id="attendanceForm">
-                <input type="text" id="studentId" placeholder="Nhập mã sinh viên / tên của bạn" required>
-                <button type="submit" id="submitBtn">Xác nhận điểm danh</button>
-            </form>
-            <p id="message" style="font-weight: bold; margin-top: 10px;"></p>
-
-            <h3 style="margin-top: 25px;">Danh sách đã điểm danh (<span id="count">0</span>)</h3>
-            <table>
-                <thead>
-                    <tr>
-                        <th>STT</th>
-                        <th>Tên / MSSV</th>
-                        <th>Thời gian</th>
-                    </tr>
-                </thead>
-                <tbody id="listBody"></tbody>
-            </table>
-        </div>
+        <!-- Danh sách hiển thị -->
+        <h3 style="margin-top: 25px;">Danh sách đã điểm danh (<span id="count">0</span>)</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>STT</th>
+                    <th>Tên / MSSV</th>
+                    <th>Thời gian</th>
+                </tr>
+            </thead>
+            <tbody id="listBody"></tbody>
+        </table>
     </div>
 
     <script>
-        // --- 1 MẬT KHẨU DUY NHẤT CỦA BẠN (Có thể đổi chữ '123' thành mật khẩu bạn muốn) ---
-        const ADMIN_PASSWORD = "123";
-
-        let isGateOpen = localStorage.getItem('isGateOpen') !== 'false';
+        let isGateOpen = false;
         let attendanceList = JSON.parse(localStorage.getItem('attendanceList')) || [];
 
-        // Kiểm tra mật khẩu khi mở link
-        function checkPassword() {
-            const pass = document.getElementById('accessPass').value;
-            if (pass === ADMIN_PASSWORD) {
-                document.getElementById('authScreen').classList.add('hidden');
-                document.getElementById('mainContent').classList.remove('hidden');
+        // Tự động kiểm tra trạng thái từ file status.json trên GitHub mỗi khi có người quét QR
+        async function checkGateStatus() {
+            try {
+                // Lấy link file status.json trực tiếp từ GitHub của bạn (Thay đường dẫn raw của bạn vào đây nếu cần, hoặc dùng đường dẫn tương đối)
+                const response = await fetch('./status.json?t=' + new Date().getTime());
+                const data = await response.json();
+                isGateOpen = data.isOpen;
                 updateUI();
-            } else {
-                document.getElementById('errorMsg').innerText = 'Sai mật khẩu! Vui lòng thử lại.';
+            } catch (error) {
+                console.error('Không tải được trạng thái cổng');
             }
         }
 
         function updateUI() {
             const indicator = document.getElementById('statusIndicator');
-            const toggleBtn = document.getElementById('toggleGateBtn');
-            const formInputs = document.getElementById('studentId');
+            const studentInput = document.getElementById('studentId');
             const submitBtn = document.getElementById('submitBtn');
 
             if (isGateOpen) {
                 indicator.className = 'status-box open';
                 indicator.innerText = 'Cổng điểm danh đang MỞ';
-                toggleBtn.style.background = '#dc3545';
-                toggleBtn.innerText = 'Đóng Cổng Điểm Danh';
-                formInputs.disabled = false;
+                studentInput.disabled = false;
                 submitBtn.disabled = false;
             } else {
                 indicator.className = 'status-box closed';
                 indicator.innerText = 'Cổng điểm danh đã ĐÓNG';
-                toggleBtn.style.background = '#28a745';
-                toggleBtn.innerText = 'Mở Lại Cổng Điểm Danh';
-                formInputs.disabled = true;
+                studentInput.disabled = true;
                 submitBtn.disabled = true;
             }
 
-            // Hiển thị danh sách lên bảng
+            // Hiển thị danh sách
             const listBody = document.getElementById('listBody');
             document.getElementById('count').innerText = attendanceList.length;
             listBody.innerHTML = '';
-            
             attendanceList.forEach((item, index) => {
                 listBody.innerHTML += `<tr><td>${index + 1}</td><td>${item.name}</td><td>${item.time}</td></tr>`;
             });
         }
 
-        // Bật/tắt trạng thái mở/đóng cổng nhanh
-        function toggleGateState() {
-            isGateOpen = !isGateOpen;
-            localStorage.setItem('isGateOpen', isGateOpen);
-            updateUI();
-        }
+        // Kiểm tra trạng thái ngay khi mở trang
+        checkGateStatus();
 
-        // Xử lý khi điểm danh
+        // Xử lý khi bấm gửi điểm danh
         document.getElementById('attendanceForm').addEventListener('submit', function(e) {
             e.preventDefault();
             if (!isGateOpen) return;
