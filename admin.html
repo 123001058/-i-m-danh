@@ -5,63 +5,43 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Màn Hình Máy Chiếu Điểm Danh</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; text-align: center; background: #2c3e50; color: white; margin: 0; padding: 50px; }
-        .dashboard { background: white; color: #333; padding: 40px; border-radius: 15px; max-width: 600px; margin: auto; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        h1 { margin-top: 0; color: #2c3e50; }
-        input { padding: 15px; font-size: 18px; width: 90%; margin-bottom: 20px; border: 2px solid #bdc3c7; border-radius: 8px; text-align: center; }
-        button { padding: 15px 30px; font-size: 18px; margin: 10px; cursor: pointer; border: none; border-radius: 8px; font-weight: bold; transition: 0.2s; }
-        .btn-on { background: #28a745; color: white; }
-        .btn-on:hover { background: #218838; }
-        .btn-off { background: #dc3545; color: white; }
-        .btn-off:hover { background: #c82333; }
-        .btn-fullscreen { background: #007bff; color: white; display: none; margin: 20px auto; }
-        .btn-fullscreen:hover { background: #0056b3; }
-        
-        #qrArea { margin-top: 30px; min-height: 300px; }
-        
-        /* Cấu hình vùng chứa QR */
-        #qrWrapper { background: white; padding: 20px; border-radius: 10px; display: inline-block; }
-        #qrImage { width: 300px; height: 300px; display: none; margin: auto; border: 10px solid white; box-shadow: 0 5px 15px rgba(0,0,0,0.2); cursor: zoom-in; }
-        
-        .status { font-size: 18px; font-weight: bold; margin-top: 15px; color: #dc3545; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; text-align: center; background: #1e293b; color: white; margin: 0; padding: 40px; }
+        .dashboard { background: white; color: #1e293b; padding: 30px; border-radius: 16px; max-width: 600px; margin: auto; box-shadow: 0 10px 30px rgba(0,0,0,0.4); }
+        h1 { margin-top: 0; font-size: 26px; }
+        input { padding: 14px; font-size: 16px; width: 90%; margin-bottom: 15px; border: 2px solid #cbd5e1; border-radius: 8px; text-align: center; outline: none; }
+        button { padding: 12px 24px; font-size: 16px; margin: 6px; cursor: pointer; border: none; border-radius: 8px; font-weight: bold; transition: 0.2s; }
+        .btn-on { background: #16a34a; color: white; }
+        .btn-on:hover { background: #15803d; }
+        .btn-off { background: #dc2626; color: white; }
+        .btn-off:hover { background: #b91c1c; }
+        .btn-fullscreen { background: #2563eb; color: white; display: none; margin: 15px auto; }
+        .status { font-size: 16px; font-weight: bold; margin-top: 15px; color: #dc2626; }
+        #qrArea { margin-top: 20px; display: none; }
+        #qrWrapper { background: white; padding: 15px; border-radius: 12px; display: inline-block; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        #qrImage { width: 300px; height: 300px; display: block; margin: auto; cursor: zoom-in; }
+        .progress-bar-container { width: 300px; background: #e2e8f0; height: 8px; border-radius: 4px; margin: 15px auto 5px; overflow: hidden; }
+        .progress-bar { width: 100%; height: 100%; background: #2563eb; transition: width 1s linear; }
+        .timer-text { font-size: 13px; color: #64748b; margin-bottom: 10px; }
 
-        /* Cấu hình khi vào chế độ Toàn màn hình */
+        /* Chế độ toàn màn hình */
         #qrWrapper:fullscreen {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            background-color: white;
-            width: 100vw;
-            height: 100vh;
+            display: flex; flex-direction: column; justify-content: center; align-items: center; background: white; width: 100vw; height: 100vh;
         }
-        #qrWrapper:fullscreen #qrImage {
-            width: 70vh; /* Phóng to theo chiều cao màn hình */
-            height: 70vh;
-            max-width: 90vw;
-            max-height: 90vw;
-            box-shadow: none;
-            cursor: zoom-out;
-        }
-        #qrWrapper:fullscreen .fs-title {
-            display: block !important;
-            font-size: 40px;
-            color: #333;
-            margin-bottom: 30px;
-            font-weight: bold;
-        }
+        #qrWrapper:fullscreen #qrImage { width: 65vh; height: 65vh; max-width: 85vw; max-height: 85vw; cursor: zoom-out; }
+        #qrWrapper:fullscreen .fs-title { display: block !important; font-size: 36px; color: #1e293b; margin-bottom: 20px; font-weight: bold; }
+        #qrWrapper:fullscreen .progress-bar-container { width: 50vw; height: 12px; }
     </style>
 </head>
 <body>
     <div class="dashboard">
-        <h1>Bảng Điều Khiển Điểm Danh</h1>
-        <p>Gõ tên buổi học và bật mã QR lên máy chiếu</p>
+        <h1>🎓 Bảng Điều Khiển Điểm Danh</h1>
+        <p style="color: #64748b;">Mã QR tự động cập nhật mỗi 20 giây để chống gian lận</p>
 
-        <input type="text" id="sessionName" placeholder="VD: Buổi 1 - Thực hành CNC (10/10)">
+        <input type="text" id="sessionName" placeholder="Tên buổi học (VD: Buổi 1 - Thực hành)">
         
         <div>
             <button class="btn-on" onclick="turnOn()">🟢 Mở Điểm Danh</button>
-            <button class="btn-off" onclick="turnOff()">🔴 Tắt Điểm Danh</button>
+            <button class="btn-off" onclick="turnOff()">🔴 Đóng Điểm Danh</button>
         </div>
 
         <div class="status" id="statusText">Trạng thái: ĐÃ ĐÓNG</div>
@@ -69,72 +49,84 @@
         <div id="qrArea">
             <div id="qrWrapper">
                 <div class="fs-title" id="fsSessionName" style="display: none;"></div>
-                <!-- Bấm vào ảnh cũng tự động phóng to/thu nhỏ -->
-                <img id="qrImage" src="" alt="Mã QR Điểm Danh" onclick="toggleFullScreen()" title="Bấm để phóng to/thu nhỏ">
+                <img id="qrImage" src="" alt="Mã QR Điểm Danh" onclick="toggleFullScreen()" title="Bấm để phóng to">
+                <div class="progress-bar-container">
+                    <div id="progressBar" class="progress-bar"></div>
+                </div>
+                <div class="timer-text">Mã mới sau: <span id="secondsLeft" style="font-weight: bold; color: #2563eb;">20</span>s</div>
             </div>
+            <br>
             <button id="fsBtn" class="btn-fullscreen" onclick="toggleFullScreen()">🔲 Phóng To QR</button>
         </div>
     </div>
 
     <script>
         const BASE_LINK = "https://123001058.github.io/DIEM_DANH/"; 
+        const REFRESH_SECONDS = 20;
+        let qrInterval = null;
+        let progressInterval = null;
+        let secondsRemaining = REFRESH_SECONDS;
+
+        function generateQR() {
+            let session = document.getElementById('sessionName').value.trim();
+            // Token đổi theo block 20 giây
+            let timeToken = Math.floor(Date.now() / (REFRESH_SECONDS * 1000));
+            let fullLink = `${BASE_LINK}?phien=${encodeURIComponent(session)}&token=${timeToken}`;
+            
+            let qrUrl = "https://api.qrserver.com/v1/create-qr-code/?size=600x600&data=" + encodeURIComponent(fullLink);
+            document.getElementById('qrImage').src = qrUrl;
+        }
 
         function turnOn() {
             let session = document.getElementById('sessionName').value.trim();
             if(!session) { 
-                alert("Bạn phải nhập tên phiên điểm danh trước khi mở!"); 
+                alert("Vui lòng nhập tên buổi học!"); 
                 return; 
             }
 
-            let fullLink = BASE_LINK + "?phien=" + encodeURIComponent(session);
-            
-            // Dùng API tạo mã QR kích thước lớn để không bị mờ khi phóng to (600x600)
-            let qrUrl = "https://api.qrserver.com/v1/create-qr-code/?size=600x600&data=" + encodeURIComponent(fullLink);
-            
-            document.getElementById('qrImage').src = qrUrl;
-            document.getElementById('qrImage').style.display = "block";
+            document.getElementById('qrArea').style.display = "block";
             document.getElementById('fsBtn').style.display = "inline-block";
-            
-            let statusText = document.getElementById('statusText');
-            statusText.innerText = "Trạng thái: ĐANG MỞ KẾT NỐI (" + session + ")";
-            statusText.style.color = "#28a745";
-
-            // Cập nhật tiêu đề khi vào chế độ toàn màn hình
+            document.getElementById('statusText').innerText = "Trạng thái: ĐANG MỞ KẾT NỐI (" + session + ")";
+            document.getElementById('statusText').style.color = "#16a34a";
             document.getElementById('fsSessionName').innerText = "Điểm Danh: " + session;
+
+            // Reset và chạy bộ đếm
+            clearInterval(qrInterval);
+            clearInterval(progressInterval);
+            secondsRemaining = REFRESH_SECONDS;
+            generateQR();
+
+            progressInterval = setInterval(() => {
+                secondsRemaining--;
+                document.getElementById('secondsLeft').innerText = secondsRemaining;
+                document.getElementById('progressBar').style.width = (secondsRemaining / REFRESH_SECONDS * 100) + '%';
+                
+                if (secondsRemaining <= 0) {
+                    secondsRemaining = REFRESH_SECONDS;
+                    generateQR();
+                }
+            }, 1000);
         }
 
         function turnOff() {
-            document.getElementById('qrImage').style.display = "none";
-            document.getElementById('qrImage').src = "";
+            clearInterval(qrInterval);
+            clearInterval(progressInterval);
+            document.getElementById('qrArea').style.display = "none";
             document.getElementById('fsBtn').style.display = "none";
-            
-            let statusText = document.getElementById('statusText');
-            statusText.innerText = "Trạng thái: ĐÃ ĐÓNG";
-            statusText.style.color = "#dc3545";
+            document.getElementById('statusText').innerText = "Trạng thái: ĐÃ ĐÓNG";
+            document.getElementById('statusText').style.color = "#dc2626";
 
-            // Thoát toàn màn hình nếu đang bật
             if (document.fullscreenElement) {
                 document.exitFullscreen();
             }
         }
 
-        // Hàm xử lý Phóng to / Thu nhỏ
         function toggleFullScreen() {
             let elem = document.getElementById("qrWrapper");
             if (!document.fullscreenElement) {
-                // Yêu cầu bật toàn màn hình
-                if (elem.requestFullscreen) {
-                    elem.requestFullscreen();
-                } else if (elem.webkitRequestFullscreen) { /* Safari */
-                    elem.webkitRequestFullscreen();
-                } else if (elem.msRequestFullscreen) { /* IE11 */
-                    elem.msRequestFullscreen();
-                }
+                if (elem.requestFullscreen) elem.requestFullscreen();
             } else {
-                // Thoát toàn màn hình
-                if (document.exitFullscreen) {
-                    document.exitFullscreen();
-                }
+                if (document.exitFullscreen) document.exitFullscreen();
             }
         }
     </script>
