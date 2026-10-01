@@ -3,118 +3,128 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trang Điểm Danh</title>
+    <title>Hệ Thống Điểm Danh Trực Tuyến</title>
     <style>
-        body { font-family: Arial, sans-serif; text-align: center; margin-top: 50px; background: #f4f4f9; }
-        .container { background: white; padding: 30px; border-radius: 8px; display: inline-block; box-shadow: 0 0 10px rgba(0,0,0,0.1); width: 90%; max-width: 400px; box-sizing: border-box; }
-        input, button { padding: 10px; margin: 10px 0; font-size: 16px; width: 100%; box-sizing: border-box; }
-        button { background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f4f9; text-align: center; margin: 0; padding: 20px; }
+        .container { background: white; padding: 30px; border-radius: 10px; max-width: 500px; margin: auto; box-shadow: 0 4px 15px rgba(0,0,0,0.1); box-sizing: border-box; }
+        input, button { padding: 12px; margin: 10px 0; font-size: 16px; width: 100%; box-sizing: border-box; border-radius: 6px; border: 1px solid #ccc; }
+        button { background: #28a745; color: white; border: none; cursor: pointer; font-weight: bold; }
         button:hover { background: #218838; }
-        #message { font-weight: bold; margin-top: 15px; }
-        
-        /* Khu vực Admin ẩn đi cho gọn */
-        .admin-panel { margin-top: 30px; border-top: 1px dashed #ccc; padding-top: 15px; font-size: 14px; text-align: left; }
-        .status-box { font-weight: bold; padding: 5px; text-align: center; margin-bottom: 10px; border-radius: 4px; }
+        .status-box { font-weight: bold; padding: 10px; margin-bottom: 15px; border-radius: 6px; }
         .open { background: #d4edda; color: #155724; }
         .closed { background: #f8d7da; color: #721c24; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 14px; }
+        th, td { padding: 8px; border-bottom: 1px solid #ddd; text-align: left; }
+        th { background: #007bff; color: white; }
+        .admin-section { margin-top: 30px; border-top: 2px dashed #ddd; padding-top: 15px; text-align: left; background: #fafafa; padding: 15px; border-radius: 6px; }
     </style>
 </head>
 <body>
     <div class="container">
         <h2>Điểm Danh Trực Tuyến</h2>
         
-        <!-- Trạng thái hiển thị cho mọi người thấy -->
+        <!-- Hiển thị trạng thái cổng cho mọi người thấy -->
         <div id="statusIndicator" class="status-box open">Cổng đang MỞ</div>
 
+        <!-- Form dành cho sinh viên điểm danh -->
         <form id="attendanceForm">
-            <input type="text" id="studentId" placeholder="Nhập mã sinh viên / tên của bạn" required><br>
+            <input type="text" id="studentId" placeholder="Nhập mã sinh viên / tên của bạn" required>
             <button type="submit" id="submitBtn">Xác nhận điểm danh</button>
         </form>
-        <p id="message"></p>
+        <p id="message" style="font-weight: bold; margin-top: 10px;"></p>
 
-        <!-- KHU VỰC QUẢN TRỊ VIÊN -->
-        <div class="admin-panel">
-            <details>
-                <summary style="cursor: pointer; color: #007bff; font-weight: bold;">Dành cho Quản trị viên (Admin)</summary>
-                <p style="margin-top: 10px; font-size: 12px; color: #666;">Nhập mật khẩu để bật/tắt cổng điểm danh:</p>
-                <input type="password" id="adminPassword" placeholder="Nhập mật khẩu admin">
-                <button type="button" onclick="toggleAttendance()" style="background: #007bff; margin-top: 5px;">Đổi Trạng Thái Mở/Đóng</button>
-            </details>
+        <!-- KHU VỰC QUẢN TRỊ VIÊN (Admin ngay trên web) -->
+        <div class="admin-section">
+            <h4 style="margin: 0 0 10px 0; color: #333;">Khu Vực Quản Trị (Admin)</h4>
+            <input type="password" id="adminPass" placeholder="Nhập mật khẩu admin">
+            <button type="button" onclick="toggleGate()" style="background: #007bff;">Bật / Tắt Cổng Điểm Danh</button>
+            <p id="adminMsg" style="font-size: 13px; color: #666; margin: 5px 0 0 0;"></p>
         </div>
+
+        <!-- Danh sách đã điểm danh hiển thị tại chỗ -->
+        <h3 style="margin-top: 25px;">Danh sách đã điểm danh (<span id="count">0</span>)</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>STT</th>
+                    <th>Tên / MSSV</th>
+                    <th>Thời gian</th>
+                </tr>
+            </thead>
+            <tbody id="listBody"></tbody>
+        </table>
     </div>
 
     <script>
-        // URL Google Apps Script của bạn
-        const scriptURL = 'https://script.google.com/macros/s/AKfycbwKnUATrVs4xIXN-deWsYkcu1x3S_Jptbshkw5a36y-DQZ-3LNtjfTtH3sFo82zEzwtxA/exec';
+        // Mật khẩu Admin mặc định (Bạn có thể sửa lại tùy ý bên dưới)
+        const ADMIN_PASSWORD = "123";
 
-        // Mật khẩu Admin của bạn (Bạn có thể đổi chữ '123456' thành mật khẩu riêng của bạn)
-        const ADMIN_PASS = '123456'; 
-
-        // Lấy trạng thái từ bộ nhớ trình duyệt (mặc định là true - mở)
-        let isAttendanceOpen = localStorage.getItem('isAttendanceOpen') !== 'false';
+        // Lấy trạng thái cổng và danh sách từ bộ nhớ trình duyệt (localStorage)
+        let isGateOpen = localStorage.getItem('isGateOpen') !== 'false';
+        let attendanceList = JSON.parse(localStorage.getItem('attendanceList')) || [];
 
         function updateUI() {
             const indicator = document.getElementById('statusIndicator');
-            if (isAttendanceOpen) {
+            const formInputs = document.getElementById('studentId');
+            const submitBtn = document.getElementById('submitBtn');
+
+            if (isGateOpen) {
                 indicator.className = 'status-box open';
-                indicator.innerText = 'Cổng đang MỞ';
+                indicator.innerText = 'Cổng điểm danh đang MỞ';
+                formInputs.disabled = false;
+                submitBtn.disabled = false;
             } else {
                 indicator.className = 'status-box closed';
-                indicator.innerText = 'Cổng đã ĐÓNG';
+                indicator.innerText = 'Cổng điểm danh đã ĐÓNG';
+                formInputs.disabled = true;
+                submitBtn.disabled = true;
             }
+
+            // Hiển thị danh sách
+            const listBody = document.getElementById('listBody');
+            document.getElementById('count').innerText = attendanceList.length;
+            listBody.innerHTML = '';
+            attendanceList.forEach((item, index) => {
+                listBody.innerHTML += `<tr><td>${index + 1}</td><td>${item.name}</td><td>${item.time}</td></tr>`;
+            });
         }
         updateUI();
 
-        // Hàm đổi trạng thái dành cho Admin
-        function toggleAttendance() {
-            const pass = document.getElementById('adminPassword').value;
-            if (pass !== ADMIN_PASS) {
-                alert('Sai mật khẩu Admin!');
-                return;
-            }
-            isAttendanceOpen = !isAttendanceOpen;
-            localStorage.setItem('isAttendanceOpen', isAttendanceOpen);
-            updateUI();
-            alert('Đã đổi trạng thái thành công! Cổng hiện tại: ' + (isAttendanceOpen ? 'MỞ' : 'ĐÓNG'));
-            document.getElementById('adminPassword').value = '';
-        }
-
-        // Xử lý khi bấm điểm danh
+        // Xử lý điểm danh
         document.getElementById('attendanceForm').addEventListener('submit', function(e) {
             e.preventDefault();
-            const messageEl = document.getElementById('message');
-            const submitBtn = document.getElementById('submitBtn');
+            if (!isGateOpen) return;
 
-            if (!isAttendanceOpen) {
-                messageEl.style.color = 'red';
-                messageEl.innerText = 'Cổng điểm danh đã ĐÓNG! Không thể điểm danh lúc này.';
+            const name = document.getElementById('studentId').value.trim();
+            const time = new Date().toLocaleTimeString() + ' ' + new Date().toLocaleDateString();
+
+            attendanceList.push({ name, time });
+            localStorage.setItem('attendanceList', JSON.stringify(attendanceList));
+
+            document.getElementById('message.style.color = 'green';
+            document.getElementById('message').innerText = `Điểm danh thành công cho: ${name}!`;
+            document.getElementById('studentId').value = '';
+            updateUI();
+        });
+
+        // Hàm bật/tắt cổng dành cho Admin
+        function toggleGate() {
+            const pass = document.getElementById('adminPass').value;
+            const adminMsg = document.getElementById('adminMsg');
+
+            if (pass !== ADMIN_PASSWORD) {
+                adminMsg.style.color = 'red';
+                adminMsg.innerText = 'Sai mật khẩu Admin!';
                 return;
             }
 
-            const studentId = document.getElementById('studentId').value;
-            submitBtn.disabled = true;
-            submitBtn.innerText = 'Đang gửi...';
-
-            fetch(scriptURL, { 
-                method: 'POST', 
-                mode: 'no-cors',
-                body: JSON.stringify({ studentId: studentId }) 
-            })
-            .then(() => {
-                messageEl.style.color = 'green';
-                messageEl.innerText = `Điểm danh thành công cho: ${studentId}!`;
-                document.getElementById('studentId').value = '';
-                submitBtn.disabled = false;
-                submitBtn.innerText = 'Xác nhận điểm danh';
-            })
-            .catch(error => {
-                console.error('Error!', error.message);
-                messageEl.style.color = 'red';
-                messageEl.innerText = 'Có lỗi xảy ra, vui lòng thử lại!';
-                submitBtn.disabled = false;
-                submitBtn.innerText = 'Xác nhận điểm danh';
-            });
-        });
+            isGateOpen = !isGateOpen;
+            localStorage.setItem('isGateOpen', isGateOpen);
+            adminMsg.style.color = 'green';
+            adminMsg.innerText = 'Đã đổi trạng thái thành công sang: ' + (isGateOpen ? 'MỞ' : 'ĐÓNG');
+            document.getElementById('adminPass').value = '';
+            updateUI();
+        }
     </script>
 </body>
 </html>
