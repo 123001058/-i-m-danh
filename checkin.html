@@ -19,7 +19,7 @@
     padding:32px;max-width:440px;width:100%;
     box-shadow:0 4px 30px rgba(11,46,92,.06);
   }
-  .logo-top{height:70px;display:block;margin:0 auto 20px}
+  .logo-top{display:block;margin:0 auto 20px}
   h1{font-size:19px;font-weight:800;text-align:center;margin-bottom:6px}
   .sub{text-align:center;color:#8896AB;font-size:12.5px;margin-bottom:22px}
   .badge{
@@ -55,7 +55,20 @@
 </head>
 <body>
 <div class="card">
-  <img src="logo.png.md" alt="LHU" class="logo-top">
+  <svg class="logo-top" width="70" height="70" viewBox="0 0 120 120">
+    <defs>
+      <linearGradient id="lgGold3" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#E5B93C"/>
+        <stop offset="100%" stop-color="#B8860B"/>
+      </linearGradient>
+    </defs>
+    <circle cx="60" cy="60" r="56" fill="url(#lgGold3)"/>
+    <circle cx="60" cy="60" r="50" fill="none" stroke="#fff" stroke-width="2" opacity="0.5"/>
+    <path d="M30 52 L60 38 L90 52 L60 66 Z" fill="#fff"/>
+    <rect x="42" y="62" width="36" height="18" rx="2" fill="#fff" opacity="0.9"/>
+    <line x1="86" y1="50" x2="86" y2="72" stroke="#fff" stroke-width="2"/>
+    <circle cx="86" cy="75" r="3" fill="#fff"/>
+  </svg>
   <h1>Điểm danh trực tuyến</h1>
   <p class="sub">Xác thực thiết bị · Vị trí GPS · Chống gian lận</p>
 
@@ -98,7 +111,6 @@ function showMsg(t, type = 'err') {
   msg.style.display = 'block';
 }
 
-/* ---------- Lấy GPS ---------- */
 function getLocation() {
   return new Promise(resolve => {
     if (!navigator.geolocation) return resolve('');
@@ -110,7 +122,6 @@ function getLocation() {
   });
 }
 
-/* ---------- Khởi tạo ---------- */
 (async function init() {
   if (!session || !qrToken) {
     badge.className = 'badge err';
@@ -145,7 +156,6 @@ function getLocation() {
   form.style.display = 'block';
 })();
 
-/* ---------- Autofill MSSV ---------- */
 document.getElementById('mssv').addEventListener('input', e => {
   const sv = validStudents.find(s => s.mssv === e.target.value.trim());
   document.getElementById('name').value = sv ? sv.name : '';
@@ -160,7 +170,6 @@ document.getElementById('mssv').addEventListener('input', e => {
   }
 });
 
-/* ---------- Submit ---------- */
 document.getElementById('form').addEventListener('submit', async e => {
   e.preventDefault();
   const mssv = document.getElementById('mssv').value.trim();
