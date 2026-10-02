@@ -5,12 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Quản Lý Điểm Danh</title>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<script src="config.js?v=20250102"></script>
+<script src="config.js?v=20250104"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
-  if (sessionStorage.getItem('admin_auth') !== '1') {
-    location.replace('index.html');
-  }
+  if (sessionStorage.getItem('admin_auth') !== '1') location.replace('index.html');
 </script>
 <style>
   *{margin:0;padding:0;box-sizing:border-box}
@@ -55,7 +53,7 @@
   .timer-info b{color:#0B2E5C;font-weight:700}
   .timer-info .warn b{color:#a37b18}
   .progress-bar{width:100%;max-width:252px;height:4px;background:#f1ebdc;border-radius:2px;margin:8px auto 0;overflow:hidden}
-  .progress-fill{height:100%;background:#D4A537;border-radius:2px;transition:width 0.2s linear}
+  .progress-fill{height:100%;background:#D4A537;border-radius:2px;transition:width .25s linear}
   .stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
   .stat-box{background:#fbfaf6;border:1px solid #f1ebdc;border-radius:12px;padding:16px;text-align:center}
   .stat-label{font-size:10.5px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:#8896AB}
@@ -85,33 +83,41 @@
   tr:hover{background:#fbfaf6}
   .student-cell{display:flex;align-items:center;gap:10px}
   .avatar{width:32px;height:32px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;color:#fff;background:#0B2E5C}
+  .dashboard-area{display:none}
+  .dashboard-area.show{display:grid}
+  .empty-state{background:#fff;border:1px dashed #D4A537;border-radius:16px;padding:60px 24px;text-align:center}
+  .empty-state svg{opacity:.35;margin-bottom:16px}
+  .empty-state h3{font-size:16px;font-weight:800;margin-bottom:6px}
+  .empty-state p{font-size:13px;color:#8896AB;line-height:1.6;max-width:400px;margin:0 auto}
 
-  /* ===== FULLSCREEN TƯƠNG THÍCH ===== */
-  .qr-fullscreen {
-    position: fixed !important; inset: 0 !important; z-index: 9999 !important;
-    background: #0B2E5C !important; display: flex !important; flex-direction: column;
-    align-items: center; justify-content: center; padding: 20px; gap: 24px;
-    margin: 0 !important; border-radius: 0 !important; box-shadow: none !important;
-  }
-  .qr-fullscreen #qrWrapper { background: #fff !important; padding: 32px !important; border-radius: 24px !important; box-shadow: 0 0 60px rgba(0,0,0,.5); }
-  .qr-fullscreen #qrCanvas, .qr-fullscreen #qrCanvas img, .qr-fullscreen #qrCanvas canvas { width: min(65vh, 65vw) !important; height: min(65vh, 65vw) !important; }
-  .qr-fullscreen .qr-title { color: #fff !important; font-size: 20px !important; letter-spacing: 3px !important; margin-bottom: 0 !important; }
-  .qr-fullscreen .progress-bar { max-width: min(65vh, 65vw) !important; width: 100% !important; height: 8px !important; background: rgba(255,255,255,.2) !important; }
-  .qr-fullscreen .progress-fill { background: #D4A537 !important; }
-  .qr-fullscreen .timer-info { color: #cbd5e1 !important; font-size: 16px !important; max-width: min(65vh, 65vw) !important; }
-  .qr-fullscreen .timer-info b { color: #fff !important; font-size: 18px !important; }
-  .qr-fullscreen .btn-full { background: #fff !important; color: #0B2E5C !important; font-size: 15px !important; padding: 14px 32px !important; width: auto !important; max-width: 320px; }
-  .qr-fullscreen .btn-full:hover { background: #f1ebdc !important; }
-  .qr-fullscreen .session-big { color: #fff; font-size: 22px; font-weight: 800; text-align: center; letter-spacing: -.3px; }
-  .qr-fullscreen .session-big small { display: block; color: #94a3b8; font-size: 13px; font-weight: 500; margin-top: 4px; letter-spacing: 1.5px; text-transform: uppercase; }
+  /* FULLSCREEN QR */
+  .qr-fullscreen{position:fixed!important;inset:0!important;z-index:9999!important;background:#0B2E5C!important;display:flex!important;flex-direction:column;align-items:center;justify-content:center;padding:20px;gap:24px;margin:0!important;border-radius:0!important;max-width:none!important;width:100%!important;height:100%!important}
+  .qr-fullscreen #qrWrapper{background:#fff!important;padding:32px!important;border-radius:24px!important;box-shadow:0 0 60px rgba(0,0,0,.5)}
+  .qr-fullscreen #qrCanvas{width:min(65vh,65vw)!important;height:min(65vh,65vw)!important}
+  .qr-fullscreen #qrCanvas img,.qr-fullscreen #qrCanvas canvas{width:min(65vh,65vw)!important;height:min(65vh,65vw)!important}
+  .qr-fullscreen .qr-title{color:#fff!important;font-size:20px!important;letter-spacing:3px!important;margin-bottom:0!important}
+  .qr-fullscreen .progress-bar{max-width:min(65vh,65vw)!important;width:100%!important;height:8px!important;background:rgba(255,255,255,.2)!important}
+  .qr-fullscreen .progress-fill{background:#D4A537!important}
+  .qr-fullscreen .timer-info{color:#cbd5e1!important;font-size:16px!important;max-width:min(65vh,65vw)!important}
+  .qr-fullscreen .timer-info b{color:#fff!important;font-size:18px!important}
+  .qr-fullscreen .btn-full{background:#fff!important;color:#0B2E5C!important;font-size:15px!important;padding:14px 32px!important;width:auto!important;max-width:320px}
+  .qr-fullscreen .btn-full:hover{background:#f1ebdc!important}
+  .qr-fullscreen .session-big{color:#fff;font-size:22px;font-weight:800;text-align:center;letter-spacing:-.3px}
+  .qr-fullscreen .session-big small{display:block;color:#94a3b8;font-size:13px;font-weight:500;margin-top:4px;letter-spacing:1.5px;text-transform:uppercase}
 </style>
 </head>
 <body>
 <div class="wrapper">
+
   <div class="topbar">
     <div class="topbar-left">
       <svg width="44" height="44" viewBox="0 0 120 120">
-        <defs><linearGradient id="lgGold2" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#E5B93C"/><stop offset="100%" stop-color="#B8860B"/></linearGradient></defs>
+        <defs>
+          <linearGradient id="lgGold2" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#E5B93C"/>
+            <stop offset="100%" stop-color="#B8860B"/>
+          </linearGradient>
+        </defs>
         <circle cx="60" cy="60" r="56" fill="url(#lgGold2)"/>
         <circle cx="60" cy="60" r="50" fill="none" stroke="#fff" stroke-width="2" opacity="0.5"/>
         <path d="M30 52 L60 38 L90 52 L60 66 Z" fill="#fff"/>
@@ -125,7 +131,9 @@
       </div>
     </div>
     <div class="topbar-right">
-      <div id="statusIndicator" class="status-badge status-off"><span>Trạng thái: ĐÓNG</span></div>
+      <div id="statusIndicator" class="status-badge status-off">
+        <span>Trạng thái: ĐÓNG</span>
+      </div>
       <button class="btn-logout" onclick="logout()">Đăng xuất</button>
     </div>
   </div>
@@ -133,9 +141,18 @@
   <div class="card">
     <div class="card-label">Cấu hình phiên điểm danh</div>
     <div class="form-grid">
-      <div><label class="input-label">Tên phiên</label><input type="text" id="sessionName" placeholder="VD: Lập trình Web - Buổi 3"></div>
-      <div><label class="input-label">QR đổi mỗi (giây)</label><input type="number" id="qrRefreshTime" value="20" min="5" max="300"></div>
-      <div><label class="input-label">Mở trong (phút)</label><input type="number" id="sessionDuration" value="5" min="1" max="1440"></div>
+      <div>
+        <label class="input-label">Tên phiên</label>
+        <input type="text" id="sessionName" placeholder="VD: Lập trình Web - Buổi 3">
+      </div>
+      <div>
+        <label class="input-label">QR đổi mỗi (giây)</label>
+        <input type="number" id="qrRefreshTime" value="20" min="5" max="300">
+      </div>
+      <div>
+        <label class="input-label">Mở trong (phút)</label>
+        <input type="number" id="sessionDuration" value="5" min="1" max="1440">
+      </div>
     </div>
     <div class="btn-row">
       <button class="btn-on" onclick="turnOn()">Mở phiên</button>
@@ -144,10 +161,22 @@
     </div>
   </div>
 
-  <div class="main-layout">
-    <div class="card qr-section" id="qrContainer" style="display:none">
+  <div class="empty-state" id="emptyState">
+    <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="#D4A537" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+      <rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>
+    </svg>
+    <h3>Chưa có phiên điểm danh nào đang mở</h3>
+    <p>Nhập <b>tên phiên</b>, chọn thời gian QR và thời lượng, sau đó bấm <b>"Mở phiên"</b> để bắt đầu.</p>
+  </div>
+
+  <div class="main-layout dashboard-area" id="dashboardArea">
+
+    <div class="card qr-section" id="qrContainer">
       <div class="qr-title">Mã QR động trực tiếp</div>
-      <div id="qrWrapper"><div id="qrCanvas"></div></div>
+      <div id="qrWrapper">
+        <div id="qrCanvas"></div>
+      </div>
       <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:100%"></div></div>
       <div class="timer-info">
         <span>Đổi mã sau <b id="secondsLeft">20s</b></span>
@@ -162,27 +191,49 @@
 
     <div class="card">
       <div class="stats-grid">
-        <div class="stat-box"><div class="stat-label">Tổng sinh viên</div><div class="stat-number" id="totalCount">0</div></div>
-        <div class="stat-box"><div class="stat-label stat-green">Đã điểm danh</div><div class="stat-number stat-green" id="presentCount">0</div></div>
-        <div class="stat-box"><div class="stat-label stat-red">Chưa điểm danh</div><div class="stat-number stat-red" id="absentCount">0</div></div>
+        <div class="stat-box">
+          <div class="stat-label">Tổng sinh viên</div>
+          <div class="stat-number" id="totalCount">0</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label stat-green">Đã điểm danh</div>
+          <div class="stat-number stat-green" id="presentCount">0</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label stat-red">Chưa điểm danh</div>
+          <div class="stat-number stat-red" id="absentCount">0</div>
+        </div>
       </div>
       <div class="progress-section">
-        <div class="label-row"><span>Tỉ lệ điểm danh</span><span class="pct" id="ratePercent">0%</span></div>
+        <div class="label-row">
+          <span>Tỉ lệ điểm danh</span>
+          <span class="pct" id="ratePercent">0%</span>
+        </div>
         <div class="big-bar"><div class="big-bar-fill" id="rateBar" style="width:0%"></div></div>
       </div>
       <div class="card-label" style="margin-bottom:10px">Vừa điểm danh gần đây</div>
-      <div class="recent-list" id="recentList"><div class="recent-empty">Chưa có ai điểm danh</div></div>
+      <div class="recent-list" id="recentList">
+        <div class="recent-empty">Chưa có ai điểm danh</div>
+      </div>
       <div class="table-header">
         <h3>Danh sách theo dõi realtime</h3>
         <input type="text" id="searchStudent" placeholder="Tìm MSSV, tên..." onkeyup="filterTable()">
       </div>
       <div style="overflow-x:auto;max-height:440px">
         <table>
-          <thead><tr><th>Sinh viên</th><th>MSSV</th><th>Trạng thái</th><th>Thời gian</th></tr></thead>
+          <thead>
+            <tr>
+              <th>Sinh viên</th>
+              <th>MSSV</th>
+              <th>Trạng thái</th>
+              <th>Thời gian</th>
+            </tr>
+          </thead>
           <tbody id="studentList"></tbody>
         </table>
       </div>
     </div>
+
   </div>
 </div>
 
@@ -191,32 +242,42 @@ let classStudents = [];
 let recentCheckins = [];
 let progressInterval = null;
 let sessionTimer = null;
+let secondsRemaining = 20;
 let pollingInterval = null;
 let currentSession = '';
 let currentRefresh = 20;
 let sessionEndsAt = null;
 let isOpen = false;
+let lastToken = null;
 
 function logout(){
   if (!confirm('Đăng xuất?')) return;
   sessionStorage.removeItem('admin_auth');
   location.href = 'index.html';
 }
-
-function initials(name){ return (name || '?').trim().split(/\s+/).slice(-2).map(w => w[0]).join('').toUpperCase(); }
+function initials(name){
+  return (name || '?').trim().split(/\s+/).slice(-2).map(w => w[0]).join('').toUpperCase();
+}
 function fmtTime(sec){
-  const m = Math.floor(sec / 60); const s = sec % 60;
+  const m = Math.floor(sec / 60);
+  const s = sec % 60;
   return String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+}
+function showDashboard(show){
+  document.getElementById('dashboardArea').classList.toggle('show', !!show);
+  document.getElementById('emptyState').style.display = show ? 'none' : 'block';
 }
 
 async function initAdmin(){
   await loadStudents();
-  if (!validStudents.length){
-    document.getElementById('studentList').innerHTML = '<tr><td colspan="4" style="text-align:center;color:#94a3b8;padding:20px">Không load được danh sách sinh viên</td></tr>';
-    return;
-  }
-  classStudents = validStudents.map(s => ({ mssv: s.mssv, name: s.name, status: 'Chưa điểm danh', time: '-', category: '-', note: '-' }));
+  classStudents = validStudents.map(s => ({
+    mssv: s.mssv, name: s.name,
+    status: 'Chưa điểm danh', time: '-', category: '-', note: '-'
+  }));
+  showDashboard(false);
   renderStudents();
+  updateStats();
+
   const st = await loadSessionStatus();
   if (st.isOpen && st.session){
     document.getElementById('sessionName').value = st.session;
@@ -231,11 +292,13 @@ async function turnOn(){
   const session = document.getElementById('sessionName').value.trim();
   const refresh = Number(document.getElementById('qrRefreshTime').value) || 20;
   const duration = Number(document.getElementById('sessionDuration').value) || 5;
-
   if (!session){ alert('Vui lòng nhập tên phiên!'); return; }
+
   const startedAt = new Date().toISOString();
   try {
-    await postToGAS({ action: 'updateStatus', isOpen: true, session: session, refresh: refresh, startedAt: startedAt, durationMin: duration });
+    await postToGAS({
+      action: 'updateStatus', isOpen: true, session, refresh, startedAt, durationMin: duration
+    });
     startSessionUI({ isOpen: true, session, refresh, durationMin: duration, startedAt });
   } catch (e){ alert('Lỗi mở phiên: ' + e.message); }
 }
@@ -243,15 +306,25 @@ async function turnOn(){
 async function turnOff(){
   if (!confirm('Đóng phiên điểm danh?')) return;
   try {
-    await postToGAS({ action: 'updateStatus', isOpen: false, session: currentSession || document.getElementById('sessionName').value.trim(), refresh: currentRefresh, startedAt: '', durationMin: 5 });
+    await postToGAS({
+      action: 'updateStatus', isOpen: false,
+      session: currentSession || document.getElementById('sessionName').value.trim(),
+      refresh: currentRefresh, startedAt: '', durationMin: 5
+    });
     stopSessionUI();
   } catch (e){ alert('Lỗi đóng phiên: ' + e.message); }
 }
 
-/* FIX: Trôi thời gian (Sync Drift) bằng việc đếm ngược qua Date.now() thay vì trừ lùi số nguyên */
 function startSessionUI(st){
-  isOpen = true; currentSession = st.session; currentRefresh = st.refresh || 20;
-  document.getElementById('qrContainer').style.display = 'block';
+  isOpen = true;
+  currentSession = st.session;
+  currentRefresh = st.refresh || 20;
+  secondsRemaining = currentRefresh;
+  lastToken = null;
+
+  showDashboard(true);
+  updateStats();
+
   const ind = document.getElementById('statusIndicator');
   ind.className = 'status-badge status-on';
   ind.innerHTML = '<span class="pulse"></span><span>Trạng thái: MỞ — ' + st.session + '</span>';
@@ -260,23 +333,28 @@ function startSessionUI(st){
   const startedMs = st.startedAt ? new Date(st.startedAt).getTime() : Date.now();
   sessionEndsAt = startedMs + dur * 60 * 1000;
 
-  window.lastToken = null;
+  renderQR();
+  pollAttendance();
+
   if (progressInterval) clearInterval(progressInterval);
   progressInterval = setInterval(() => {
     const now = Date.now();
-    const currentToken = Math.floor(now / (currentRefresh * 1000));
-    const nextTick = (currentToken + 1) * currentRefresh * 1000;
-    const secondsRemaining = Math.max(0, Math.ceil((nextTick - now) / 1000));
-    
-    // Chỉ tạo lại ảnh QR nếu Token thay đổi
-    if (window.lastToken !== currentToken) {
-      window.lastToken = currentToken;
-      renderQR(currentToken);
+    const cycleMs = currentRefresh * 1000;
+    const cycleStart = Math.floor(now / cycleMs) * cycleMs;
+    const cycleEnd = cycleStart + cycleMs;
+
+    secondsRemaining = Math.max(1, Math.ceil((cycleEnd - now) / 1000));
+
+    const currentToken = Math.floor(now / cycleMs);
+    if (currentToken !== lastToken){
+      lastToken = currentToken;
+      renderQR();
     }
-    
+
     document.getElementById('secondsLeft').innerText = secondsRemaining + 's';
-    document.getElementById('progressFill').style.width = ((secondsRemaining / currentRefresh) * 100) + '%';
-  }, 200); // Check 5 lần/giây để mượt thanh progress bar
+    document.getElementById('progressFill').style.width =
+      (((cycleEnd - now) / cycleMs) * 100) + '%';
+  }, 250);
 
   if (sessionTimer) clearInterval(sessionTimer);
   sessionTimer = setInterval(() => {
@@ -287,21 +365,44 @@ function startSessionUI(st){
 }
 
 function stopSessionUI(){
-  isOpen = false; currentSession = '';
-  document.getElementById('qrContainer').style.display = 'none';
+  isOpen = false;
+  currentSession = '';
+  showDashboard(false);
   const ind = document.getElementById('statusIndicator');
-  ind.className = 'status-badge status-off'; ind.innerHTML = '<span>Trạng thái: ĐÓNG</span>';
+  ind.className = 'status-badge status-off';
+  ind.innerHTML = '<span>Trạng thái: ĐÓNG</span>';
   if (progressInterval) clearInterval(progressInterval);
   if (sessionTimer) clearInterval(sessionTimer);
+  progressInterval = null;
+  sessionTimer = null;
+  recentCheckins = [];
+  document.getElementById('recentList').innerHTML = '<div class="recent-empty">Chưa có ai điểm danh</div>';
+  document.getElementById('qrCanvas').innerHTML = '';
+  document.getElementById('secondsLeft').innerText = '--';
+  document.getElementById('sessionCountdown').innerText = '--:--';
+  document.getElementById('progressFill').style.width = '100%';
+  classStudents.forEach(s => { s.status = 'Chưa điểm danh'; s.time = '-'; });
+  renderStudents();
+  updateStats();
 }
 
-/* FIX: Tạo link trực tiếp tới trang checkin thay vì ném JSON thô bạo */
-function renderQR(token){
+function renderQR(){
   if (!isOpen || !currentSession) return;
-  const qrUrl = `${CONFIG.BASE_URL}/checkin.html?t=${token}`;
+
+  const token = Math.floor(Date.now() / (currentRefresh * 1000));
+  const baseUrl = (CONFIG.BASE_URL || '').replace(/\/$/, '');
+
+  const checkinUrl =
+    `${baseUrl}/checkin.html?s=${encodeURIComponent(currentSession)}&t=${token}`;
+
   const el = document.getElementById('qrCanvas');
   el.innerHTML = '';
-  new QRCode(el, { text: qrUrl, width: 220, height: 220, colorDark: '#0B2E5C', colorLight: '#FFFFFF', correctLevel: QRCode.CorrectLevel.M });
+  new QRCode(el, {
+    text: checkinUrl,
+    width: 220, height: 220,
+    colorDark: '#0B2E5C', colorLight: '#FFFFFF',
+    correctLevel: QRCode.CorrectLevel.M
+  });
 }
 
 async function pollAttendance(){
@@ -311,43 +412,93 @@ async function pollAttendance(){
   recentCheckins = [];
   records.forEach(r => {
     const st = classStudents.find(s => s.mssv === r.mssv);
-    if (st){ st.status = 'Đã điểm danh'; st.time = r.time || '-'; st.category = r.category || '-'; st.note = r.note || '-'; }
+    if (st){
+      st.status = 'Đã điểm danh';
+      st.time = r.time || '-';
+      st.category = r.category || '-';
+      st.note = r.note || '-';
+    }
     recentCheckins.push(r);
   });
   recentCheckins.reverse();
-  renderRecent(); renderStudents(); updateStats();
+  renderRecent();
+  renderStudents();
+  updateStats();
 }
 
 function renderStudents(){
   const tbody = document.getElementById('studentList');
-  if (!classStudents.length){ tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:#94a3b8;padding:20px">Chưa có dữ liệu</td></tr>'; return; }
-  tbody.innerHTML = classStudents.map(s => `<tr><td><div class="student-cell"><div class="avatar">${initials(s.name)}</div><div>${s.name}</div></div></td><td>${s.mssv}</td><td>${s.status === 'Đã điểm danh' ? '<span style="color:#4e7a46;font-weight:700">✓ Đã điểm danh</span>' : '<span style="color:#a44a44">— Chưa</span>'}</td><td>${s.time}</td></tr>`).join('');
-}
-function renderRecent(){
-  const el = document.getElementById('recentList');
-  if (!recentCheckins.length){ el.innerHTML = '<div class="recent-empty">Chưa có ai điểm danh</div>'; return; }
-  el.innerHTML = recentCheckins.slice(0,10).map(r => `<div class="recent-item"><div class="avatar">${initials(r.name)}</div><div class="info"><div class="name">${r.name || r.mssv}</div><div class="time">${r.time || ''}</div></div></div>`).join('');
-}
-function updateStats(){
-  const total = classStudents.length; const present = classStudents.filter(s => s.status === 'Đã điểm danh').length; const absent = total - present;
-  document.getElementById('totalCount').innerText = total; document.getElementById('presentCount').innerText = present; document.getElementById('absentCount').innerText = absent;
-  const pct = total ? Math.round((present / total) * 100) : 0;
-  document.getElementById('ratePercent').innerText = pct + '%'; document.getElementById('rateBar').style.width = pct + '%';
-}
-function filterTable(){
-  const q = document.getElementById('searchStudent').value.trim().toLowerCase();
-  const rows = document.querySelectorAll('#studentList tr');
-  rows.forEach(tr => { tr.style.display = tr.innerText.toLowerCase().includes(q) ? '' : 'none'; });
-}
-function exportToExcel(){
-  if (!currentSession){ alert('Chưa có phiên nào đang mở!'); return; }
-  let csv = '\uFEFFMSSV,Họ Tên,Trạng Thái,Thời Gian,Lĩnh Vực,Ghi Chú\n';
-  classStudents.forEach(s => { csv += `"${s.mssv}","${s.name}","${s.status}","${s.time}","${s.category}","${s.note}"\n`; });
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-  const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = `diemdanh_${currentSession.replace(/\s+/g,'_')}_${Date.now()}.csv`; link.click();
+  if (!classStudents.length){
+    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:#94a3b8;padding:20px">Chưa có dữ liệu</td></tr>';
+    return;
+  }
+  tbody.innerHTML = classStudents.map(s => `
+    <tr>
+      <td>
+        <div class="student-cell">
+          <div class="avatar">${initials(s.name)}</div>
+          <div>${s.name}</div>
+        </div>
+      </td>
+      <td>${s.mssv}</td>
+      <td>${s.status === 'Đã điểm danh'
+        ? '<span style="color:#4e7a46;font-weight:700">✓ Đã điểm danh</span>'
+        : '<span style="color:#a44a44">— Chưa</span>'}</td>
+      <td>${s.time}</td>
+    </tr>
+  `).join('');
 }
 
-/* FIX: Tương thích Fullscreen mọi loại máy (MacOS, Windows, iOS) */
+function renderRecent(){
+  const el = document.getElementById('recentList');
+  if (!recentCheckins.length){
+    el.innerHTML = '<div class="recent-empty">Chưa có ai điểm danh</div>';
+    return;
+  }
+  el.innerHTML = recentCheckins.slice(0,10).map(r => `
+    <div class="recent-item">
+      <div class="avatar">${initials(r.name)}</div>
+      <div class="info">
+        <div class="name">${r.name || r.mssv}</div>
+        <div class="time">${r.time || ''}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function updateStats(){
+  const total = classStudents.length;
+  const present = classStudents.filter(s => s.status === 'Đã điểm danh').length;
+  const absent = total - present;
+  document.getElementById('totalCount').innerText = total;
+  document.getElementById('presentCount').innerText = present;
+  document.getElementById('absentCount').innerText = absent;
+  const pct = total ? Math.round((present / total) * 100) : 0;
+  document.getElementById('ratePercent').innerText = pct + '%';
+  document.getElementById('rateBar').style.width = pct + '%';
+}
+
+function filterTable(){
+  const q = document.getElementById('searchStudent').value.trim().toLowerCase();
+  document.querySelectorAll('#studentList tr').forEach(tr => {
+    tr.style.display = tr.innerText.toLowerCase().includes(q) ? '' : 'none';
+  });
+}
+
+function exportToExcel(){
+  if (!currentSession){ alert('Chưa có phiên nào đang mở!'); return; }
+  let csv = '\uFEFF';
+  csv += 'MSSV,Họ Tên,Trạng Thái,Thời Gian,Lĩnh Vực,Ghi Chú\n';
+  classStudents.forEach(s => {
+    csv += `"${s.mssv}","${s.name}","${s.status}","${s.time}","${s.category}","${s.note}"\n`;
+  });
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = `diemdanh_${currentSession.replace(/\s+/g,'_')}_${Date.now()}.csv`;
+  link.click();
+}
+
 function toggleFullScreen(){
   const el = document.getElementById('qrContainer');
   const big = document.getElementById('sessionBig');
@@ -360,7 +511,6 @@ function toggleFullScreen(){
     if (btn) btn.innerText = 'Thoát toàn màn hình (ESC)';
     document.body.style.overflow = 'hidden';
   };
-
   const exit = () => {
     el.classList.remove('qr-fullscreen');
     big.style.display = 'none';
@@ -368,41 +518,56 @@ function toggleFullScreen(){
     document.body.style.overflow = '';
   };
 
+  const requestFS = (node) => {
+    const fn = node.requestFullscreen || node.webkitRequestFullscreen
+            || node.mozRequestFullScreen || node.msRequestFullscreen;
+    if (fn) try { fn.call(node).catch(()=>{}); } catch(e){}
+  };
+  const exitFS = () => {
+    const fn = document.exitFullscreen || document.webkitExitFullscreen
+            || document.mozCancelFullScreen || document.msExitFullscreen;
+    if (fn) try { fn.call(document).catch(()=>{}); } catch(e){}
+  };
+  const isFS = () => !!(document.fullscreenElement
+                    || document.webkitFullscreenElement
+                    || document.mozFullScreenElement
+                    || document.msFullscreenElement);
+
   if (!el.classList.contains('qr-fullscreen')){
     enter();
-    const docEl = document.documentElement;
-    if (docEl.requestFullscreen) { docEl.requestFullscreen().catch(()=>{}); } 
-    else if (docEl.webkitRequestFullscreen) { docEl.webkitRequestFullscreen(); } // Safari
-    else if (docEl.msRequestFullscreen) { docEl.msRequestFullscreen(); } // IE/Edge
+    requestFS(el);
   } else {
     exit();
-    if (document.exitFullscreen) { document.exitFullscreen().catch(()=>{}); }
-    else if (document.webkitExitFullscreen) { document.webkitExitFullscreen(); }
-    else if (document.msExitFullscreen) { document.msExitFullscreen(); }
+    if (isFS()) exitFS();
   }
 }
 
-document.addEventListener('fullscreenchange', handleExitFullscreen);
-document.addEventListener('webkitfullscreenchange', handleExitFullscreen);
-document.addEventListener('msfullscreenchange', handleExitFullscreen);
-
-function handleExitFullscreen() {
-  if (!document.fullscreenElement && !document.webkitFullscreenElement && !document.msFullscreenElement){
-    const el = document.getElementById('qrContainer');
-    if (el.classList.contains('qr-fullscreen')){
-      el.classList.remove('qr-fullscreen');
-      document.getElementById('sessionBig').style.display = 'none';
-      document.body.style.overflow = '';
-      const btn = el.querySelector('.btn-full');
-      if (btn) btn.innerText = 'Phóng to full màn hình';
+['fullscreenchange','webkitfullscreenchange','mozfullscreenchange','MSFullscreenChange']
+  .forEach(evt => document.addEventListener(evt, () => {
+    const fs = document.fullscreenElement
+            || document.webkitFullscreenElement
+            || document.mozFullScreenElement
+            || document.msFullscreenElement;
+    if (!fs){
+      const el = document.getElementById('qrContainer');
+      if (el.classList.contains('qr-fullscreen')){
+        el.classList.remove('qr-fullscreen');
+        document.getElementById('sessionBig').style.display = 'none';
+        document.body.style.overflow = '';
+        const btn = el.querySelector('.btn-full');
+        if (btn) btn.innerText = 'Phóng to full màn hình';
+      }
     }
-  }
-}
+  }));
+
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape'){
     const el = document.getElementById('qrContainer');
     if (el.classList.contains('qr-fullscreen')){
-      toggleFullScreen(); // Gọi toggle để tự thoát
+      const fs = document.fullscreenElement
+              || document.webkitFullscreenElement
+              || document.mozFullScreenElement;
+      if (!fs) toggleFullScreen();
     }
   }
 });
