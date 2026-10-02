@@ -3,73 +3,57 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hệ Thống Điểm Danh QR Động - Cổng Chính</title>
+    <title>Hệ Thống Điểm Danh QR - Cổng Chính</title>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --primary: #6366f1;
-            --primary-hover: #4f46e5;
-            --bg: #090d16;
-            --card-bg: #131c31;
-            --text: #f8fafc;
-            --text-muted: #94a3b8;
-            --border: #1e293b;
-        }
-
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Plus Jakarta Sans', sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            margin: 0;
-            padding: 20px;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #f8fafc;
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            box-sizing: border-box;
+            padding: 20px;
         }
-
         .portal-card {
-            background: var(--card-bg);
-            border: 1px solid var(--border);
-            padding: 40px;
-            border-radius: 24px;
+            background: rgba(19, 28, 49, 0.8);
+            backdrop-filter: blur(10px);
+            border: 1px solid #1e293b;
+            padding: 50px 40px;
+            border-radius: 20px;
             width: 100%;
-            max-width: 440px;
+            max-width: 450px;
             text-align: center;
-            box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
         }
-
-        h1 { margin-top: 0; font-size: 24px; font-weight: 700; color: #fff; }
-        p { color: var(--text-muted); font-size: 14px; margin-bottom: 30px; }
-
+        h1 { font-size: 28px; margin-bottom: 15px; font-weight: 700; }
+        p { color: #94a3b8; font-size: 14px; margin-bottom: 35px; }
         .btn-portal {
             display: block;
             width: 100%;
-            padding: 16px;
-            margin-bottom: 15px;
-            background: var(--primary);
+            padding: 14px;
+            margin-bottom: 12px;
+            background: #6366f1;
             color: white;
             text-decoration: none;
             font-weight: 600;
+            border-radius: 12px;
+            transition: all 0.3s;
+            border: none;
+            cursor: pointer;
             font-size: 15px;
-            border-radius: 14px;
-            transition: 0.2s;
-            box-sizing: border-box;
-            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
         }
-
         .btn-portal:hover {
-            background: var(--primary-hover);
+            background: #4f46e5;
             transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(99, 102, 241, 0.3);
         }
-
         .btn-secondary {
             background: rgba(255, 255, 255, 0.05);
-            border: 1px solid var(--border);
-            box-shadow: none;
+            border: 1px solid #1e293b;
         }
-
         .btn-secondary:hover {
             background: rgba(255, 255, 255, 0.1);
         }
@@ -78,10 +62,9 @@
 <body>
     <div class="portal-card">
         <h1>🎓 Hệ Thống Điểm Danh QR</h1>
-        <p>Chọn phân vùng giao diện bạn muốn truy cập trên GitHub Pages</p>
-
-        <a href="admin.html" class="btn-portal">⚙️️ Truy Cập Trang Quản Lý (Admin)</a>
-        <a href="checkin.html" class="btn-portal btn-secondary">📱 Mở Form Điểm Danh (Sinh Viên)</a>
+        <p>Chọn giao diện để bắt đầu</p>
+        <a href="admin.html" class="btn-portal">⚙️ Trang Quản Lý (Admin)</a>
+        <a href="checkin.html" class="btn-portal btn-secondary">📱 Form Điểm Danh (Sinh Viên)</a>
     </div>
 </body>
 </html>

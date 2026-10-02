@@ -3,164 +3,98 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hệ Thống Quản Lý Điểm Danh QR Động</title>
+    <title>Quản Lý Điểm Danh QR</title>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="config.js"></script>
     <style>
-        :root {
-            --primary: #6366f1;
-            --primary-hover: #4f46e5;
-            --success: #10b981;
-            --danger: #ef4444;
-            --warning: #f59e0b;
-            --bg: #090d16;
-            --card-bg: #131c31;
-            --text: #f8fafc;
-            --text-muted: #94a3b8;
-            --border: #1e293b;
-        }
-
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Plus Jakarta Sans', sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            margin: 0;
+            background: #090d16;
+            color: #f8fafc;
             padding: 25px;
             min-height: 100vh;
-            box-sizing: border-box;
         }
-
         .wrapper { max-width: 1200px; margin: auto; }
-
-        .config-card {
-            background: var(--card-bg);
-            border: 1px solid var(--border);
+        .header {
+            background: #131c31;
+            border: 1px solid #1e293b;
             padding: 25px;
-            border-radius: 20px;
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4);
+            border-radius: 16px;
             margin-bottom: 25px;
-        }
-
-        .config-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
             flex-wrap: wrap;
             gap: 15px;
         }
-
-        h1 { margin: 0; font-size: 22px; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 10px; }
-        p { margin: 4px 0 0 0; color: var(--text-muted); font-size: 13px; }
-
-        .form-grid {
-            display: grid;
-            grid-template-columns: 2fr 1fr 1fr auto auto;
-            gap: 12px;
-            align-items: center;
-        }
-
-        @media(max-width: 900px) {
-            .form-grid { grid-template-columns: 1fr; }
-        }
-
-        input, select {
-            background: #090d16;
-            border: 1px solid var(--border);
-            padding: 12px 16px;
-            color: white;
-            font-size: 14px;
-            border-radius: 12px;
-            outline: none;
-            transition: 0.2s;
-            width: 100%;
-            box-sizing: border-box;
-        }
-        input:focus, select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2); }
-
-        button {
-            padding: 12px 20px;
-            font-size: 14px;
-            font-weight: 600;
-            border: none;
-            border-radius: 12px;
-            cursor: pointer;
-            transition: 0.2s;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            white-space: nowrap;
-        }
-        .btn-on { background: var(--success); color: white; }
-        .btn-on:hover { background: #059669; }
-        .btn-off { background: var(--danger); color: white; }
-        .btn-off:hover { background: #dc2626; }
-
+        h1 { font-size: 22px; font-weight: 700; }
         .status-badge {
             display: inline-flex;
             align-items: center;
-            gap: 6px;
-            padding: 6px 14px;
+            gap: 8px;
+            padding: 8px 16px;
             border-radius: 20px;
-            font-weight: 600;
             font-size: 13px;
+            font-weight: 600;
         }
-        .status-off { background: rgba(239, 68, 68, 0.15); color: var(--danger); }
-        .status-on { background: rgba(16, 185, 129, 0.15); color: var(--success); }
-        .pulse-dot { width: 8px; height: 8px; background: var(--success); border-radius: 50%; animation: pulse 1.5s infinite; }
-        @keyframes pulse { 0% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(1.4); } 100% { opacity: 1; transform: scale(1); } }
-
+        .status-on {
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+        }
+        .status-off {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+        }
+        .pulse { width: 8px; height: 8px; background: #10b981; border-radius: 50%; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+        .controls {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: 15px;
+        }
+        input, select {
+            background: #090d16;
+            border: 1px solid #1e293b;
+            padding: 12px 16px;
+            color: white;
+            border-radius: 10px;
+            font-size: 14px;
+            outline: none;
+        }
+        input:focus, select:focus { border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2); }
+        button {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+        .btn-on { background: #10b981; color: white; }
+        .btn-on:hover { background: #059669; }
+        .btn-off { background: #ef4444; color: white; }
+        .btn-off:hover { background: #dc2626; }
+        .btn-export { background: #6366f1; color: white; }
+        .btn-export:hover { background: #4f46e5; }
         .main-layout {
             display: grid;
-            grid-template-columns: 380px 1fr;
+            grid-template-columns: 350px 1fr;
             gap: 25px;
         }
-
-        @media(max-width: 900px) {
-            .main-layout { grid-template-columns: 1fr; }
-        }
-
+        @media(max-width: 900px) { .main-layout { grid-template-columns: 1fr; } }
         .card {
-            background: var(--card-bg);
-            border: 1px solid var(--border);
-            border-radius: 20px;
+            background: #131c31;
+            border: 1px solid #1e293b;
+            border-radius: 16px;
             padding: 25px;
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
         }
-
         .qr-section { text-align: center; }
-        #fullscreenQRBox {
-            background: var(--card-bg);
-            display: inline-block;
-            width: 100%;
-        }
-        #fullscreenQRBox:fullscreen, #fullscreenQRBox:-webkit-full-screen {
-            background: var(--bg);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 40px;
-            box-sizing: border-box;
-        }
-
-        #qrWrapper {
-            background: white;
-            padding: 20px;
-            border-radius: 20px;
-            display: inline-block;
-            margin-top: 10px;
-            box-shadow: 0 0 30px rgba(99, 102, 241, 0.3);
-        }
-        #qrImage { width: 240px; height: 240px; display: block; margin: auto; }
-
-        .progress-bar-container { width: 100%; background: var(--border); height: 8px; border-radius: 4px; margin: 18px 0 8px; overflow: hidden; }
-        .progress-bar { width: 100%; height: 100%; background: var(--success); transition: width 1s linear, background 0.3s; }
-        .timer-info { font-size: 14px; color: var(--text-muted); display: flex; justify-content: space-between; margin-top: 5px; width: 100%; max-width: 280px; margin-left: auto; margin-right: auto;}
-
-        .btn-fullscreen { background: var(--primary); color: white; width: 100%; margin-top: 20px; }
-        .btn-fullscreen:hover { background: var(--primary-hover); }
-
+        #qrWrapper { background: white; padding: 20px; border-radius: 16px; display: inline-block; margin-top: 15px; }
+        #qrImage { width: 240px; height: 240px; display: block; }
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -169,109 +103,91 @@
         }
         .stat-box {
             background: rgba(255, 255, 255, 0.02);
-            border: 1px solid var(--border);
-            padding: 12px;
-            border-radius: 14px;
+            border: 1px solid #1e293b;
+            padding: 15px;
+            border-radius: 12px;
             text-align: center;
         }
-        .stat-number { font-size: 20px; font-weight: 700; margin-top: 4px; }
-
-        .table-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px; }
-        .table-header h3 { margin: 0; font-size: 16px; }
-
-        table { width: 100%; border-collapse: collapse; font-size: 14px; text-align: left; }
-        th, td { padding: 12px 14px; border-bottom: 1px solid var(--border); }
-        th { background: rgba(255,255,255,0.02); color: var(--text-muted); font-weight: 600; }
-        tr:hover { background: rgba(255, 255, 255, 0.015); }
-
-        .student-cell { display: flex; align-items: center; gap: 12px; }
-        .avatar-badge {
-            width: 36px; height: 36px; background: linear-gradient(135deg, var(--primary), #818cf8);
-            color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center;
-            font-weight: 700; font-size: 14px; flex-shrink: 0;
+        .stat-number { font-size: 24px; font-weight: 700; margin-top: 5px; }
+        .table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 10px;
         }
-        
+        .table-header h3 { font-size: 16px; }
+        table { width: 100%; border-collapse: collapse; font-size: 14px; }
+        th, td { padding: 12px; border-bottom: 1px solid #1e293b; text-align: left; }
+        th { background: rgba(255, 255, 255, 0.02); color: #94a3b8; font-weight: 600; }
+        tr:hover { background: rgba(255, 255, 255, 0.02); }
+        .avatar { width: 36px; height: 36px; background: linear-gradient(135deg, #6366f1, #818cf8); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; }
+        .student-cell { display: flex; align-items: center; gap: 12px; }
         select.status-select {
-            background: #090d16; color: white; border: 1px solid var(--border);
-            padding: 6px 10px; border-radius: 8px; font-size: 13px; cursor: pointer; outline: none;
+            background: #090d16; color: white; border: 1px solid #1e293b; padding: 6px 10px; border-radius: 8px; font-size: 12px; outline: none;
         }
     </style>
 </head>
 <body>
     <div class="wrapper">
-        <div class="config-card">
-            <div class="config-header">
-                <div>
-                    <h1>🎓 Hệ Thống Quản Lý Điểm Danh QR Động</h1>
-                    <p>Thiết lập thông số, phát hành mã QR chống gian lận và theo dõi tiến độ thời gian thực.</p>
-                </div>
-                <div id="statusIndicator" class="status-badge status-off">
-                    <span>Trạng thái: ĐÃ ĐÓNG</span>
-                </div>
+        <div class="header">
+            <div>
+                <h1>🎓 Quản Lý Điểm Danh QR</h1>
             </div>
-            
-            <div class="form-grid">
-                <input type="text" id="sessionName" placeholder="Tên phiên học (VD: Lập trình Web - Buổi 3)">
-                
-                <select id="qrRefreshTime" title="Thời gian đổi mã QR">
-                    <option value="15">QR đổi mỗi 15 giây</option>
-                    <option value="20" selected>QR đổi mỗi 20 giây</option>
-                    <option value="30">QR đổi mỗi 30 giây</option>
-                </select>
+            <div id="statusIndicator" class="status-badge status-off">
+                <span>Trạng thái: ĐÓNG</span>
+            </div>
+        </div>
 
-                <select id="sessionDuration" title="Thời gian mở điểm danh">
-                    <option value="3">Mở trong 3 phút</option>
-                    <option value="5" selected>Mở trong 5 phút</option>
-                    <option value="10">Mở trong 10 phút</option>
-                    <option value="999">Mở vô thời hạn</option>
-                </select>
-
+        <div class="card">
+            <div style="margin-bottom: 15px;">
+                <label style="color: #94a3b8; font-size: 12px; display: block; margin-bottom: 6px;">Tên phiên học</label>
+                <input type="text" id="sessionName" placeholder="VD: Lập trình Web - Buổi 3" style="width: 100%;">
+            </div>
+            <div class="controls">
+                <input type="number" id="qrRefreshTime" value="20" placeholder="Thời gian QR (giây)" style="width: 140px;">
+                <input type="number" id="sessionDuration" value="5" placeholder="Thời gian phiên (phút)" style="width: 140px;">
                 <button class="btn-on" onclick="turnOn()">🟢 Mở Phiên</button>
                 <button class="btn-off" onclick="turnOff()">🔴 Đóng Phiên</button>
+                <button class="btn-export" onclick="exportToExcel()">📊 Export Excel</button>
             </div>
         </div>
 
         <div class="main-layout">
-            <div class="card qr-section" id="qrContainerCard" style="display: none;">
-                <div id="fullscreenQRBox">
-                    <h3 style="margin-top:0; font-size: 16px;">Mã QR Động Trực Tiếp</h3>
-                    <div id="qrWrapper">
-                        <img id="qrImage" src="" alt="Dynamic QR Code">
-                    </div>
-                    <div style="width: 100%; max-width: 280px; margin: auto;">
-                        <div class="progress-bar-container">
-                            <div id="progressBar" class="progress-bar"></div>
-                        </div>
-                        <div class="timer-info">
-                            <span>Đổi mã sau: <b id="secondsLeft" style="color: var(--primary);">20s</b></span>
-                            <span style="color: var(--warning);">⏳ Còn lại: <b id="sessionCountdown">--:--</b></span>
-                        </div>
-                    </div>
+            <div class="card qr-section" id="qrContainer" style="display: none;">
+                <h3 style="margin-bottom: 15px;">Mã QR Động Trực Tiếp</h3>
+                <div id="qrWrapper">
+                    <img id="qrImage" src="" alt="QR Code">
                 </div>
-                <button class="btn-fullscreen" onclick="toggleFullScreen()">🔲 Phóng To Full Màn Hình</button>
+                <div style="margin-top: 15px; font-size: 12px; color: #94a3b8;">
+                    <div>Đổi sau: <b id="secondsLeft" style="color: #6366f1;">20s</b></div>
+                    <div>Còn lại: <b id="sessionCountdown" style="color: #f59e0b;">--:--</b></div>
+                </div>
+                <button class="btn-export" style="margin-top: 15px; width: 100%;" onclick="toggleFullScreen()">🔲 Phóng To Màn Hình</button>
             </div>
 
             <div class="card">
                 <div class="stats-grid">
                     <div class="stat-box">
-                        <div style="color: var(--text-muted); font-size: 12px;">Tổng số sinh viên</div>
+                        <div style="color: #94a3b8; font-size: 12px;">Tổng sinh viên</div>
                         <div class="stat-number" id="totalCount">27</div>
                     </div>
                     <div class="stat-box">
-                        <div style="color: var(--success); font-size: 12px;">Đã điểm danh</div>
-                        <div class="stat-number" id="presentCount" style="color: var(--success);">0</div>
+                        <div style="color: #10b981; font-size: 12px;">Đã điểm danh</div>
+                        <div class="stat-number" id="presentCount" style="color: #10b981;">0</div>
                     </div>
                     <div class="stat-box">
-                        <div style="color: var(--danger); font-size: 12px;">Chưa điểm danh</div>
-                        <div class="stat-number" id="absentCount" style="color: var(--danger);">27</div>
+                        <div style="color: #ef4444; font-size: 12px;">Chưa điểm danh</div>
+                        <div class="stat-number" id="absentCount" style="color: #ef4444;">27</div>
                     </div>
                 </div>
 
                 <div class="table-header">
-                    <h3>📋 Danh Sách Theo Dõi Real-time</h3>
-                    <input type="text" id="searchStudent" placeholder="Tìm kiếm nhanh MSSV, Tên..." style="width: 220px; padding: 8px 12px; font-size: 13px;" onkeyup="filterTable()">
+                    <h3>📋 Danh Sách</h3>
+                    <input type="text" id="searchStudent" placeholder="Tìm MSSV, tên..." style="width: 180px; padding: 8px; font-size: 13px;" onkeyup="filterTable()">
                 </div>
-                <div style="overflow-x: auto; max-height: 420px;">
+                <div style="overflow-x: auto; max-height: 400px;">
                     <table>
                         <thead>
                             <tr>
@@ -281,7 +197,7 @@
                                 <th>Thời Gian</th>
                             </tr>
                         </thead>
-                        <tbody id="adminStudentList"></tbody>
+                        <tbody id="studentList"></tbody>
                     </table>
                 </div>
             </div>
@@ -289,119 +205,84 @@
     </div>
 
     <script>
-        const BASE_LINK = "https://123001058.github.io/DIEM_DANH/checkin.html"; 
-        let qrInterval = null, progressInterval = null, sessionTimerInterval = null;
-        let secondsRemaining = 20;
-        let sessionSecondsLeft = 300;
+        let classStudents = [];
+        let qrInterval = null, progressInterval = null, sessionTimer = null;
+        let secondsRemaining = 20, sessionSecondsLeft = 300;
+        let sessionActive = false;
 
-        const classStudents = [
-            { mssv: '123000555', name: 'Nguyễn Lê Vũ Duy', status: 'Chưa điểm danh', time: '-' },
-            { mssv: '123000078', name: 'Trần Hải Nam', status: 'Chưa điểm danh', time: '-' },
-            { mssv: '125001579', name: 'Nguyễn Thiện Nhân', status: 'Chưa điểm danh', time: '-' },
-            { mssv: '124000534', name: 'Nguyễn Ngọc Bình An', status: 'Chưa điểm danh', time: '-' },
-            { mssv: '125001875', name: 'Nguyễn Hoàng Phi Hùng', status: 'Chưa điểm danh', time: '-' },
-            { mssv: '124000737', name: 'Phạm tuấn phát', status: 'Chưa điểm danh', time: '-' },
-            { mssv: '125001809', name: 'Nguyễn Thanh Thái', status: 'Chưa điểm danh', time: '-' },
-            { mssv: '124001238', name: 'Nguyễn Đức Huy', status: 'Chưa điểm danh', time: '-' },
-            { mssv: '124001851', name: 'Nguyễn Thị Thùy', status: 'Chưa điểm danh', time: '-' },
-            { mssv: '124000354', name: 'Phan Công Thịnh', status: 'Chưa điểm danh', time: '-' },
-            { mssv: '124001589', name: 'Nguyễn Hồng Hiệp', status: 'Chưa điểm danh', time: '-' },
-            { mssv: '125000568', name: 'Phan Quốc Bảo', status: 'Chưa điểm danh', time: '-' },
-            { mssv: '125002381', name: 'Cao thế phi', status: 'Chưa điểm danh', time: '-' },
-            { mssv: '123000651', name: 'Cao Thanh Nghĩa', status: 'Chưa điểm danh', time: '-' },
-            { mssv: '125001648', name: 'Nguyễn Thanh Tiến', status: 'Chưa điểm danh', time: '-' },
-            { mssv: '125000372', name: 'Nguyễn Huỳnh Minh Thông', status: 'Chưa điểm danh', time: '-' },
-            { mssv: '123000722', name: 'Bùi Trần Thanh Sang', status: 'Chưa điểm danh', time: '-' },
-            { mssv: '125000287', name: 'Nguyễn Duy Phúc', status: 'Chưa điểm danh', time: '-' },
-            { mssv: '123001058', name: 'Nguyễn Khánh Hoà', status: 'Chưa điểm danh', time: '-' },
-            { mssv: '123000185', name: 'Lê Văn Minh', status: 'Chưa điểm danh', time: '-' },
-            { mssv: '123000872', name: 'Nguyễn Đình Hậu', status: 'Chưa điểm danh', time: '-' },
-            { mssv: '125000798', name: 'Nguyễn Minh Khang', status: 'Chưa điểm danh', time: '-' },
-            { mssv: '123001188', name: 'Phạm Anh Tuấn', status: 'Chưa điểm danh', time: '-' },
-            { mssv: '125000550', name: 'Nguyễn Duy Tiến', status: 'Chưa điểm danh', time: '-' },
-            { mssv: '123000432', name: 'Trần Thành Long', status: 'Chưa điểm danh', time: '-' },
-            { mssv: '123000375', name: 'Phạm Đinh Tài Lộc', status: 'Chưa điểm danh', time: '-' },
-            { mssv: '123001394', name: 'Đỗ Văn Quyền', status: 'Chưa điểm danh', time: '-' }
-        ];
-
-        function getInitials(name) {
-            const parts = name.trim().split(' ');
-            return parts[parts.length - 1].charAt(0).toUpperCase();
+        async function initAdmin() {
+            await loadStudents();
+            classStudents = validStudents.map(s => ({
+                mssv: s.mssv,
+                name: s.name,
+                status: 'Chưa điểm danh',
+                time: '-',
+                category: '-',
+                note: '-'
+            }));
+            document.getElementById('totalCount').innerText = classStudents.length;
+            document.getElementById('absentCount').innerText = classStudents.length;
+            renderTable();
         }
 
-        function renderAdminTable() {
-            const tbody = document.getElementById('adminStudentList');
+        function renderTable() {
+            const tbody = document.getElementById('studentList');
             tbody.innerHTML = '';
-            
-            let present = 0, absent = 0;
-
+            let present = 0;
             classStudents.forEach((s, idx) => {
                 if (s.status === 'Có mặt') present++;
-                else absent++;
-
+                const initials = s.name.split(' ').pop().charAt(0).toUpperCase();
                 tbody.innerHTML += `
                     <tr>
-                        <td>
-                            <div class="student-cell">
-                                <div class="avatar-badge">${getInitials(s.name)}</div>
-                                <b>${s.name}</b>
-                            </div>
-                        </td>
-                        <td><code style="color: var(--text-muted);">${s.mssv}</code></td>
-                        <td>
-                            <select class="status-select" onchange="updateStatus(${idx}, this.value)">
-                                <option value="Chưa điểm danh" ${s.status === 'Chưa điểm danh' ? 'selected' : ''}>Chưa điểm danh</option>
-                                <option value="Có mặt" ${s.status === 'Có mặt' ? 'selected' : ''}>Có mặt</option>
-                                <option value="Vắng có phép" ${s.status === 'Vắng có phép' ? 'selected' : ''}>Vắng có phép</option>
-                                <option value="Vắng không phép" ${s.status === 'Vắng không phép' ? 'selected' : ''}>Vắng không phép</option>
-                            </select>
-                        </td>
-                        <td><span style="color: var(--text-muted);">${s.time}</span></td>
+                        <td><div class="student-cell"><div class="avatar">${initials}</div><b>${s.name}</b></div></td>
+                        <td><code>${s.mssv}</code></td>
+                        <td><select class="status-select" onchange="updateStatus(${idx}, this.value)">
+                            <option value="Chưa điểm danh" ${s.status === 'Chưa điểm danh' ? 'selected' : ''}>Chưa điểm danh</option>
+                            <option value="Có mặt" ${s.status === 'Có mặt' ? 'selected' : ''}>Có mặt</option>
+                            <option value="Vắng có phép" ${s.status === 'Vắng có phép' ? 'selected' : ''}>Vắng có phép</option>
+                            <option value="Vắng không phép" ${s.status === 'Vắng không phép' ? 'selected' : ''}>Vắng không phép</option>
+                        </select></td>
+                        <td>${s.time}</td>
                     </tr>`;
             });
-
             document.getElementById('presentCount').innerText = present;
-            document.getElementById('absentCount').innerText = absent;
+            document.getElementById('absentCount').innerText = classStudents.length - present;
         }
 
-        function updateStatus(index, newStatus) {
-            classStudents[index].status = newStatus;
-            classStudents[index].time = newStatus !== 'Chưa điểm danh' ? new Date().toLocaleTimeString('vi-VN') : '-';
-            renderAdminTable();
+        function updateStatus(idx, status) {
+            classStudents[idx].status = status;
+            classStudents[idx].time = status !== 'Chưa điểm danh' ? new Date().toLocaleTimeString('vi-VN') : '-';
+            renderTable();
         }
 
         function filterTable() {
-            let keyword = document.getElementById('searchStudent').value.toLowerCase();
-            let rows = document.getElementById('adminStudentList').getElementsByTagName('tr');
-            for (let row of rows) {
-                let text = row.innerText.toLowerCase();
-                row.style.display = text.includes(keyword) ? '' : 'none';
-            }
+            const keyword = document.getElementById('searchStudent').value.toLowerCase();
+            document.querySelectorAll('#studentList tr').forEach(row => {
+                row.style.display = row.innerText.toLowerCase().includes(keyword) ? '' : 'none';
+            });
         }
-        renderAdminTable();
 
         function generateQR(refreshSec) {
-            let session = document.getElementById('sessionName').value.trim();
-            let timeToken = Math.floor(Date.now() / (refreshSec * 1000));
-            let fullLink = `${BASE_LINK}?phien=${encodeURIComponent(session)}&token=${timeToken}`;
-            document.getElementById('qrImage').src = "https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=" + encodeURIComponent(fullLink);
+            const session = document.getElementById('sessionName').value.trim();
+            const timeToken = Math.floor(Date.now() / (refreshSec * 1000));
+            const link = `${CONFIG.BASE_URL}/checkin.html?phien=${encodeURIComponent(session)}&token=${timeToken}`;
+            document.getElementById('qrImage').src = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(link)}`;
         }
 
         function turnOn() {
-            let session = document.getElementById('sessionName').value.trim();
-            if(!session) { alert("Vui lòng nhập tên phiên điểm danh!"); return; }
+            const session = document.getElementById('sessionName').value.trim();
+            if (!session) { alert('Vui lòng nhập tên phiên!'); return; }
+            const refreshSec = parseInt(document.getElementById('qrRefreshTime').value) || 20;
+            const durationMin = parseInt(document.getElementById('sessionDuration').value) || 5;
 
-            const refreshSec = parseInt(document.getElementById('qrRefreshTime').value, 10);
-            const durationMin = parseInt(document.getElementById('sessionDuration').value, 10);
-
-            document.getElementById('qrContainerCard').style.display = "block";
-            let indicator = document.getElementById('statusIndicator');
-            indicator.innerHTML = `<span class="pulse-dot"></span> Trạng thái: ĐANG MỞ`;
-            indicator.className = "status-badge status-on";
+            sessionActive = true;
+            document.getElementById('qrContainer').style.display = 'block';
+            document.getElementById('statusIndicator').innerHTML = `<span class="pulse"></span> Trạng thái: MỞ`;
+            document.getElementById('statusIndicator').className = 'status-badge status-on';
 
             clearInterval(qrInterval);
             clearInterval(progressInterval);
-            clearInterval(sessionTimerInterval);
+            clearInterval(sessionTimer);
 
             secondsRemaining = refreshSec;
             generateQR(refreshSec);
@@ -409,54 +290,65 @@
             progressInterval = setInterval(() => {
                 secondsRemaining--;
                 document.getElementById('secondsLeft').innerText = secondsRemaining + 's';
-                let percent = (secondsRemaining / refreshSec) * 100;
-                let bar = document.getElementById('progressBar');
-                bar.style.width = percent + '%';
-                
-                if (percent > 50) bar.style.background = 'var(--success)';
-                else if (percent > 20) bar.style.background = 'var(--warning)';
-                else bar.style.background = 'var(--danger)';
-
-                if (secondsRemaining <= 0) { 
-                    secondsRemaining = refreshSec; 
-                    generateQR(refreshSec); 
+                if (secondsRemaining <= 0) {
+                    secondsRemaining = refreshSec;
+                    generateQR(refreshSec);
                 }
             }, 1000);
 
             if (durationMin !== 999) {
                 sessionSecondsLeft = durationMin * 60;
-                sessionTimerInterval = setInterval(() => {
+                sessionTimer = setInterval(() => {
                     sessionSecondsLeft--;
-                    let m = Math.floor(sessionSecondsLeft / 60);
-                    let s = sessionSecondsLeft % 60;
+                    const m = Math.floor(sessionSecondsLeft / 60);
+                    const s = sessionSecondsLeft % 60;
                     document.getElementById('sessionCountdown').innerText = `${m}:${s < 10 ? '0' : ''}${s}`;
-
                     if (sessionSecondsLeft <= 0) {
                         turnOff();
-                        alert("⏰ Đã hết thời gian mở điểm danh của phiên này!");
+                        alert('⏰ Đã hết thời gian!');
                     }
                 }, 1000);
             } else {
-                document.getElementById('sessionCountdown').innerText = "Vô thời hạn";
+                document.getElementById('sessionCountdown').innerText = 'Vô thời hạn';
             }
         }
 
         function turnOff() {
+            sessionActive = false;
             clearInterval(qrInterval);
             clearInterval(progressInterval);
-            clearInterval(sessionTimerInterval);
-            document.getElementById('qrContainerCard').style.display = "none";
-            let indicator = document.getElementById('statusIndicator');
-            indicator.innerHTML = `<span>Trạng thái: ĐÃ ĐÓNG</span>`;
-            indicator.className = "status-badge status-off";
+            clearInterval(sessionTimer);
+            document.getElementById('qrContainer').style.display = 'none';
+            document.getElementById('statusIndicator').innerHTML = `<span>Trạng thái: ĐÓNG</span>`;
+            document.getElementById('statusIndicator').className = 'status-badge status-off';
             if (document.fullscreenElement) document.exitFullscreen();
         }
 
         function toggleFullScreen() {
-            let elem = document.getElementById("fullscreenQRBox");
-            if (!document.fullscreenElement) elem.requestFullscreen?.();
-            else document.exitFullscreen?.();
+            const elem = document.getElementById('qrContainer');
+            if (!document.fullscreenElement) {
+                elem.requestFullscreen?.();
+            } else {
+                document.exitFullscreen?.();
+            }
         }
+
+        function exportToExcel() {
+            const now = new Date().toLocaleString('vi-VN');
+            const session = document.getElementById('sessionName').value.trim() || 'Không xác định';
+            let csv = 'Phiên,MSSV,Tên sinh viên,Trạng thái,Thời gian,Lĩnh vực,Ghi chú\n';
+            csv += `"${session}","${now}",,,,\n`;
+            classStudents.forEach(s => {
+                csv += `"${session}","${s.mssv}","${s.name}","${s.status}","${s.time}","${s.category}","${s.note}"\n`;
+            });
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `diem-danh-${session.replace(/\s+/g, '-')}-${Date.now()}.csv`;
+            link.click();
+        }
+
+        initAdmin();
     </script>
 </body>
 </html>
