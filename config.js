@@ -1,6 +1,10 @@
+const CURRENT_HREF = window.location.href.split('?')[0];
+const DYNAMIC_BASE_URL = CURRENT_HREF.substring(0, CURRENT_HREF.lastIndexOf('/'));
+
 const CONFIG = {
-  GOOGLE_SHEET_API: 'https://script.google.com/macros/s/AKfycbwgJ5u43TUZcrK2K7Z9CmnZDs0IyBmqEsdXcPGS9e8tfCD2jLt2nSxkc4Dm1YhCx33PXg/exec',
-  BASE_URL: 'https://123001058.github.io/DIEM_DANH',
+  // Thay thế bằng link App Script thực tế của bạn
+  GOOGLE_SHEET_API: 'https://script.google.com/macros/s/AKfycbxMN3KfzmnVNggqR6MVwQ4bsxc7MRrov1uj9XWqTVhOkQvCimLcQU7CkxFXu4JcYRsE/exec',
+  BASE_URL: DYNAMIC_BASE_URL, 
   CATEGORIES: ['Thiết kế', 'Cơ khí', 'Điện', 'Lập trình'],
   FETCH_TIMEOUT: 10000
 };
@@ -33,9 +37,8 @@ async function loadStudents() {
 
 async function loadSessionStatus() {
   try {
-    const res = await fetchWithTimeout(
-      `${CONFIG.GOOGLE_SHEET_API}?action=getStatus&t=${Date.now()}&_r=${Math.random()}`
-    );
+    const url = `${CONFIG.GOOGLE_SHEET_API}?action=getStatus&t=${Date.now()}&_r=${Math.random()}`;
+    const res = await fetchWithTimeout(url);
     const data = await res.json();
     return {
       isOpen: !!data.isOpen,
@@ -65,14 +68,9 @@ async function fetchAttendance(sessionName) {
 async function postToGAS(payload) {
   const params = new URLSearchParams();
   params.set('data', JSON.stringify(payload));
-  const url = CONFIG.GOOGLE_SHEET_API + '?' + params.toString() + '&_r=' + Math.random();
-
-  console.log('[postToGAS] URL length:', url.length);
-
+  const url = `${CONFIG.GOOGLE_SHEET_API}?${params.toString()}&_r=${Math.random()}`;
   const res = await fetchWithTimeout(url, {}, 15000);
   if (!res.ok) throw new Error('HTTP ' + res.status);
-
   const data = await res.json();
-  console.log('[postToGAS] Response:', data);
   return data;
 }
