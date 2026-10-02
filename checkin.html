@@ -35,8 +35,8 @@
   }
   input,select,textarea{
     width:100%;padding:13px 14px;border:1px solid #ece6d6;border-radius:10px;
-    background:#fbfaf6;color:#0B2E5C;font-family:inherit;font-size:14px;outline:none;
-    transition:.2s;
+    background:#fbfaf6;color:#0B2E5C;font-family:inherit;font-size:14px;
+    outline:none;transition:.2s;
   }
   input:focus,select:focus,textarea:focus{border-color:#D4A537;background:#fff}
   input[readonly]{background:#f4f1e8;color:#64748b}
@@ -48,9 +48,10 @@
   }
   button:hover:not(:disabled){background:#c09030}
   button:disabled{background:#cbd5e1;cursor:not-allowed}
-  .msg{padding:12px 14px;border-radius:10px;font-size:13px;font-weight:600;margin-top:14px;text-align:center}
-  .msg.err{background:#f8ebea;color:#a44a44}
-  .msg.ok{background:#eef6ec;color:#4e7a46}
+  .msg{padding:12px 14px;border-radius:10px;font-size:13px;font-weight:600;margin-top:14px;text-align:center;display:none}
+  .msg.err{background:#f8ebea;color:#a44a44;display:block}
+  .msg.ok{background:#eef6ec;color:#4e7a46;display:block}
+  .msg.warn{background:#faf6ea;color:#a37b18;display:block}
 </style>
 </head>
 <body>
@@ -70,7 +71,7 @@
     <circle cx="86" cy="75" r="3" fill="#fff"/>
   </svg>
   <h1>Điểm danh trực tuyến</h1>
-  <p class="sub">Xác thực thiết bị · Vị trí GPS · Chống gian lận</p>
+  <p class="sub">Xác thực thiết bị · Chống điểm danh hộ</p>
 
   <div id="sessionBadge" class="badge">Đang kiểm tra phiên...</div>
 
@@ -92,36 +93,79 @@
     <button type="submit" id="submitBtn">Xác nhận điểm danh</button>
   </form>
 
-  <div id="msg" class="msg" style="display:none"></div>
+  <div id="msg" class="msg"></div>
 </div>
 
 <script>
 const url = new URLSearchParams(location.search);
-const session = url.get('phien');
-const qrToken = parseInt(url.get('token'), 10);
+const session    = url.get('phien');
+const qrToken    = parseInt(url.get('token'), 10);
 const refreshSec = parseInt(url.get('refresh'), 10) || 20;
 
 const badge = document.getElementById('sessionBadge');
-const msg = document.getElementById('msg');
-const form = document.getElementById('form');
+const msg   = document.getElementById('msg');
+const form  = document.getElementById('form');
 
 function showMsg(t, type = 'err') {
   msg.innerText = t;
   msg.className = 'msg ' + type;
-  msg.style.display = 'block';
 }
 
-function getLocation() {
-  return new Promise(resolve => {
-    if (!navigator.geolocation) return resolve('');
-    navigator.geolocation.getCurrentPosition(
-      pos => resolve(`${pos.coords.latitude},${pos.coords.longitude}`),
-      () => resolve(''),
-      { timeout: 5000, enableHighAccuracy: true }
-    );
-  });
+/* ============ DEVICE FINGERPRINT v2 ============ */
+function getDeviceId() {
+  let cached = localStorage.getItem('lhu_device_id_v2');
+  if (cached) return cached;
+
+  const parts = [];
+  parts.push(navigator.userAgent || '');
+  parts.push(navigator.language || '');
+  parts.push(screen.width + 'x' + screen.height + 'x' + (screen.colorDepth||0));
+  parts.push(new Date().getTimezoneOffset());
+  parts.push(navigator.platform || '');
+  parts.push(navigator.hardwareConcurrency || '');
+  parts.push(navigator.deviceMemory || '');
+  parts.push(navigator.maxTouchPoints || '');
+
+  // Canvas fingerprint
+  try {
+    const c = document.createElement('canvas');
+    const ctx = c.getContext('2d');
+    ctx.textBaseline = 'top';
+    ctx.font = '14px "Arial"';
+    ctx.fillStyle = '#f60';
+    ctx.fillRect(125, 1, 62, 20);
+    ctx.fillStyle = '#069';
+    ctx.fillText('LHU-Attendance-v5', 2, 15);
+    ctx.fillStyle = 'rgba(102,204,0,0.7)';
+    ctx.fillText('LHU-Attendance-v5', 4, 17);
+    parts.push(c.toDataURL().slice(-80));
+  } catch(e) {}
+
+  // WebGL fingerprint
+  try {
+    const c = document.createElement('canvas');
+    const gl = c.getContext('webgl') || c.getContext('experimental-webgl');
+    if (gl) {
+      const dbg = gl.getExtension('WEBGL_debug_renderer_info');
+      if (dbg) {
+        parts.push(gl.getParameter(dbg.UNMASKED_VENDOR_WEBGL) || '');
+        parts.push(gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL) || '');
+      }
+    }
+  } catch(e) {}
+
+  const fp = parts.join('|');
+  let hash = 0;
+  for (let i = 0; i < fp.length; i++) {
+    hash = ((hash << 5) - hash) + fp.charCodeAt(i);
+    hash |= 0;
+  }
+  const id = 'dev_' + Math.abs(hash).toString(36) + '_' + fp.length.toString(36);
+  localStorage.setItem('lhu_device_id_v2', id);
+  return id;
 }
 
+/* ============ KHỞI TẠO ============ */
 (async function init() {
   if (!session || !qrToken) {
     badge.className = 'badge err';
@@ -156,59 +200,63 @@ function getLocation() {
   form.style.display = 'block';
 })();
 
+/* ============ AUTOFILL ============ */
 document.getElementById('mssv').addEventListener('input', e => {
-  const sv = validStudents.find(s => s.mssv === e.target.value.trim());
+  const v = e.target.value.trim();
+  const sv = validStudents.find(s => s.mssv === v);
   document.getElementById('name').value = sv ? sv.name : '';
-
-  const history = JSON.parse(localStorage.getItem('checked_sessions') || '{}');
-  if (sv && history[session]) {
-    showMsg(`Thiết bị này đã điểm danh cho ${history[session]} trong phiên này`);
-    document.getElementById('submitBtn').disabled = true;
-  } else {
-    document.getElementById('submitBtn').disabled = !sv;
-    if (!sv) msg.style.display = 'none';
-  }
+  document.getElementById('submitBtn').disabled = !sv;
+  if (sv) msg.className = 'msg';
 });
 
+/* ============ SUBMIT ============ */
 document.getElementById('form').addEventListener('submit', async e => {
   e.preventDefault();
+
   const mssv = document.getElementById('mssv').value.trim();
   const name = document.getElementById('name').value.trim();
   if (!name) { showMsg('MSSV không hợp lệ'); return; }
 
   const btn = document.getElementById('submitBtn');
   btn.disabled = true;
-  btn.innerText = 'Đang lấy vị trí...';
-
-  const location = await getLocation();
   btn.innerText = 'Đang gửi...';
 
   const payload = {
     phien: session,
     mssv,
     name,
+    deviceId: getDeviceId(),
     category: document.getElementById('category').value,
-    note: document.getElementById('note').value.trim(),
-    location
+    note: document.getElementById('note').value.trim()
   };
 
   try {
-    await fetch(CONFIG.GOOGLE_SHEET_API, {
-      method: 'POST',
-      mode: 'no-cors',
-      body: JSON.stringify(payload)
-    });
+    const result = await postToGAS(payload);
 
-    const history = JSON.parse(localStorage.getItem('checked_sessions') || '{}');
-    history[session] = mssv;
-    localStorage.setItem('checked_sessions', JSON.stringify(history));
+    if (result.status === 'success') {
+      form.style.display = 'none';
+      badge.className = 'badge ok';
+      badge.innerText = 'Đã điểm danh thành công';
+      showMsg(`${name} đã điểm danh thành công`, 'ok');
+    } else if (result.status === 'duplicate') {
+      showMsg(result.message || 'MSSV đã điểm danh rồi', 'err');
+      btn.disabled = false;
+      btn.innerText = 'Xác nhận điểm danh';
+    } else if (result.status === 'device_used') {
+      showMsg(result.message || 'Thiết bị này đã được dùng để điểm danh', 'err');
+      btn.disabled = false;
+      btn.innerText = 'Xác nhận điểm danh';
+    } else if (result.status === 'busy') {
+      showMsg('Hệ thống đang bận, vui lòng thử lại sau vài giây', 'warn');
+      setTimeout(() => { btn.disabled = false; btn.innerText = 'Xác nhận điểm danh'; }, 2500);
+    } else {
+      showMsg(result.message || 'Lỗi không xác định', 'err');
+      btn.disabled = false;
+      btn.innerText = 'Xác nhận điểm danh';
+    }
 
-    form.style.display = 'none';
-    badge.className = 'badge ok';
-    badge.innerText = 'Đã điểm danh thành công';
-    showMsg(`${name} đã điểm danh thành công`, 'ok');
   } catch (err) {
-    showMsg('Lỗi kết nối, thử lại sau');
+    showMsg('Không kết nối được tới server. Vui lòng kiểm tra mạng và thử lại.', 'err');
     btn.disabled = false;
     btn.innerText = 'Xác nhận điểm danh';
   }
