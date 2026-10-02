@@ -1,4 +1,6 @@
-// config.js
+/* ============================================================
+   CONFIG CHUNG
+   ============================================================ */
 const CONFIG = {
   GOOGLE_SHEET_API: 'https://script.google.com/macros/s/AKfycby6XDYL3besdFVXS6hD0IirL_IAyZbwXGEPakwzPf2I7DGCoifLeLpiT2b7JLjqrf2Xpg/exec',
   BASE_URL: 'https://123001058.github.io/DIEM_DANH',
@@ -7,7 +9,7 @@ const CONFIG = {
 
 let validStudents = [];
 
-/* ---------- Load danh sách SV ---------- */
+/* ---------- Load danh sách sinh viên ---------- */
 async function loadStudents() {
   try {
     const res = await fetch('./students.json?t=' + Date.now());
