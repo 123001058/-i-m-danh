@@ -5,37 +5,38 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Điểm Danh Sinh Viên</title>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<script src="config.js?v=20250102"></script>
+<script src="config.js?v=20250104"></script>
 <style>
   *{margin:0;padding:0;box-sizing:border-box}
-  body{font-family:'Plus Jakarta Sans',sans-serif;background:#f7f6f2;color:#0B2E5C;min-height:100vh;padding:20px;display:flex;align-items:center;justify-content:center;}
+  body{font-family:'Plus Jakarta Sans',sans-serif;background:#f7f6f2;color:#0B2E5C;min-height:100vh;padding:20px;display:flex;align-items:center;justify-content:center}
   .wrap{max-width:460px;width:100%}
-  .card{background:#fff;border:1px solid #ece6d6;border-radius:20px;padding:32px 28px;box-shadow:0 4px 40px rgba(11,46,92,.06);}
+  .card{background:#fff;border:1px solid #ece6d6;border-radius:20px;padding:32px 28px;box-shadow:0 4px 40px rgba(11,46,92,.06)}
   h1{font-size:20px;font-weight:800;letter-spacing:-.3px;margin-bottom:6px;text-align:center}
   .sub{color:#8896AB;font-size:12.5px;text-align:center;margin-bottom:24px;line-height:1.5}
   .divider{width:40px;height:1px;background:#D4A537;margin:0 auto 24px}
   .field{margin-bottom:14px}
   label{font-size:10.5px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:#8896AB;display:block;margin-bottom:6px}
-  input,select{width:100%;padding:12px 14px;border:1px solid #ece6d6;border-radius:10px;background:#fbfaf6;color:#0B2E5C;font-family:inherit;font-size:14px;outline:none;transition:.2s;}
+  label .req{color:#a44a44}
+  input,select{width:100%;padding:12px 14px;border:1px solid #ece6d6;border-radius:10px;background:#fbfaf6;color:#0B2E5C;font-family:inherit;font-size:14px;outline:none;transition:.2s}
   input:focus,select:focus{border-color:#D4A537;background:#fff}
-  .btn{width:100%;padding:14px;border-radius:10px;border:none;cursor:pointer;font-weight:700;font-size:14px;font-family:inherit;transition:.2s;margin-top:8px;}
+  .btn{width:100%;padding:14px;border-radius:10px;border:none;cursor:pointer;font-weight:700;font-size:14px;font-family:inherit;transition:.2s;margin-top:8px}
   .btn-primary{background:#D4A537;color:#fff}
   .btn-primary:hover{background:#c09030}
   .btn-primary:disabled{opacity:.6;cursor:not-allowed}
   .btn-secondary{background:#fff;color:#0B2E5C;border:1px solid #ece6d6}
   .btn-secondary:hover{background:#fbfaf6}
-  .badge{padding:14px;border-radius:10px;text-align:center;font-size:13.5px;font-weight:600;margin-top:16px;line-height:1.6;display:none;}
+  .badge{padding:14px;border-radius:10px;text-align:center;font-size:13.5px;font-weight:600;margin-top:16px;line-height:1.6;display:none}
   .badge.show{display:block}
   .badge.ok{background:#eef6ec;color:#4e7a46}
   .badge.err{background:#f8ebea;color:#a44a44}
   .badge.info{background:#fbf6e8;color:#a37b18}
-  .info-box{background:#fbfaf6;border:1px solid #f1ebdc;border-radius:10px;padding:12px;margin-top:16px;font-size:12.5px;color:#8896AB;line-height:1.6;}
+  .info-box{background:#fbfaf6;border:1px solid #f1ebdc;border-radius:10px;padding:12px;margin-top:16px;font-size:12.5px;color:#8896AB;line-height:1.6}
   .info-box b{color:#0B2E5C}
   .back{display:block;text-align:center;margin-top:16px;font-size:12.5px;color:#8896AB;text-decoration:none}
   .back:hover{color:#0B2E5C}
-  .loader{display:none;text-align:center;padding:16px;font-size:13px;color:#8896AB;}
+  .loader{display:none;text-align:center;padding:16px;font-size:13px;color:#8896AB}
   .loader.show{display:block}
-  .spin{display:inline-block;width:16px;height:16px;border:2px solid #f1ebdc;border-top-color:#D4A537;border-radius:50%;animation:sp .8s linear infinite;vertical-align:middle;margin-right:8px;}
+  .spin{display:inline-block;width:16px;height:16px;border:2px solid #f1ebdc;border-top-color:#D4A537;border-radius:50%;animation:sp .8s linear infinite;vertical-align:middle;margin-right:8px}
   @keyframes sp{to{transform:rotate(360deg)}}
 </style>
 </head>
@@ -46,12 +47,12 @@
     <p class="sub">Vui lòng nhập MSSV và xác nhận để điểm danh</p>
     <div class="divider"></div>
     <div class="field">
-      <label>MSSV</label>
+      <label>MSSV <span class="req">*</span></label>
       <input type="text" id="mssv" placeholder="VD: 123001058" autocomplete="off">
     </div>
     <div class="field">
-      <label>Lĩnh vực</label>
-      <select id="category">
+      <label>Lĩnh vực <span class="req">*</span></label>
+      <select id="category" required>
         <option value="">-- Chọn lĩnh vực --</option>
       </select>
     </div>
@@ -67,30 +68,47 @@
     <a class="back" href="index.html">← Về trang chủ</a>
   </div>
 </div>
+
 <script>
-let currentSession = ''; let currentRefresh = 20;
-let sessionToken = null; let deviceId = '';
+let currentSession = '';
+let currentRefresh = 20;
+let sessionToken = null;
+let deviceId = '';
 let sessionStatus = { isOpen: false, session: '', refresh: 20 };
 
 function getDeviceId(){
   let id = localStorage.getItem('device_id');
-  if (!id){ id = 'dev_' + Math.random().toString(36).slice(2) + Date.now().toString(36); localStorage.setItem('device_id', id); }
+  if (!id){
+    id = 'dev_' + Math.random().toString(36).slice(2) + Date.now().toString(36);
+    localStorage.setItem('device_id', id);
+  }
   return id;
 }
-
-function showBadge(type, text){ const b = document.getElementById('badge'); b.className = 'badge show ' + type; b.innerHTML = text; }
+function showBadge(type, text){
+  const b = document.getElementById('badge');
+  b.className = 'badge show ' + type;
+  b.innerHTML = text;
+}
 function hideBadge(){ document.getElementById('badge').className = 'badge'; }
 function showLoader(v){ document.getElementById('loader').classList.toggle('show', !!v); }
 function setBtnDisabled(v){ document.getElementById('btnCheckin').disabled = !!v; }
 
 async function init(){
   deviceId = getDeviceId();
+
   const catSel = document.getElementById('category');
-  (CONFIG.CATEGORIES || []).forEach(c => { const o = document.createElement('option'); o.value = c; o.textContent = c; catSel.appendChild(o); });
+  (CONFIG.CATEGORIES || []).forEach(c => {
+    const o = document.createElement('option');
+    o.value = c; o.textContent = c;
+    catSel.appendChild(o);
+  });
 
   const url = new URL(location.href);
+  const qrSession = url.searchParams.get('s');
   const qrToken = url.searchParams.get('t');
+
   if (qrToken) sessionToken = Number(qrToken);
+  if (qrSession) currentSession = qrSession;
 
   await loadStudents();
   await refreshStatus();
@@ -102,7 +120,8 @@ async function refreshStatus(){
   sessionStatus = st;
   const box = document.getElementById('sessionInfo');
   if (st.isOpen && st.session){
-    currentSession = st.session; currentRefresh = st.refresh || 20;
+    currentSession = st.session;
+    currentRefresh = st.refresh || 20;
     box.innerHTML = `<b>Phiên đang mở:</b> ${st.session}<br>QR đổi mỗi <b>${currentRefresh}s</b> · Thời lượng <b>${st.durationMin} phút</b>`;
   } else {
     currentSession = '';
@@ -112,44 +131,84 @@ async function refreshStatus(){
 
 async function doCheckin(){
   hideBadge();
-  if (!sessionStatus.isOpen || !currentSession){ showBadge('err', 'Chưa có phiên điểm danh nào đang mở. Vui lòng chờ giảng viên.'); return; }
+
+  if (!sessionStatus.isOpen || !currentSession){
+    showBadge('err', 'Phiên điểm danh hiện đang ĐÓNG. Vui lòng quét lại mã QR.');
+    return;
+  }
 
   const mssv = document.getElementById('mssv').value.trim();
-  if (!mssv){ showBadge('err', 'Vui lòng nhập MSSV!'); return; }
-
-  /* FIX: Bắt buộc chọn lĩnh vực */
   const category = document.getElementById('category').value;
-  if (!category) { showBadge('err', 'Vui lòng chọn Lĩnh vực!'); return; }
+
+  if (!mssv){
+    showBadge('err', 'Vui lòng nhập MSSV!');
+    document.getElementById('mssv').focus();
+    return;
+  }
+  if (!category){
+    showBadge('err', 'Vui lòng chọn <b>Lĩnh vực</b>!');
+    document.getElementById('category').focus();
+    return;
+  }
 
   const stu = validStudents.find(s => String(s.mssv).trim() === mssv);
-  if (!stu){ showBadge('err', 'MSSV không có trong danh sách lớp. Vui lòng kiểm tra lại.'); return; }
+  if (!stu){
+    showBadge('err', 'MSSV không có trong danh sách lớp!');
+    return;
+  }
 
-  const nowToken = Math.floor(Date.now() / (currentRefresh * 1000));
+  // Client-side check token — 60s tolerance
   if (sessionToken !== null && !isNaN(sessionToken)){
-    if (Math.abs(nowToken - sessionToken) > 5){
-      showBadge('err', 'Mã QR đã hết hạn, vui lòng quét lại mã mới nhất trên màn hình');
+    const cycleMs = currentRefresh * 1000;
+    const nowMs = Date.now();
+    const tokenStartMs = sessionToken * cycleMs;
+    const tokenEndMs = tokenStartMs + cycleMs;
+    const TOL = 60000;
+
+    if (nowMs < tokenStartMs - TOL || nowMs > tokenEndMs + TOL){
+      showBadge('err', 'Mã QR đã hết hạn, vui lòng quét lại mã mới nhất');
       return;
     }
   } else {
-    sessionToken = nowToken;
+    sessionToken = Math.floor(Date.now() / (currentRefresh * 1000));
   }
 
-  setBtnDisabled(true); showLoader(true);
+  setBtnDisabled(true);
+  showLoader(true);
   try {
-    const res = await postToGAS({ phien: currentSession, mssv: mssv, name: stu.name || '', category: category, note: document.getElementById('note').value.trim() || '', deviceId: deviceId });
-    showLoader(false); setBtnDisabled(false);
+    const res = await postToGAS({
+      phien: currentSession,
+      mssv: mssv,
+      name: stu.name || '',
+      category: category,
+      note: document.getElementById('note').value.trim() || '',
+      deviceId: deviceId,
+      token: sessionToken
+    });
+
+    showLoader(false);
+    setBtnDisabled(false);
+
     if (res.status === 'success'){
       showBadge('ok', `✓ Điểm danh thành công!<br>${stu.name} — ${mssv}<br>Lúc ${res.time || ''}`);
-      document.getElementById('mssv').value = ''; document.getElementById('note').value = '';
-    } else if (res.status === 'duplicate'){ showBadge('info', 'Bạn đã điểm danh phiên này rồi.');
-    } else if (res.status === 'device_used'){ showBadge('err', res.message || 'Thiết bị này đã được dùng để điểm danh cho sinh viên khác.');
-    } else if (res.status === 'busy'){ showBadge('info', 'Hệ thống đang bận, vui lòng bấm điểm danh lại.');
-    } else { showBadge('err', res.message || 'Có lỗi xảy ra, vui lòng thử lại.'); }
+      document.getElementById('mssv').value = '';
+      document.getElementById('note').value = '';
+    } else if (res.status === 'duplicate'){
+      showBadge('info', 'Bạn đã điểm danh phiên này rồi.');
+    } else if (res.status === 'device_used'){
+      showBadge('err', res.message || 'Thiết bị này đã được dùng để điểm danh.');
+    } else if (res.status === 'busy'){
+      showBadge('info', 'Hệ thống đang bận, vui lòng thử lại sau 3 giây.');
+    } else {
+      showBadge('err', res.message || 'Có lỗi xảy ra, vui lòng thử lại.');
+    }
   } catch (e){
-    showLoader(false); setBtnDisabled(false);
+    showLoader(false);
+    setBtnDisabled(false);
     showBadge('err', 'Lỗi kết nối: ' + e.message);
   }
 }
+
 init();
 </script>
 </body>
