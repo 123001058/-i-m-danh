@@ -146,8 +146,8 @@
                 <input type="text" id="sessionName" placeholder="VD: Lập trình Web - Buổi 3" style="width: 100%;">
             </div>
             <div class="controls">
-                <input type="number" id="qrRefreshTime" value="20" placeholder="Thời gian QR (giây)" style="width: 140px;">
-                <input type="number" id="sessionDuration" value="5" placeholder="Thời gian phiên (phút)" style="width: 140px;">
+                <input type="number" id="qrRefreshTime" value="20" min="10" max="60" placeholder="Thời gian QR (giây)" style="width: 140px;">
+                <input type="number" id="sessionDuration" value="5" min="1" max="120" placeholder="Thời gian phiên (phút)" style="width: 140px;">
                 <button class="btn-on" onclick="turnOn()">🟢 Mở Phiên</button>
                 <button class="btn-off" onclick="turnOff()">🔴 Đóng Phiên</button>
                 <button class="btn-export" onclick="exportToExcel()">📊 Export Excel</button>
@@ -171,7 +171,7 @@
                 <div class="stats-grid">
                     <div class="stat-box">
                         <div style="color: #94a3b8; font-size: 12px;">Tổng sinh viên</div>
-                        <div class="stat-number" id="totalCount">27</div>
+                        <div class="stat-number" id="totalCount">0</div>
                     </div>
                     <div class="stat-box">
                         <div style="color: #10b981; font-size: 12px;">Đã điểm danh</div>
@@ -179,7 +179,7 @@
                     </div>
                     <div class="stat-box">
                         <div style="color: #ef4444; font-size: 12px;">Chưa điểm danh</div>
-                        <div class="stat-number" id="absentCount" style="color: #ef4444;">27</div>
+                        <div class="stat-number" id="absentCount" style="color: #ef4444;">0</div>
                     </div>
                 </div>
 
@@ -206,6 +206,7 @@
 
     <script>
         let classStudents = [];
+        let currentRefreshTime = 20;
         let qrInterval = null, progressInterval = null, sessionTimer = null;
         let secondsRemaining = 20, sessionSecondsLeft = 300;
         let sessionActive = false;
@@ -265,7 +266,7 @@
         function generateQR(refreshSec) {
             const session = document.getElementById('sessionName').value.trim();
             const timeToken = Math.floor(Date.now() / (refreshSec * 1000));
-            const link = `${CONFIG.BASE_URL}/checkin.html?phien=${encodeURIComponent(session)}&token=${timeToken}`;
+            const link = `${CONFIG.BASE_URL}/checkin.html?phien=${encodeURIComponent(session)}&token=${timeToken}&refresh=${refreshSec}`;
             document.getElementById('qrImage').src = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(link)}`;
         }
 
@@ -275,6 +276,7 @@
             const refreshSec = parseInt(document.getElementById('qrRefreshTime').value) || 20;
             const durationMin = parseInt(document.getElementById('sessionDuration').value) || 5;
 
+            currentRefreshTime = refreshSec;
             sessionActive = true;
             document.getElementById('qrContainer').style.display = 'block';
             document.getElementById('statusIndicator').innerHTML = `<span class="pulse"></span> Trạng thái: MỞ`;
@@ -341,7 +343,10 @@
             classStudents.forEach(s => {
                 csv += `"${session}","${s.mssv}","${s.name}","${s.status}","${s.time}","${s.category}","${s.note}"\n`;
             });
-            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            
+            // Thêm BOM để Excel hiểu đúng encoding UTF-8 với tiếng Việt
+            const BOM = '\uFEFF';
+            const blob = new Blob([BOM + csv], { type: 'text/csv;charset=utf-8;' });
             const link = document.createElement('a');
             link.href = URL.createObjectURL(blob);
             link.download = `diem-danh-${session.replace(/\s+/g, '-')}-${Date.now()}.csv`;

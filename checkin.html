@@ -77,7 +77,7 @@
             <input type="text" id="mssv" placeholder="Nhập MSSV" required autocomplete="off">
             
             <label>Họ và Tên</label>
-            <input type="text" id="studentName" placeholder="Tự động điền" readonly required>
+            <input type="text" id="studentName" placeholder="Tự động điền nếu MSSV đúng" readonly>
 
             <label>Lĩnh vực / Bộ phận</label>
             <select id="category" required>
@@ -97,11 +97,12 @@
         const urlParams = new URLSearchParams(window.location.search);
         const currentSession = urlParams.get('phien');
         const qrToken = parseInt(urlParams.get('token'), 10);
-        const refreshTime = parseInt(urlParams.get('refresh')) || 20; // Default 20 giây
+        const refreshTime = parseInt(urlParams.get('refresh')) || 20;
         const errorBox = document.getElementById('errorMsg');
         const submitBtn = document.getElementById('submitBtn');
+        const mssvInput = document.getElementById('mssv');
+        let isValidStudent = false;
 
-        // Load categories from config
         async function initCheckin() {
             await loadStudents();
             const select = document.getElementById('category');
@@ -133,7 +134,7 @@
             // Kiểm tra token dựa trên thời gian QR thực tế từ admin
             const currentToken = Math.floor(Date.now() / (refreshTime * 1000));
             if (Math.abs(currentToken - qrToken) > 1) {
-                showError('⚠️ QR đã hết hạn! Quét QR mới nhất.');
+                showError('⚠️ QR đã hết hạn! Vui lòng quét QR mới nhất.');
                 submitBtn.disabled = true;
                 return false;
             }
@@ -142,22 +143,28 @@
 
         verifyToken();
 
-        document.getElementById('mssv').addEventListener('input', function() {
+        mssvInput.addEventListener('input', function() {
             const val = this.value.trim();
+            if (!val) {
+                document.getElementById('studentName').value = '';
+                isValidStudent = false;
+                submitBtn.disabled = true;
+                errorBox.style.display = 'none';
+                return;
+            }
+
             const student = validStudents.find(s => s.mssv === val);
             
             if (student) {
                 document.getElementById('studentName').value = student.name;
                 errorBox.style.display = 'none';
-                let history = JSON.parse(localStorage.getItem('checked_sessions') || '{}');
-                if (currentSession && history[currentSession]) {
-                    showError(`⚠️ Thiết bị này đã dùng để điểm danh cho MSSV (${history[currentSession]}) trong phiên này!`);
-                    submitBtn.disabled = true;
-                } else {
-                    submitBtn.disabled = false;
-                }
+                isValidStudent = true;
+                submitBtn.disabled = false;
             } else {
+                // Cho phép người dùng nhập MSSV không có trong danh sách (dễ thêm người mới)
                 document.getElementById('studentName').value = '';
+                isValidStudent = false;
+                submitBtn.disabled = false; // Cho phép submit mặc dù MSSV không có
             }
         });
 
@@ -165,16 +172,24 @@
             e.preventDefault();
             if (!verifyToken()) return;
 
-            const mssv = document.getElementById('mssv').value.trim();
+            const mssv = mssvInput.value.trim();
             const name = document.getElementById('studentName').value.trim();
             const category = document.getElementById('category').value;
             const note = document.getElementById('note').value.trim();
             const msg = document.getElementById('message');
 
-            if (!name) {
-                showError('❌ MSSV không hợp lệ!');
+            if (!mssv) {
+                showError('❌ Vui lòng nhập MSSV!');
                 return;
             }
+
+            // Nếu MSSV không trong danh sách, yêu cầu nhập tên
+            if (!isValidStudent && !name) {
+                showError('❌ MSSV không có trong danh sách. Vui lòng nhập tên sinh viên!');
+                return;
+            }
+
+            const finalName = name || mssv; // Dùng MSSV làm tên nếu không có tên
 
             submitBtn.disabled = true;
             submitBtn.innerText = 'Đang xử lý...';
@@ -184,21 +199,21 @@
                 mode: 'no-cors',
                 body: JSON.stringify({
                     phien: currentSession || 'Mặc định',
-                    mssv, name, category, note,
+                    mssv, 
+                    name: finalName, 
+                    category, 
+                    note,
                     timestamp: new Date().toLocaleString('vi-VN')
                 })
             })
             .then(() => {
-                let history = JSON.parse(localStorage.getItem('checked_sessions') || '{}');
-                if (currentSession) {
-                    history[currentSession] = mssv;
-                    localStorage.setItem('checked_sessions', JSON.stringify(history));
-                }
-                msg.innerText = `✓ Tuyệt vời! ${name} đã điểm danh thành công.`;
+                msg.innerText = `✓ Tuyệt vời! ${finalName} đã điểm danh thành công.`;
                 document.getElementById('attendanceForm').style.display = 'none';
+                // Clear localStorage để cho phép điểm danh lại nếu cần (có thể sửa sau)
+                setTimeout(() => location.reload(), 2000);
             })
             .catch(() => {
-                showError('⚠️ Lỗi kết nối! Thử lại.');
+                showError('⚠️ Lỗi kết nối! Vui lòng thử lại.');
                 submitBtn.disabled = false;
                 submitBtn.innerText = '✓ Xác nhận điểm danh';
             });
