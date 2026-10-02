@@ -43,7 +43,7 @@
 
   .badge{
     padding:14px;border-radius:10px;text-align:center;font-size:13.5px;
-    font-weight:600;margin-top:16px;line-height:1.5;display:none;
+    font-weight:600;margin-top:16px;line-height:1.6;display:none;
   }
   .badge.show{display:block}
   .badge.ok{background:#eef6ec;color:#4e7a46}
@@ -113,7 +113,7 @@
 /* ===== STATE ===== */
 let currentSession = '';
 let currentRefresh = 20;
-let sessionToken = null;   // Token lấy từ QR (nếu có) — fallback dùng nowToken
+let sessionToken = null;
 let deviceId = '';
 let sessionStatus = { isOpen: false, session: '', refresh: 20 };
 
@@ -131,7 +131,7 @@ function getDeviceId(){
 function showBadge(type, text){
   const b = document.getElementById('badge');
   b.className = 'badge show ' + type;
-  b.innerText = text;
+  b.innerHTML = text;   /* ✅ FIX: dùng innerHTML để <br> xuống dòng */
 }
 function hideBadge(){
   document.getElementById('badge').className = 'badge';
@@ -147,7 +147,6 @@ function setBtnDisabled(v){
 async function init(){
   deviceId = getDeviceId();
 
-  // Load danh sách lĩnh vực
   const catSel = document.getElementById('category');
   (CONFIG.CATEGORIES || []).forEach(c => {
     const o = document.createElement('option');
@@ -155,18 +154,13 @@ async function init(){
     catSel.appendChild(o);
   });
 
-  // Đọc token từ URL (nếu sinh viên quét QR)
   const url = new URL(location.href);
   const qrToken = url.searchParams.get('t');
   if (qrToken) sessionToken = Number(qrToken);
 
-  // Load sinh viên
   await loadStudents();
-
-  // Load trạng thái phiên
   await refreshStatus();
 
-  // Auto refresh mỗi 10s
   setInterval(refreshStatus, 10000);
 }
 
@@ -189,29 +183,24 @@ async function refreshStatus(){
 async function doCheckin(){
   hideBadge();
 
-  // 1. Kiểm tra phiên
   if (!sessionStatus.isOpen || !currentSession){
     showBadge('err', 'Chưa có phiên điểm danh nào đang mở. Vui lòng chờ giảng viên.');
     return;
   }
 
-  // 2. Lấy MSSV
   const mssv = document.getElementById('mssv').value.trim();
   if (!mssv){
     showBadge('err', 'Vui lòng nhập MSSV!');
     return;
   }
 
-  // 3. Kiểm tra sinh viên có trong danh sách
   const stu = validStudents.find(s => String(s.mssv).trim() === mssv);
   if (!stu){
     showBadge('err', 'MSSV không có trong danh sách lớp. Vui lòng kiểm tra lại.');
     return;
   }
 
-  // 4. Kiểm tra QR token (nếu có)
-  // ✅ Nới lỏng dung sai lên ±5 chu kỳ (~100s cho QR 20s)
-  //    để bù lệch đồng hồ thiết bị và độ trễ mạng
+  /* Dung sai ±5 chu kỳ (~100s cho QR 20s) để bù lệch đồng hồ thiết bị */
   const nowToken = Math.floor(Date.now() / (currentRefresh * 1000));
   if (sessionToken !== null && !isNaN(sessionToken)){
     if (Math.abs(nowToken - sessionToken) > 5){
@@ -219,12 +208,9 @@ async function doCheckin(){
       return;
     }
   } else {
-    // Không có token trên URL → dùng nowToken hiện tại
-    // (cho phép nhập tay cũng điểm danh được nếu phiên đang mở)
     sessionToken = nowToken;
   }
 
-  // 5. Gửi điểm danh
   setBtnDisabled(true);
   showLoader(true);
   try {
