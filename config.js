@@ -2,7 +2,7 @@
    CONFIG CHUNG
    ============================================================ */
 const CONFIG = {
-  GOOGLE_SHEET_API: 'https://script.google.com/macros/s/AKfycby6XDYL3besdFVXS6hD0IirL_IAyZbwXGEPakwzPf2I7DGCoifLeLpiT2b7JLjqrf2Xpg/exec',
+  GOOGLE_SHEET_API: 'https://script.google.com/macros/s/AKfycbxudUK0oM-9Z5VUGv_WdpXLinjMTDyb5wVMwouGWMhtjFFQoFhZ1x4OXyUjq9YPDgUArg/exec',
   BASE_URL: 'https://123001058.github.io/DIEM_DANH',
   CATEGORIES: ['Thiết kế', 'Cơ khí', 'Điện', 'Lập trình']
 };
