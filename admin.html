@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Quản Lý Điểm Danh</title>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<script src="config.js"></script>
+<script src="config.js?v=20250101"></script>
 <script>
   if (sessionStorage.getItem('admin_auth') !== '1') {
     location.replace('index.html');
@@ -91,7 +91,6 @@
   tr:hover{background:#fbfaf6}
   .student-cell{display:flex;align-items:center;gap:10px}
   .avatar{width:32px;height:32px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;color:#fff;background:#0B2E5C}
-  .status-select{background:#fbfaf6;border:1px solid #f1ebdc;border-radius:8px;padding:6px 10px;font-size:12px;color:#0B2E5C;cursor:pointer;font-family:inherit;outline:none}
 </style>
 </head>
 <body>
@@ -215,7 +214,9 @@
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
 <script>
+/* ===== STATE ===== */
 let classStudents = [];
 let recentCheckins = [];
 let progressInterval = null;
@@ -223,267 +224,300 @@ let sessionTimer = null;
 let secondsRemaining = 20;
 let sessionSecondsLeft = 300;
 let pollingInterval = null;
+let currentSession = '';
+let currentRefresh = 20;
+let sessionEndsAt = null;
+let isOpen = false;
 
+/* ===== UTILS ===== */
 function logout(){
   if (!confirm('Đăng xuất?')) return;
   sessionStorage.removeItem('admin_auth');
   location.href = 'index.html';
 }
 
-/* ============ KHỞI TẠO ============ */
-async function initAdmin() {
+function initials(name){
+  return (name || '?').trim().split(/\s+/).slice(-2).map(w => w[0]).join('').toUpperCase();
+}
+
+function fmtTime(sec){
+  const m = Math.floor(sec / 60);
+  const s = sec % 60;
+  return String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+}
+
+/* ===== INIT ===== */
+async function initAdmin(){
   await loadStudents();
 
-  if (!validStudents.length) {
+  if (!validStudents.length){
     document.getElementById('studentList').innerHTML =
       '<tr><td colspan="4" style="text-align:center;color:#94a3b8;padding:20px">Không load được danh sách sinh viên</td></tr>';
     return;
   }
 
   classStudents = validStudents.map(s => ({
-    mssv: s.mssv, name: s.name, status: 'Chưa điểm danh', time: '-', category: '-', note: '-'
+    mssv: s.mssv,
+    name: s.name,
+    status: 'Chưa điểm danh',
+    time: '-',
+    category: '-',
+    note: '-'
   }));
 
-  document.getElementById('totalCount').innerText = classStudents.length;
-  document.getElementById('absentCount').innerText = classStudents.length;
-  renderTable();
+  renderStudents();
+
+  // Load trạng thái phiên hiện tại
+  const st = await loadSessionStatus();
+  if (st.isOpen && st.session){
+    document.getElementById('sessionName').value = st.session;
+    document.getElementById('qrRefreshTime').value = st.refresh;
+    document.getElementById('sessionDuration').value = st.durationMin;
+    startSessionUI(st);
+  }
+
+  // Polling 5s
+  pollingInterval = setInterval(pollAttendance, 5000);
 }
 
-/* ============ RENDER ============ */
-function renderTable() {
-  const tbody = document.getElementById('studentList');
-  tbody.innerHTML = '';
-  let present = 0;
+/* ===== SESSION ===== */
+async function turnOn(){
+  const session = document.getElementById('sessionName').value.trim();
+  const refresh = Number(document.getElementById('qrRefreshTime').value) || 20;
+  const duration = Number(document.getElementById('sessionDuration').value) || 5;
 
-  classStudents.forEach((s, idx) => {
-    if (s.status === 'Có mặt') present++;
-    const initials = s.name.trim().split(' ').pop().charAt(0).toUpperCase();
-    tbody.innerHTML += `
-      <tr>
-        <td><div class="student-cell"><div class="avatar">${initials}</div><b>${s.name}</b></div></td>
-        <td><code style="color:#64748b">${s.mssv}</code></td>
-        <td>
-          <select class="status-select" onchange="updateStatus(${idx}, this.value)">
-            <option value="Chưa điểm danh" ${s.status === 'Chưa điểm danh' ? 'selected' : ''}>Chưa điểm danh</option>
-            <option value="Có mặt" ${s.status === 'Có mặt' ? 'selected' : ''}>Có mặt</option>
-            <option value="Vắng có phép" ${s.status === 'Vắng có phép' ? 'selected' : ''}>Vắng có phép</option>
-            <option value="Vắng không phép" ${s.status === 'Vắng không phép' ? 'selected' : ''}>Vắng không phép</option>
-          </select>
-        </td>
-        <td style="color:#64748b">${s.time}</td>
-      </tr>`;
-  });
-
-  document.getElementById('presentCount').innerText = present;
-  document.getElementById('absentCount').innerText = classStudents.length - present;
-
-  const rate = classStudents.length ? Math.round((present / classStudents.length) * 100) : 0;
-  document.getElementById('ratePercent').innerText = rate + '%';
-  document.getElementById('rateBar').style.width = rate + '%';
-}
-
-function renderRecent() {
-  const el = document.getElementById('recentList');
-  if (!recentCheckins.length) {
-    el.innerHTML = '<div class="recent-empty">Chưa có ai điểm danh</div>';
+  if (!session){
+    alert('Vui lòng nhập tên phiên!');
     return;
   }
-  el.innerHTML = recentCheckins.slice(0, 8).map(r => {
-    const initials = r.name.trim().split(' ').pop().charAt(0).toUpperCase();
-    return `
-      <div class="recent-item">
-        <div class="avatar">${initials}</div>
-        <div class="info">
-          <div class="name">${r.name}</div>
-          <div class="time">${r.time} · ${r.mssv}</div>
-        </div>
-      </div>`;
-  }).join('');
-}
 
-function updateStatus(idx, status) {
-  classStudents[idx].status = status;
-  classStudents[idx].time = status !== 'Chưa điểm danh'
-    ? new Date().toLocaleTimeString('vi-VN') : '-';
-  renderTable();
-}
-
-function filterTable() {
-  const kw = document.getElementById('searchStudent').value.toLowerCase();
-  document.querySelectorAll('#studentList tr').forEach(row => {
-    row.style.display = row.innerText.toLowerCase().includes(kw) ? '' : 'none';
-  });
-}
-
-async function syncAttendance() {
-  const session = document.getElementById('sessionName').value.trim();
-  if (!session) return;
-
-  const records = await fetchAttendance(session);
-  if (!records.length) return;
-
-  const knownMssv = new Set(classStudents.filter(s => s.status === 'Có mặt').map(s => s.mssv));
-
-  records.forEach(r => {
-    const sv = classStudents.find(s => s.mssv === r.mssv);
-    if (sv && sv.status === 'Chưa điểm danh') {
-      sv.status = 'Có mặt';
-      sv.time = r.time || new Date().toLocaleTimeString('vi-VN');
-      sv.category = r.category || '-';
-      sv.note = r.note || '-';
-
-      if (!knownMssv.has(r.mssv)) {
-        recentCheckins.unshift({
-          name: sv.name, mssv: sv.mssv,
-          time: r.time || new Date().toLocaleTimeString('vi-VN')
-        });
-      }
-    }
-  });
-
-  renderTable();
-  renderRecent();
-}
-
-function generateQR(refreshSec) {
-  const session = document.getElementById('sessionName').value.trim();
-  const timeToken = Math.floor(Date.now() / (refreshSec * 1000));
-  const link = `${CONFIG.BASE_URL}/checkin.html?phien=${encodeURIComponent(session)}&token=${timeToken}&refresh=${refreshSec}`;
-  document.getElementById('qrImage').src =
-    `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(link)}`;
-}
-
-async function turnOn() {
-  const session = document.getElementById('sessionName').value.trim();
-  if (!session) { alert('Vui lòng nhập tên phiên học!'); return; }
-
-  const refreshSec  = parseInt(document.getElementById('qrRefreshTime').value) || 20;
-  const durationMin = parseInt(document.getElementById('sessionDuration').value) || 5;
-
-  if (refreshSec < 5) { alert('Thời gian đổi QR tối thiểu 5 giây'); return; }
-  if (durationMin < 1) { alert('Thời gian mở phiên tối thiểu 1 phút'); return; }
-
-  const btn = event?.target;
-  if (btn) { btn.disabled = true; btn.innerText = 'Đang ghi...'; }
-
-  // BƯỚC 1: Ghi status lên GAS TRƯỚC
-  let gasResult = null;
+  const startedAt = new Date().toISOString();
   try {
-    gasResult = await postToGAS({
+    await postToGAS({
       action: 'updateStatus',
       isOpen: true,
       session: session,
-      refresh: refreshSec,
-      durationMin: durationMin,
-      startedAt: Date.now()
+      refresh: refresh,
+      startedAt: startedAt,
+      durationMin: duration
     });
-    console.log('[turnOn] GAS ghi status:', gasResult);
-  } catch (e) {
-    console.error('[turnOn] LỖI ghi status:', e);
-    alert('❌ Không ghi được trạng thái phiên lên server!\n\n' + e.message + '\n\nVui lòng kiểm tra GAS đã Deploy version mới chưa.');
-    if (btn) { btn.disabled = false; btn.innerText = 'Mở phiên'; }
-    return;
+    startSessionUI({ isOpen: true, session, refresh, durationMin: duration, startedAt });
+  } catch (e){
+    alert('Lỗi mở phiên: ' + e.message);
   }
+}
 
-  if (!gasResult || gasResult.status !== 'success') {
-    alert('❌ Server từ chối!\n\n' + JSON.stringify(gasResult));
-    if (btn) { btn.disabled = false; btn.innerText = 'Mở phiên'; }
-    return;
+async function turnOff(){
+  if (!confirm('Đóng phiên điểm danh?')) return;
+  try {
+    await postToGAS({
+      action: 'updateStatus',
+      isOpen: false,
+      session: currentSession || document.getElementById('sessionName').value.trim(),
+      refresh: currentRefresh,
+      startedAt: '',
+      durationMin: 5
+    });
+    stopSessionUI();
+  } catch (e){
+    alert('Lỗi đóng phiên: ' + e.message);
   }
+}
 
-  // BƯỚC 2: Verify đã ghi đúng chưa
-  await new Promise(r => setTimeout(r, 800));
-  const check = await loadSessionStatus();
-  console.log('[turnOn] Verify sau khi ghi:', check);
-
-  if (check.session !== session) {
-    alert('⚠️ Server ghi chưa kịp!\n\nMong đợi: ' + session + '\nNhận được: ' + check.session + '\n\nThử lại sau 2 giây.');
-    if (btn) { btn.disabled = false; btn.innerText = 'Mở phiên'; }
-    return;
-  }
-
-  // BƯỚC 3: OK — hiện QR
-  recentCheckins = [];
+function startSessionUI(st){
+  isOpen = true;
+  currentSession = st.session;
+  currentRefresh = st.refresh || 20;
+  secondsRemaining = currentRefresh;
 
   document.getElementById('qrContainer').style.display = 'block';
-  document.getElementById('statusIndicator').innerHTML = '<span class="pulse"></span> Trạng thái: ĐANG MỞ';
-  document.getElementById('statusIndicator').className = 'status-badge status-on';
+  const ind = document.getElementById('statusIndicator');
+  ind.className = 'status-badge status-on';
+  ind.innerHTML = '<span class="pulse"></span><span>Trạng thái: MỞ — ' + st.session + '</span>';
 
-  clearInterval(progressInterval);
-  clearInterval(sessionTimer);
+  // Session end time
+  const dur = st.durationMin || 5;
+  const startedMs = st.startedAt ? new Date(st.startedAt).getTime() : Date.now();
+  sessionEndsAt = startedMs + dur * 60 * 1000;
 
-  secondsRemaining = refreshSec;
-  generateQR(refreshSec);
+  renderQR();
 
+  if (progressInterval) clearInterval(progressInterval);
   progressInterval = setInterval(() => {
     secondsRemaining--;
+    if (secondsRemaining <= 0){
+      secondsRemaining = currentRefresh;
+      renderQR();
+    }
     document.getElementById('secondsLeft').innerText = secondsRemaining + 's';
-    const pct = (secondsRemaining / refreshSec) * 100;
-    document.getElementById('progressFill').style.width = pct + '%';
-    if (secondsRemaining <= 0) {
-      secondsRemaining = refreshSec;
-      generateQR(refreshSec);
-    }
+    document.getElementById('progressFill').style.width =
+      ((secondsRemaining / currentRefresh) * 100) + '%';
   }, 1000);
 
-  sessionSecondsLeft = durationMin * 60;
+  if (sessionTimer) clearInterval(sessionTimer);
   sessionTimer = setInterval(() => {
-    sessionSecondsLeft--;
-    const m = Math.floor(sessionSecondsLeft / 60);
-    const s = sessionSecondsLeft % 60;
-    document.getElementById('sessionCountdown').innerText = `${m}:${s < 10 ? '0' : ''}${s}`;
-    if (sessionSecondsLeft <= 0) {
+    const left = Math.max(0, Math.floor((sessionEndsAt - Date.now()) / 1000));
+    document.getElementById('sessionCountdown').innerText = fmtTime(left);
+    if (left <= 0){
+      clearInterval(sessionTimer);
       turnOff();
-      alert('Đã hết thời gian phiên!');
     }
   }, 1000);
-
-  clearInterval(pollingInterval);
-  pollingInterval = setInterval(syncAttendance, 3000);
-  syncAttendance();
-
-  if (btn) { btn.disabled = false; btn.innerText = 'Mở phiên'; }
 }
 
-async function turnOff() {
-  clearInterval(progressInterval);
-  clearInterval(sessionTimer);
-  clearInterval(pollingInterval);
+function stopSessionUI(){
+  isOpen = false;
+  currentSession = '';
   document.getElementById('qrContainer').style.display = 'none';
-  document.getElementById('statusIndicator').innerHTML = '<span>Trạng thái: ĐÓNG</span>';
-  document.getElementById('statusIndicator').className = 'status-badge status-off';
-  if (document.fullscreenElement) document.exitFullscreen();
+  const ind = document.getElementById('statusIndicator');
+  ind.className = 'status-badge status-off';
+  ind.innerHTML = '<span>Trạng thái: ĐÓNG</span>';
+  if (progressInterval) clearInterval(progressInterval);
+  if (sessionTimer) clearInterval(sessionTimer);
+  progressInterval = null;
+  sessionTimer = null;
+}
+
+/* ===== QR ===== */
+async function renderQR(){
+  if (!isOpen || !currentSession) return;
+
+  const token = Math.floor(Date.now() / (currentRefresh * 1000));
+  const payload = JSON.stringify({
+    s: currentSession,
+    t: token,
+    r: currentRefresh
+  });
 
   try {
-    const r = await postToGAS({ action: 'updateStatus', isOpen: false });
-    console.log('[turnOff] GAS:', r);
-  } catch (e) {
-    console.error('[turnOff]', e);
+    const url = await QRCode.toDataURL(payload, {
+      width: 440,
+      margin: 1,
+      color: { dark: '#0B2E5C', light: '#FFFFFF' }
+    });
+    document.getElementById('qrImage').src = url;
+  } catch (e){
+    console.error('[renderQR]', e);
   }
 }
 
-function toggleFullScreen() {
-  const elem = document.getElementById('qrContainer');
-  if (!document.fullscreenElement) elem.requestFullscreen?.();
-  else document.exitFullscreen?.();
-}
+/* ===== POLLING ===== */
+async function pollAttendance(){
+  if (!currentSession) return;
+  const records = await fetchAttendance(currentSession);
 
-function exportToExcel() {
-  const session = document.getElementById('sessionName').value.trim() || 'Không xác định';
-  let csv = 'Phiên,MSSV,Tên sinh viên,Trạng thái,Thời gian,Lĩnh vực,Ghi chú\n';
+  // Reset
+  classStudents.forEach(s => { s.status = 'Chưa điểm danh'; s.time = '-'; });
 
-  classStudents.forEach(s => {
-    csv += `"${session}","${s.mssv}","${s.name}","${s.status}","${s.time}","${s.category}","${s.note}"\n`;
+  recentCheckins = [];
+  records.forEach(r => {
+    const st = classStudents.find(s => s.mssv === r.mssv);
+    if (st){
+      st.status = 'Đã điểm danh';
+      st.time = r.time || '-';
+      st.category = r.category || '-';
+      st.note = r.note || '-';
+    }
+    recentCheckins.push(r);
   });
 
-  const BOM = '\uFEFF';
-  const blob = new Blob([BOM + csv], { type: 'text/csv;charset=utf-8;' });
+  // Recent list (đảo ngược, mới nhất lên đầu, giới hạn 10)
+  recentCheckins.reverse();
+  renderRecent();
+  renderStudents();
+  updateStats();
+}
+
+/* ===== RENDER ===== */
+function renderStudents(){
+  const tbody = document.getElementById('studentList');
+  if (!classStudents.length){
+    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:#94a3b8;padding:20px">Chưa có dữ liệu</td></tr>';
+    return;
+  }
+  tbody.innerHTML = classStudents.map(s => `
+    <tr>
+      <td>
+        <div class="student-cell">
+          <div class="avatar">${initials(s.name)}</div>
+          <div>${s.name}</div>
+        </div>
+      </td>
+      <td>${s.mssv}</td>
+      <td>${s.status === 'Đã điểm danh'
+        ? '<span style="color:#4e7a46;font-weight:700">✓ Đã điểm danh</span>'
+        : '<span style="color:#a44a44">— Chưa</span>'}</td>
+      <td>${s.time}</td>
+    </tr>
+  `).join('');
+}
+
+function renderRecent(){
+  const el = document.getElementById('recentList');
+  if (!recentCheckins.length){
+    el.innerHTML = '<div class="recent-empty">Chưa có ai điểm danh</div>';
+    return;
+  }
+  el.innerHTML = recentCheckins.slice(0,10).map(r => `
+    <div class="recent-item">
+      <div class="avatar">${initials(r.name)}</div>
+      <div class="info">
+        <div class="name">${r.name || r.mssv}</div>
+        <div class="time">${r.time || ''}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function updateStats(){
+  const total = classStudents.length;
+  const present = classStudents.filter(s => s.status === 'Đã điểm danh').length;
+  const absent = total - present;
+  document.getElementById('totalCount').innerText = total;
+  document.getElementById('presentCount').innerText = present;
+  document.getElementById('absentCount').innerText = absent;
+  const pct = total ? Math.round((present / total) * 100) : 0;
+  document.getElementById('ratePercent').innerText = pct + '%';
+  document.getElementById('rateBar').style.width = pct + '%';
+}
+
+function filterTable(){
+  const q = document.getElementById('searchStudent').value.trim().toLowerCase();
+  const rows = document.querySelectorAll('#studentList tr');
+  rows.forEach(tr => {
+    tr.style.display = tr.innerText.toLowerCase().includes(q) ? '' : 'none';
+  });
+}
+
+/* ===== EXPORT ===== */
+function exportToExcel(){
+  if (!currentSession){
+    alert('Chưa có phiên nào đang mở!');
+    return;
+  }
+  let csv = '\uFEFF'; // BOM UTF-8
+  csv += 'MSSV,Họ Tên,Trạng Thái,Thời Gian,Lĩnh Vực,Ghi Chú\n';
+  classStudents.forEach(s => {
+    csv += `"${s.mssv}","${s.name}","${s.status}","${s.time}","${s.category}","${s.note}"\n`;
+  });
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
   const link = document.createElement('a');
   link.href = URL.createObjectURL(blob);
-  link.download = `diem-danh-${session.replace(/\s+/g, '-')}-${Date.now()}.csv`;
+  link.download = `diemdanh_${currentSession.replace(/\s+/g,'_')}_${Date.now()}.csv`;
   link.click();
 }
 
+/* ===== FULLSCREEN ===== */
+function toggleFullScreen(){
+  const el = document.getElementById('qrContainer');
+  if (!document.fullscreenElement){
+    el.requestFullscreen().catch(()=>{});
+  } else {
+    document.exitFullscreen();
+  }
+}
+
+/* ===== BOOT ===== */
 initAdmin();
 </script>
 </body>
