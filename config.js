@@ -1,28 +1,31 @@
-// ⚙️ Cấu hình hệ thống điểm danh
-const CONFIG = {
-  GOOGLE_SHEET_API: 'https://script.google.com/macros/s/AKfycby6XDYL3besdFVXS6hD0IirL_IAyZbwXGEPakwzPf2I7DGCoifLeLpiT2b7JLjqrf2Xpg/exec',
-  BASE_URL: 'https://123001058.github.io/DIEM_DANH',
-  CATEGORIES: ['Thiết kế', 'Cơ khí', 'Điện', 'Lập trình']
-};
-
-let validStudents = [];
-
-async function loadStudents() {
-  try {
-    const response = await fetch('./students.json');
-    if (!response.ok) throw new Error('Failed to load');
-    const data = await response.json();
-    validStudents = data.students || [];
-    console.log(`✅ Loaded ${validStudents.length} students`);
-    return validStudents;
-  } catch (error) {
-    console.error('❌ Error loading students:', error);
-    return [];
-  }
-}
-
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', loadStudents);
-} else {
-  loadStudents();
+{
+  "students": [
+    { "mssv": "123000555", "name": "Nguyễn Lê Vũ Duy" },
+    { "mssv": "123000078", "name": "Trần Hải Nam" },
+    { "mssv": "125001579", "name": "Nguyễn Thiện Nhân" },
+    { "mssv": "124000534", "name": "Nguyễn Ngọc Bình An" },
+    { "mssv": "125001875", "name": "Nguyễn Hoàng Phi Hùng" },
+    { "mssv": "124000737", "name": "Phạm tuấn phát" },
+    { "mssv": "125001809", "name": "Nguyễn Thanh Thái" },
+    { "mssv": "124001238", "name": "Nguyễn Đức Huy" },
+    { "mssv": "124001851", "name": "Nguyễn Thị Thùy" },
+    { "mssv": "124000354", "name": "Phan Công Thịnh" },
+    { "mssv": "124001589", "name": "Nguyễn Hồng Hiệp" },
+    { "mssv": "125000568", "name": "Phan Quốc Bảo" },
+    { "mssv": "125002381", "name": "Cao thế phi" },
+    { "mssv": "123000651", "name": "Cao Thanh Nghĩa" },
+    { "mssv": "125001648", "name": "Nguyễn Thanh Tiến" },
+    { "mssv": "125000372", "name": "Nguyễn Huỳnh Minh Thông" },
+    { "mssv": "123000722", "name": "Bùi Trần Thanh Sang" },
+    { "mssv": "125000287", "name": "Nguyễn Duy Phúc" },
+    { "mssv": "123001058", "name": "Nguyễn Khánh Hoà" },
+    { "mssv": "123000185", "name": "Lê Văn Minh" },
+    { "mssv": "123000872", "name": "Nguyễn Đình Hậu" },
+    { "mssv": "125000798", "name": "Nguyễn Minh Khang" },
+    { "mssv": "123001188", "name": "Phạm Anh Tuấn" },
+    { "mssv": "125000550", "name": "Nguyễn Duy Tiến" },
+    { "mssv": "123000432", "name": "Trần Thành Long" },
+    { "mssv": "123000375", "name": "Phạm Đinh Tài Lộc" },
+    { "mssv": "123001394", "name": "Đỗ Văn Quyền" }
+  ]
 }
