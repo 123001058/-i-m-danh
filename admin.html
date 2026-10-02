@@ -1,359 +1,443 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quản Lý Điểm Danh QR</title>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <script src="config.js"></script>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            background: #090d16;
-            color: #f8fafc;
-            padding: 25px;
-            min-height: 100vh;
-        }
-        .wrapper { max-width: 1200px; margin: auto; }
-        .header {
-            background: #131c31;
-            border: 1px solid #1e293b;
-            padding: 25px;
-            border-radius: 16px;
-            margin-bottom: 25px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 15px;
-        }
-        h1 { font-size: 22px; font-weight: 700; }
-        .status-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 13px;
-            font-weight: 600;
-        }
-        .status-on {
-            background: rgba(16, 185, 129, 0.2);
-            color: #10b981;
-        }
-        .status-off {
-            background: rgba(239, 68, 68, 0.2);
-            color: #ef4444;
-        }
-        .pulse { width: 8px; height: 8px; background: #10b981; border-radius: 50%; animation: pulse 1.5s infinite; }
-        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
-        .controls {
-            display: flex;
-            gap: 12px;
-            flex-wrap: wrap;
-            margin-top: 15px;
-        }
-        input, select {
-            background: #090d16;
-            border: 1px solid #1e293b;
-            padding: 12px 16px;
-            color: white;
-            border-radius: 10px;
-            font-size: 14px;
-            outline: none;
-        }
-        input:focus, select:focus { border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2); }
-        button {
-            padding: 12px 20px;
-            border: none;
-            border-radius: 10px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: all 0.3s;
-            font-size: 14px;
-        }
-        .btn-on { background: #10b981; color: white; }
-        .btn-on:hover { background: #059669; }
-        .btn-off { background: #ef4444; color: white; }
-        .btn-off:hover { background: #dc2626; }
-        .btn-export { background: #6366f1; color: white; }
-        .btn-export:hover { background: #4f46e5; }
-        .main-layout {
-            display: grid;
-            grid-template-columns: 350px 1fr;
-            gap: 25px;
-        }
-        @media(max-width: 900px) { .main-layout { grid-template-columns: 1fr; } }
-        .card {
-            background: #131c31;
-            border: 1px solid #1e293b;
-            border-radius: 16px;
-            padding: 25px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
-        }
-        .qr-section { text-align: center; }
-        #qrWrapper { background: white; padding: 20px; border-radius: 16px; display: inline-block; margin-top: 15px; }
-        #qrImage { width: 240px; height: 240px; display: block; }
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 12px;
-            margin-bottom: 20px;
-        }
-        .stat-box {
-            background: rgba(255, 255, 255, 0.02);
-            border: 1px solid #1e293b;
-            padding: 15px;
-            border-radius: 12px;
-            text-align: center;
-        }
-        .stat-number { font-size: 24px; font-weight: 700; margin-top: 5px; }
-        .table-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-        .table-header h3 { font-size: 16px; }
-        table { width: 100%; border-collapse: collapse; font-size: 14px; }
-        th, td { padding: 12px; border-bottom: 1px solid #1e293b; text-align: left; }
-        th { background: rgba(255, 255, 255, 0.02); color: #94a3b8; font-weight: 600; }
-        tr:hover { background: rgba(255, 255, 255, 0.02); }
-        .avatar { width: 36px; height: 36px; background: linear-gradient(135deg, #6366f1, #818cf8); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; }
-        .student-cell { display: flex; align-items: center; gap: 12px; }
-        select.status-select {
-            background: #090d16; color: white; border: 1px solid #1e293b; padding: 6px 10px; border-radius: 8px; font-size: 12px; outline: none;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quản Lý Điểm Danh</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="config.js"></script>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{
+    font-family:'Plus Jakarta Sans',sans-serif;
+    background:#f7f6f2;color:#0B2E5C;
+    padding:24px;min-height:100vh;
+  }
+  .wrapper{max-width:1200px;margin:auto}
+
+  /* ---------- HEADER ---------- */
+  .topbar{
+    background:#fff;border:1px solid #ece6d6;border-radius:16px;
+    padding:20px 24px;margin-bottom:20px;
+    display:flex;justify-content:space-between;align-items:center;
+    flex-wrap:wrap;gap:14px;
+  }
+  .topbar-left{display:flex;align-items:center;gap:14px}
+  .topbar img{height:44px}
+  .topbar h1{font-size:17px;font-weight:800;letter-spacing:-.2px}
+  .topbar p{font-size:12px;color:#8896AB;margin-top:2px}
+  .status-badge{
+    display:inline-flex;align-items:center;gap:8px;
+    padding:8px 16px;border-radius:999px;font-size:12px;font-weight:600;
+  }
+  .status-off{background:#f8ebea;color:#a44a44}
+  .status-on{background:#eef6ec;color:#4e7a46}
+  .pulse{width:8px;height:8px;background:#4e7a46;border-radius:50%;animation:pulse 1.5s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+  /* ---------- CARD ---------- */
+  .card{
+    background:#fff;border:1px solid #ece6d6;border-radius:16px;
+    padding:22px;margin-bottom:20px;
+    box-shadow:0 2px 20px rgba(11,46,92,.03);
+  }
+  .card-label{
+    font-size:11px;font-weight:700;letter-spacing:1.5px;
+    text-transform:uppercase;color:#8896AB;margin-bottom:10px;
+  }
+  .form-grid{
+    display:grid;grid-template-columns:1.6fr 1fr 1fr;gap:12px;
+    margin-bottom:14px;
+  }
+  @media(max-width:700px){.form-grid{grid-template-columns:1fr}}
+  input,select{
+    width:100%;padding:12px 14px;border:1px solid #ece6d6;
+    border-radius:10px;background:#fbfaf6;color:#0B2E5C;
+    font-family:inherit;font-size:14px;outline:none;transition:.2s;
+  }
+  input:focus,select:focus{border-color:#D4A537;background:#fff}
+  .btn-row{display:flex;gap:10px;flex-wrap:wrap}
+  button{
+    padding:12px 22px;border-radius:10px;border:none;cursor:pointer;
+    font-weight:600;font-size:13px;font-family:inherit;transition:.2s;
+  }
+  .btn-on{background:#D4A537;color:#fff}
+  .btn-on:hover{background:#c09030}
+  .btn-off{background:#fff;color:#a44a44;border:1px solid #f3d4d1}
+  .btn-off:hover{background:#f8ebea}
+  .btn-export{background:#0B2E5C;color:#fff}
+  .btn-export:hover{background:#0a2547}
+  .btn-full{background:#0B2E5C;color:#fff;width:100%;margin-top:14px}
+
+  /* ---------- MAIN LAYOUT ---------- */
+  .main-layout{display:grid;grid-template-columns:340px 1fr;gap:20px}
+  @media(max-width:900px){.main-layout{grid-template-columns:1fr}}
+
+  /* ---------- QR ---------- */
+  .qr-section{text-align:center}
+  .qr-title{font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#8896AB;margin-bottom:14px}
+  #qrWrapper{
+    background:#fbfaf6;border:1px solid #f1ebdc;border-radius:14px;
+    padding:16px;display:inline-block;
+  }
+  #qrImage{width:220px;height:220px;display:block;border-radius:8px}
+  .timer-info{
+    display:flex;justify-content:space-between;width:100%;max-width:252px;
+    margin:16px auto 0;font-size:12px;color:#8896AB;
+  }
+  .timer-info b{color:#0B2E5C;font-weight:700}
+  .timer-info .warn b{color:#a37b18}
+  .progress-bar{width:100%;max-width:252px;height:4px;background:#f1ebdc;border-radius:2px;margin:8px auto 0;overflow:hidden}
+  .progress-fill{height:100%;background:#D4A537;border-radius:2px;transition:width 1s linear}
+
+  /* ---------- STATS ---------- */
+  .stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
+  .stat-box{background:#fbfaf6;border:1px solid #f1ebdc;border-radius:12px;padding:16px;text-align:center}
+  .stat-label{font-size:10.5px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:#8896AB}
+  .stat-number{font-size:26px;font-weight:800;margin-top:6px;letter-spacing:-.5px}
+  .stat-green{color:#4e7a46}
+  .stat-red{color:#a44a44}
+
+  /* ---------- TABLE ---------- */
+  .table-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px}
+  .table-header h3{font-size:14px;font-weight:700}
+  .table-header input{width:220px;padding:9px 12px;font-size:13px}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th{
+    text-align:left;font-size:10.5px;font-weight:700;letter-spacing:1.2px;
+    text-transform:uppercase;color:#8896AB;
+    padding:12px 14px;border-bottom:1px solid #f1ebdc;background:#fbfaf6;
+  }
+  td{padding:12px 14px;border-bottom:1px solid #f6f1e4}
+  tr:last-child td{border-bottom:none}
+  tr:hover{background:#fbfaf6}
+  .student-cell{display:flex;align-items:center;gap:10px}
+  .avatar{
+    width:32px;height:32px;border-radius:50%;flex-shrink:0;
+    display:flex;align-items:center;justify-content:center;
+    font-weight:700;font-size:12px;color:#fff;background:#0B2E5C;
+  }
+  .status-select{
+    background:#fbfaf6;border:1px solid #f1ebdc;border-radius:8px;
+    padding:6px 10px;font-size:12px;color:#0B2E5C;cursor:pointer;
+    font-family:inherit;outline:none;
+  }
+</style>
 </head>
 <body>
-    <div class="wrapper">
-        <div class="header">
-            <div>
-                <h1>🎓 Quản Lý Điểm Danh QR</h1>
-            </div>
-            <div id="statusIndicator" class="status-badge status-off">
-                <span>Trạng thái: ĐÓNG</span>
-            </div>
-        </div>
+<div class="wrapper">
 
-        <div class="card">
-            <div style="margin-bottom: 15px;">
-                <label style="color: #94a3b8; font-size: 12px; display: block; margin-bottom: 6px;">Tên phiên học</label>
-                <input type="text" id="sessionName" placeholder="VD: Lập trình Web - Buổi 3" style="width: 100%;">
-            </div>
-            <div class="controls">
-                <input type="number" id="qrRefreshTime" value="20" min="10" max="60" placeholder="Thời gian QR (giây)" style="width: 140px;">
-                <input type="number" id="sessionDuration" value="5" min="1" max="120" placeholder="Thời gian phiên (phút)" style="width: 140px;">
-                <button class="btn-on" onclick="turnOn()">🟢 Mở Phiên</button>
-                <button class="btn-off" onclick="turnOff()">🔴 Đóng Phiên</button>
-                <button class="btn-export" onclick="exportToExcel()">📊 Export Excel</button>
-            </div>
-        </div>
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <img src="logo.png" alt="LHU">
+      <div>
+        <h1>Quản lý điểm danh</h1>
+        <p>Tạo phiên · QR động · Theo dõi realtime</p>
+      </div>
+    </div>
+    <div id="statusIndicator" class="status-badge status-off">
+      <span>Trạng thái: ĐÓNG</span>
+    </div>
+  </div>
 
-        <div class="main-layout">
-            <div class="card qr-section" id="qrContainer" style="display: none;">
-                <h3 style="margin-bottom: 15px;">Mã QR Động Trực Tiếp</h3>
-                <div id="qrWrapper">
-                    <img id="qrImage" src="" alt="QR Code">
-                </div>
-                <div style="margin-top: 15px; font-size: 12px; color: #94a3b8;">
-                    <div>Đổi sau: <b id="secondsLeft" style="color: #6366f1;">20s</b></div>
-                    <div>Còn lại: <b id="sessionCountdown" style="color: #f59e0b;">--:--</b></div>
-                </div>
-                <button class="btn-export" style="margin-top: 15px; width: 100%;" onclick="toggleFullScreen()">🔲 Phóng To Màn Hình</button>
-            </div>
+  <!-- CẤU HÌNH -->
+  <div class="card">
+    <div class="card-label">Cấu hình phiên điểm danh</div>
+    <div class="form-grid">
+      <input type="text" id="sessionName" placeholder="VD: Lập trình Web - Buổi 3">
+      <select id="qrRefreshTime">
+        <option value="15">QR đổi 15 giây</option>
+        <option value="20" selected>QR đổi 20 giây</option>
+        <option value="30">QR đổi 30 giây</option>
+        <option value="60">QR đổi 60 giây</option>
+      </select>
+      <select id="sessionDuration">
+        <option value="3">Mở 3 phút</option>
+        <option value="5" selected>Mở 5 phút</option>
+        <option value="10">Mở 10 phút</option>
+        <option value="30">Mở 30 phút</option>
+        <option value="999">Vô thời hạn</option>
+      </select>
+    </div>
+    <div class="btn-row">
+      <button class="btn-on" onclick="turnOn()">Mở phiên</button>
+      <button class="btn-off" onclick="turnOff()">Đóng phiên</button>
+      <button class="btn-export" onclick="exportToExcel()">Export Excel</button>
+    </div>
+  </div>
 
-            <div class="card">
-                <div class="stats-grid">
-                    <div class="stat-box">
-                        <div style="color: #94a3b8; font-size: 12px;">Tổng sinh viên</div>
-                        <div class="stat-number" id="totalCount">0</div>
-                    </div>
-                    <div class="stat-box">
-                        <div style="color: #10b981; font-size: 12px;">Đã điểm danh</div>
-                        <div class="stat-number" id="presentCount" style="color: #10b981;">0</div>
-                    </div>
-                    <div class="stat-box">
-                        <div style="color: #ef4444; font-size: 12px;">Chưa điểm danh</div>
-                        <div class="stat-number" id="absentCount" style="color: #ef4444;">0</div>
-                    </div>
-                </div>
+  <!-- MAIN -->
+  <div class="main-layout">
 
-                <div class="table-header">
-                    <h3>📋 Danh Sách</h3>
-                    <input type="text" id="searchStudent" placeholder="Tìm MSSV, tên..." style="width: 180px; padding: 8px; font-size: 13px;" onkeyup="filterTable()">
-                </div>
-                <div style="overflow-x: auto; max-height: 400px;">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Sinh viên</th>
-                                <th>MSSV</th>
-                                <th>Trạng Thái</th>
-                                <th>Thời Gian</th>
-                            </tr>
-                        </thead>
-                        <tbody id="studentList"></tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
+    <!-- QR -->
+    <div class="card qr-section" id="qrContainer" style="display:none">
+      <div class="qr-title">Mã QR động trực tiếp</div>
+      <div id="qrWrapper">
+        <img id="qrImage" src="" alt="QR Code">
+      </div>
+      <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:100%"></div></div>
+      <div class="timer-info">
+        <span>Đổi mã sau <b id="secondsLeft">20s</b></span>
+        <span class="warn">Còn lại <b id="sessionCountdown">--:--</b></span>
+      </div>
+      <button class="btn-full" onclick="toggleFullScreen()">Phóng to full màn hình</button>
     </div>
 
-    <script>
-        let classStudents = [];
-        let currentRefreshTime = 20;
-        let qrInterval = null, progressInterval = null, sessionTimer = null;
-        let secondsRemaining = 20, sessionSecondsLeft = 300;
-        let sessionActive = false;
+    <!-- DANH SÁCH -->
+    <div class="card">
+      <div class="stats-grid">
+        <div class="stat-box">
+          <div class="stat-label">Tổng sinh viên</div>
+          <div class="stat-number" id="totalCount">0</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label stat-green">Đã điểm danh</div>
+          <div class="stat-number stat-green" id="presentCount">0</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label stat-red">Chưa điểm danh</div>
+          <div class="stat-number stat-red" id="absentCount">0</div>
+        </div>
+      </div>
 
-        async function initAdmin() {
-            await loadStudents();
-            classStudents = validStudents.map(s => ({
-                mssv: s.mssv,
-                name: s.name,
-                status: 'Chưa điểm danh',
-                time: '-',
-                category: '-',
-                note: '-'
-            }));
-            document.getElementById('totalCount').innerText = classStudents.length;
-            document.getElementById('absentCount').innerText = classStudents.length;
-            renderTable();
-        }
+      <div class="table-header">
+        <h3>Danh sách theo dõi realtime</h3>
+        <input type="text" id="searchStudent" placeholder="Tìm MSSV, tên..." onkeyup="filterTable()">
+      </div>
+      <div style="overflow-x:auto;max-height:440px">
+        <table>
+          <thead>
+            <tr>
+              <th>Sinh viên</th>
+              <th>MSSV</th>
+              <th>Trạng thái</th>
+              <th>Thời gian</th>
+            </tr>
+          </thead>
+          <tbody id="studentList"></tbody>
+        </table>
+      </div>
+    </div>
 
-        function renderTable() {
-            const tbody = document.getElementById('studentList');
-            tbody.innerHTML = '';
-            let present = 0;
-            classStudents.forEach((s, idx) => {
-                if (s.status === 'Có mặt') present++;
-                const initials = s.name.split(' ').pop().charAt(0).toUpperCase();
-                tbody.innerHTML += `
-                    <tr>
-                        <td><div class="student-cell"><div class="avatar">${initials}</div><b>${s.name}</b></div></td>
-                        <td><code>${s.mssv}</code></td>
-                        <td><select class="status-select" onchange="updateStatus(${idx}, this.value)">
-                            <option value="Chưa điểm danh" ${s.status === 'Chưa điểm danh' ? 'selected' : ''}>Chưa điểm danh</option>
-                            <option value="Có mặt" ${s.status === 'Có mặt' ? 'selected' : ''}>Có mặt</option>
-                            <option value="Vắng có phép" ${s.status === 'Vắng có phép' ? 'selected' : ''}>Vắng có phép</option>
-                            <option value="Vắng không phép" ${s.status === 'Vắng không phép' ? 'selected' : ''}>Vắng không phép</option>
-                        </select></td>
-                        <td>${s.time}</td>
-                    </tr>`;
-            });
-            document.getElementById('presentCount').innerText = present;
-            document.getElementById('absentCount').innerText = classStudents.length - present;
-        }
+  </div>
+</div>
 
-        function updateStatus(idx, status) {
-            classStudents[idx].status = status;
-            classStudents[idx].time = status !== 'Chưa điểm danh' ? new Date().toLocaleTimeString('vi-VN') : '-';
-            renderTable();
-        }
+<script>
+let classStudents = [];
+let progressInterval = null;
+let sessionTimer = null;
+let secondsRemaining = 20;
+let sessionSecondsLeft = 300;
+let currentRefreshSec = 20;
+let pollingInterval = null;
 
-        function filterTable() {
-            const keyword = document.getElementById('searchStudent').value.toLowerCase();
-            document.querySelectorAll('#studentList tr').forEach(row => {
-                row.style.display = row.innerText.toLowerCase().includes(keyword) ? '' : 'none';
-            });
-        }
+/* ============ KHỞI TẠO ============ */
+async function initAdmin() {
+  await loadStudents();
 
-        function generateQR(refreshSec) {
-            const session = document.getElementById('sessionName').value.trim();
-            const timeToken = Math.floor(Date.now() / (refreshSec * 1000));
-            const link = `${CONFIG.BASE_URL}/checkin.html?phien=${encodeURIComponent(session)}&token=${timeToken}&refresh=${refreshSec}`;
-            document.getElementById('qrImage').src = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(link)}`;
-        }
+  if (!validStudents.length) {
+    document.getElementById('studentList').innerHTML =
+      '<tr><td colspan="4" style="text-align:center;color:#94a3b8;padding:20px">Không load được danh sách sinh viên</td></tr>';
+    return;
+  }
 
-        function turnOn() {
-            const session = document.getElementById('sessionName').value.trim();
-            if (!session) { alert('Vui lòng nhập tên phiên!'); return; }
-            const refreshSec = parseInt(document.getElementById('qrRefreshTime').value) || 20;
-            const durationMin = parseInt(document.getElementById('sessionDuration').value) || 5;
+  classStudents = validStudents.map(s => ({
+    mssv: s.mssv,
+    name: s.name,
+    status: 'Chưa điểm danh',
+    time: '-',
+    category: '-',
+    note: '-'
+  }));
 
-            currentRefreshTime = refreshSec;
-            sessionActive = true;
-            document.getElementById('qrContainer').style.display = 'block';
-            document.getElementById('statusIndicator').innerHTML = `<span class="pulse"></span> Trạng thái: MỞ`;
-            document.getElementById('statusIndicator').className = 'status-badge status-on';
+  document.getElementById('totalCount').innerText = classStudents.length;
+  document.getElementById('absentCount').innerText = classStudents.length;
+  renderTable();
 
-            clearInterval(qrInterval);
-            clearInterval(progressInterval);
-            clearInterval(sessionTimer);
+  // Khôi phục trạng thái nếu F5 khi phiên đang mở
+  const status = await loadSessionStatus();
+  if (status.isOpen && status.session) {
+    document.getElementById('sessionName').value = status.session || '';
+    document.getElementById('qrRefreshTime').value = status.refresh || 20;
+    document.getElementById('sessionDuration').value = status.durationMin || 5;
+    turnOn();
+  }
+}
 
-            secondsRemaining = refreshSec;
-            generateQR(refreshSec);
+/* ============ RENDER BẢNG ============ */
+function renderTable() {
+  const tbody = document.getElementById('studentList');
+  tbody.innerHTML = '';
+  let present = 0;
 
-            progressInterval = setInterval(() => {
-                secondsRemaining--;
-                document.getElementById('secondsLeft').innerText = secondsRemaining + 's';
-                if (secondsRemaining <= 0) {
-                    secondsRemaining = refreshSec;
-                    generateQR(refreshSec);
-                }
-            }, 1000);
+  classStudents.forEach((s, idx) => {
+    if (s.status === 'Có mặt') present++;
+    const initials = s.name.trim().split(' ').pop().charAt(0).toUpperCase();
+    tbody.innerHTML += `
+      <tr>
+        <td><div class="student-cell"><div class="avatar">${initials}</div><b>${s.name}</b></div></td>
+        <td><code style="color:#64748b">${s.mssv}</code></td>
+        <td>
+          <select class="status-select" onchange="updateStatus(${idx}, this.value)">
+            <option value="Chưa điểm danh" ${s.status === 'Chưa điểm danh' ? 'selected' : ''}>Chưa điểm danh</option>
+            <option value="Có mặt" ${s.status === 'Có mặt' ? 'selected' : ''}>Có mặt</option>
+            <option value="Vắng có phép" ${s.status === 'Vắng có phép' ? 'selected' : ''}>Vắng có phép</option>
+            <option value="Vắng không phép" ${s.status === 'Vắng không phép' ? 'selected' : ''}>Vắng không phép</option>
+          </select>
+        </td>
+        <td style="color:#64748b">${s.time}</td>
+      </tr>`;
+  });
 
-            if (durationMin !== 999) {
-                sessionSecondsLeft = durationMin * 60;
-                sessionTimer = setInterval(() => {
-                    sessionSecondsLeft--;
-                    const m = Math.floor(sessionSecondsLeft / 60);
-                    const s = sessionSecondsLeft % 60;
-                    document.getElementById('sessionCountdown').innerText = `${m}:${s < 10 ? '0' : ''}${s}`;
-                    if (sessionSecondsLeft <= 0) {
-                        turnOff();
-                        alert('⏰ Đã hết thời gian!');
-                    }
-                }, 1000);
-            } else {
-                document.getElementById('sessionCountdown').innerText = 'Vô thời hạn';
-            }
-        }
+  document.getElementById('presentCount').innerText = present;
+  document.getElementById('absentCount').innerText = classStudents.length - present;
+}
 
-        function turnOff() {
-            sessionActive = false;
-            clearInterval(qrInterval);
-            clearInterval(progressInterval);
-            clearInterval(sessionTimer);
-            document.getElementById('qrContainer').style.display = 'none';
-            document.getElementById('statusIndicator').innerHTML = `<span>Trạng thái: ĐÓNG</span>`;
-            document.getElementById('statusIndicator').className = 'status-badge status-off';
-            if (document.fullscreenElement) document.exitFullscreen();
-        }
+function updateStatus(idx, status) {
+  classStudents[idx].status = status;
+  classStudents[idx].time = status !== 'Chưa điểm danh'
+    ? new Date().toLocaleTimeString('vi-VN')
+    : '-';
+  renderTable();
+}
 
-        function toggleFullScreen() {
-            const elem = document.getElementById('qrContainer');
-            if (!document.fullscreenElement) {
-                elem.requestFullscreen?.();
-            } else {
-                document.exitFullscreen?.();
-            }
-        }
+function filterTable() {
+  const kw = document.getElementById('searchStudent').value.toLowerCase();
+  document.querySelectorAll('#studentList tr').forEach(row => {
+    row.style.display = row.innerText.toLowerCase().includes(kw) ? '' : 'none';
+  });
+}
 
-        function exportToExcel() {
-            const now = new Date().toLocaleString('vi-VN');
-            const session = document.getElementById('sessionName').value.trim() || 'Không xác định';
-            let csv = 'Phiên,MSSV,Tên sinh viên,Trạng thái,Thời gian,Lĩnh vực,Ghi chú\n';
-            csv += `"${session}","${now}",,,,\n`;
-            classStudents.forEach(s => {
-                csv += `"${session}","${s.mssv}","${s.name}","${s.status}","${s.time}","${s.category}","${s.note}"\n`;
-            });
-            
-            // Thêm BOM để Excel hiểu đúng encoding UTF-8 với tiếng Việt
-            const BOM = '\uFEFF';
-            const blob = new Blob([BOM + csv], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = `diem-danh-${session.replace(/\s+/g, '-')}-${Date.now()}.csv`;
-            link.click();
-        }
+/* ============ ĐỒNG BỘ TỪ SHEET ============ */
+async function syncAttendance() {
+  const session = document.getElementById('sessionName').value.trim();
+  if (!session) return;
 
-        initAdmin();
-    </script>
+  const records = await fetchAttendance(session);
+  if (!records.length) return;
+
+  records.forEach(r => {
+    const sv = classStudents.find(s => s.mssv === r.mssv);
+    if (sv && sv.status === 'Chưa điểm danh') {
+      sv.status = 'Có mặt';
+      sv.time = r.time || new Date().toLocaleTimeString('vi-VN');
+      sv.category = r.category || '-';
+      sv.note = r.note || '-';
+    }
+  });
+  renderTable();
+}
+
+/* ============ QR ============ */
+function generateQR(refreshSec) {
+  const session = document.getElementById('sessionName').value.trim();
+  const timeToken = Math.floor(Date.now() / (refreshSec * 1000));
+  const link = `${CONFIG.BASE_URL}/checkin.html?phien=${encodeURIComponent(session)}&token=${timeToken}&refresh=${refreshSec}`;
+  document.getElementById('qrImage').src =
+    `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(link)}`;
+}
+
+/* ============ MỞ PHIÊN ============ */
+async function turnOn() {
+  const session = document.getElementById('sessionName').value.trim();
+  if (!session) { alert('Vui lòng nhập tên phiên học!'); return; }
+
+  const refreshSec  = parseInt(document.getElementById('qrRefreshTime').value) || 20;
+  const durationMin = parseInt(document.getElementById('sessionDuration').value) || 5;
+
+  currentRefreshSec = refreshSec;
+
+  document.getElementById('qrContainer').style.display = 'block';
+  document.getElementById('statusIndicator').innerHTML = '<span class="pulse"></span> Trạng thái: ĐANG MỞ';
+  document.getElementById('statusIndicator').className = 'status-badge status-on';
+
+  clearInterval(progressInterval);
+  clearInterval(sessionTimer);
+
+  secondsRemaining = refreshSec;
+  generateQR(refreshSec);
+
+  progressInterval = setInterval(() => {
+    secondsRemaining--;
+    document.getElementById('secondsLeft').innerText = secondsRemaining + 's';
+    const pct = (secondsRemaining / refreshSec) * 100;
+    document.getElementById('progressFill').style.width = pct + '%';
+    if (secondsRemaining <= 0) {
+      secondsRemaining = refreshSec;
+      generateQR(refreshSec);
+    }
+  }, 1000);
+
+  if (durationMin !== 999) {
+    sessionSecondsLeft = durationMin * 60;
+    sessionTimer = setInterval(() => {
+      sessionSecondsLeft--;
+      const m = Math.floor(sessionSecondsLeft / 60);
+      const s = sessionSecondsLeft % 60;
+      document.getElementById('sessionCountdown').innerText = `${m}:${s < 10 ? '0' : ''}${s}`;
+      if (sessionSecondsLeft <= 0) {
+        turnOff();
+        alert('Đã hết thời gian phiên!');
+      }
+    }, 1000);
+  } else {
+    document.getElementById('sessionCountdown').innerText = 'Vô thời hạn';
+  }
+
+  // Polling đồng bộ mỗi 5s
+  clearInterval(pollingInterval);
+  pollingInterval = setInterval(syncAttendance, 5000);
+  syncAttendance();
+
+  // Ghi trạng thái lên Sheet
+  await saveSessionStatus({
+    isOpen: true,
+    session,
+    refresh: refreshSec,
+    durationMin,
+    startedAt: Date.now()
+  });
+}
+
+/* ============ ĐÓNG PHIÊN ============ */
+async function turnOff() {
+  clearInterval(progressInterval);
+  clearInterval(sessionTimer);
+  clearInterval(pollingInterval);
+  document.getElementById('qrContainer').style.display = 'none';
+  document.getElementById('statusIndicator').innerHTML = '<span>Trạng thái: ĐÓNG</span>';
+  document.getElementById('statusIndicator').className = 'status-badge status-off';
+  if (document.fullscreenElement) document.exitFullscreen();
+
+  await saveSessionStatus({ isOpen: false });
+}
+
+/* ============ FULLSCREEN ============ */
+function toggleFullScreen() {
+  const elem = document.getElementById('qrContainer');
+  if (!document.fullscreenElement) elem.requestFullscreen?.();
+  else document.exitFullscreen?.();
+}
+
+/* ============ EXPORT EXCEL ============ */
+function exportToExcel() {
+  const session = document.getElementById('sessionName').value.trim() || 'Không xác định';
+  let csv = 'Phiên,MSSV,Tên sinh viên,Trạng thái,Thời gian,Lĩnh vực,Ghi chú\n';
+
+  classStudents.forEach(s => {
+    csv += `"${session}","${s.mssv}","${s.name}","${s.status}","${s.time}","${s.category}","${s.note}"\n`;
+  });
+
+  const BOM = '\uFEFF';
+  const blob = new Blob([BOM + csv], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = `diem-danh-${session.replace(/\s+/g, '-')}-${Date.now()}.csv`;
+  link.click();
+}
+
+initAdmin();
+</script>
 </body>
 </html>
