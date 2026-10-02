@@ -6,6 +6,7 @@
 <title>Quản Lý Điểm Danh</title>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="config.js?v=20250101"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
   if (sessionStorage.getItem('admin_auth') !== '1') {
     location.replace('index.html');
@@ -52,7 +53,8 @@
   .qr-section{text-align:center}
   .qr-title{font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#8896AB;margin-bottom:14px}
   #qrWrapper{background:#fbfaf6;border:1px solid #f1ebdc;border-radius:14px;padding:16px;display:inline-block}
-  #qrImage{width:220px;height:220px;display:block;border-radius:8px}
+  #qrCanvas{width:220px;height:220px;display:flex;align-items:center;justify-content:center}
+  #qrCanvas img, #qrCanvas canvas{display:block;border-radius:8px}
   .timer-info{display:flex;justify-content:space-between;width:100%;max-width:252px;margin:16px auto 0;font-size:12px;color:#8896AB}
   .timer-info b{color:#0B2E5C;font-weight:700}
   .timer-info .warn b{color:#a37b18}
@@ -91,6 +93,84 @@
   tr:hover{background:#fbfaf6}
   .student-cell{display:flex;align-items:center;gap:10px}
   .avatar{width:32px;height:32px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;color:#fff;background:#0B2E5C}
+
+  /* ===== FULLSCREEN QR OVERLAY ===== */
+  .qr-fullscreen {
+    position: fixed !important;
+    inset: 0 !important;
+    z-index: 9999 !important;
+    background: #0B2E5C !important;
+    display: flex !important;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    gap: 24px;
+    margin: 0 !important;
+    border-radius: 0 !important;
+  }
+  .qr-fullscreen #qrWrapper {
+    background: #fff !important;
+    padding: 32px !important;
+    border-radius: 24px !important;
+    box-shadow: 0 0 60px rgba(0,0,0,.5);
+  }
+  .qr-fullscreen #qrCanvas {
+    width: min(65vh, 65vw) !important;
+    height: min(65vh, 65vw) !important;
+  }
+  .qr-fullscreen #qrCanvas img,
+  .qr-fullscreen #qrCanvas canvas {
+    width: min(65vh, 65vw) !important;
+    height: min(65vh, 65vw) !important;
+  }
+  .qr-fullscreen .qr-title {
+    color: #fff !important;
+    font-size: 20px !important;
+    letter-spacing: 3px !important;
+    margin-bottom: 0 !important;
+  }
+  .qr-fullscreen .progress-bar {
+    max-width: min(65vh, 65vw) !important;
+    width: 100% !important;
+    height: 8px !important;
+    background: rgba(255,255,255,.2) !important;
+  }
+  .qr-fullscreen .progress-fill { background: #D4A537 !important; }
+  .qr-fullscreen .timer-info {
+    color: #cbd5e1 !important;
+    font-size: 16px !important;
+    max-width: min(65vh, 65vw) !important;
+  }
+  .qr-fullscreen .timer-info b {
+    color: #fff !important;
+    font-size: 18px !important;
+  }
+  .qr-fullscreen .btn-full {
+    background: #fff !important;
+    color: #0B2E5C !important;
+    font-size: 15px !important;
+    padding: 14px 32px !important;
+    width: auto !important;
+    max-width: 320px;
+  }
+  .qr-fullscreen .btn-full:hover { background: #f1ebdc !important; }
+  .qr-fullscreen .session-big {
+    color: #fff;
+    font-size: 22px;
+    font-weight: 800;
+    text-align: center;
+    letter-spacing: -.3px;
+  }
+  .qr-fullscreen .session-big small {
+    display: block;
+    color: #94a3b8;
+    font-size: 13px;
+    font-weight: 500;
+    margin-top: 4px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+  }
 </style>
 </head>
 <body>
@@ -153,7 +233,7 @@
     <div class="card qr-section" id="qrContainer" style="display:none">
       <div class="qr-title">Mã QR động trực tiếp</div>
       <div id="qrWrapper">
-        <img id="qrImage" src="" alt="QR Code">
+        <div id="qrCanvas"></div>
       </div>
       <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:100%"></div></div>
       <div class="timer-info">
@@ -161,6 +241,10 @@
         <span class="warn">Còn lại <b id="sessionCountdown">--:--</b></span>
       </div>
       <button class="btn-full" onclick="toggleFullScreen()">Phóng to full màn hình</button>
+      <div class="session-big" id="sessionBig" style="display:none">
+        <span id="sessionBigName">--</span>
+        <small>Phiên điểm danh đang mở</small>
+      </div>
     </div>
 
     <div class="card">
@@ -214,7 +298,6 @@
   </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
 <script>
 /* ===== STATE ===== */
 let classStudents = [];
@@ -267,7 +350,6 @@ async function initAdmin(){
 
   renderStudents();
 
-  // Load trạng thái phiên hiện tại
   const st = await loadSessionStatus();
   if (st.isOpen && st.session){
     document.getElementById('sessionName').value = st.session;
@@ -276,7 +358,6 @@ async function initAdmin(){
     startSessionUI(st);
   }
 
-  // Polling 5s
   pollingInterval = setInterval(pollAttendance, 5000);
 }
 
@@ -335,7 +416,6 @@ function startSessionUI(st){
   ind.className = 'status-badge status-on';
   ind.innerHTML = '<span class="pulse"></span><span>Trạng thái: MỞ — ' + st.session + '</span>';
 
-  // Session end time
   const dur = st.durationMin || 5;
   const startedMs = st.startedAt ? new Date(st.startedAt).getTime() : Date.now();
   sessionEndsAt = startedMs + dur * 60 * 1000;
@@ -379,7 +459,7 @@ function stopSessionUI(){
 }
 
 /* ===== QR ===== */
-async function renderQR(){
+function renderQR(){
   if (!isOpen || !currentSession) return;
 
   const token = Math.floor(Date.now() / (currentRefresh * 1000));
@@ -389,16 +469,16 @@ async function renderQR(){
     r: currentRefresh
   });
 
-  try {
-    const url = await QRCode.toDataURL(payload, {
-      width: 440,
-      margin: 1,
-      color: { dark: '#0B2E5C', light: '#FFFFFF' }
-    });
-    document.getElementById('qrImage').src = url;
-  } catch (e){
-    console.error('[renderQR]', e);
-  }
+  const el = document.getElementById('qrCanvas');
+  el.innerHTML = '';
+  new QRCode(el, {
+    text: payload,
+    width: 220,
+    height: 220,
+    colorDark: '#0B2E5C',
+    colorLight: '#FFFFFF',
+    correctLevel: QRCode.CorrectLevel.M
+  });
 }
 
 /* ===== POLLING ===== */
@@ -406,7 +486,6 @@ async function pollAttendance(){
   if (!currentSession) return;
   const records = await fetchAttendance(currentSession);
 
-  // Reset
   classStudents.forEach(s => { s.status = 'Chưa điểm danh'; s.time = '-'; });
 
   recentCheckins = [];
@@ -421,7 +500,6 @@ async function pollAttendance(){
     recentCheckins.push(r);
   });
 
-  // Recent list (đảo ngược, mới nhất lên đầu, giới hạn 10)
   recentCheckins.reverse();
   renderRecent();
   renderStudents();
@@ -495,7 +573,7 @@ function exportToExcel(){
     alert('Chưa có phiên nào đang mở!');
     return;
   }
-  let csv = '\uFEFF'; // BOM UTF-8
+  let csv = '\uFEFF';
   csv += 'MSSV,Họ Tên,Trạng Thái,Thời Gian,Lĩnh Vực,Ghi Chú\n';
   classStudents.forEach(s => {
     csv += `"${s.mssv}","${s.name}","${s.status}","${s.time}","${s.category}","${s.note}"\n`;
@@ -507,15 +585,64 @@ function exportToExcel(){
   link.click();
 }
 
-/* ===== FULLSCREEN ===== */
+/* ===== FULLSCREEN QR ===== */
 function toggleFullScreen(){
   const el = document.getElementById('qrContainer');
-  if (!document.fullscreenElement){
-    el.requestFullscreen().catch(()=>{});
+  const big = document.getElementById('sessionBig');
+  const bigName = document.getElementById('sessionBigName');
+  const btn = el.querySelector('.btn-full');
+
+  const enter = () => {
+    el.classList.add('qr-fullscreen');
+    if (currentSession){
+      bigName.innerText = currentSession;
+      big.style.display = 'block';
+    }
+    if (btn) btn.innerText = 'Thoát toàn màn hình (ESC)';
+    document.body.style.overflow = 'hidden';
+  };
+
+  const exit = () => {
+    el.classList.remove('qr-fullscreen');
+    big.style.display = 'none';
+    if (btn) btn.innerText = 'Phóng to full màn hình';
+    document.body.style.overflow = '';
+  };
+
+  if (!el.classList.contains('qr-fullscreen')){
+    enter();
+    if (el.requestFullscreen){
+      el.requestFullscreen().catch(() => {});
+    }
   } else {
-    document.exitFullscreen();
+    exit();
+    if (document.fullscreenElement){
+      document.exitFullscreen().catch(() => {});
+    }
   }
 }
+
+document.addEventListener('fullscreenchange', () => {
+  if (!document.fullscreenElement){
+    const el = document.getElementById('qrContainer');
+    if (el.classList.contains('qr-fullscreen')){
+      el.classList.remove('qr-fullscreen');
+      document.getElementById('sessionBig').style.display = 'none';
+      document.body.style.overflow = '';
+      const btn = el.querySelector('.btn-full');
+      if (btn) btn.innerText = 'Phóng to full màn hình';
+    }
+  }
+});
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape'){
+    const el = document.getElementById('qrContainer');
+    if (el.classList.contains('qr-fullscreen') && !document.fullscreenElement){
+      toggleFullScreen();
+    }
+  }
+});
 
 /* ===== BOOT ===== */
 initAdmin();
