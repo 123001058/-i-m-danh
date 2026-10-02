@@ -26,6 +26,7 @@
     background:#faf6ea;border:1px solid #f1e7c7;color:#a37b18;
     font-size:12px;font-weight:600;padding:10px 14px;border-radius:10px;
     margin-bottom:18px;text-align:center;
+    white-space:pre-line;line-height:1.5;
   }
   .badge.err{background:#f8ebea;border-color:#f3d4d1;color:#a44a44}
   .badge.ok{background:#eef6ec;border-color:#d4e5d0;color:#4e7a46}
@@ -52,6 +53,15 @@
   .msg.err{background:#f8ebea;color:#a44a44;display:block}
   .msg.ok{background:#eef6ec;color:#4e7a46;display:block}
   .msg.warn{background:#faf6ea;color:#a37b18;display:block}
+
+  .browser-warn{
+    background:#fef3c7;border:1px solid #fde68a;color:#92400e;
+    padding:12px 14px;border-radius:10px;font-size:12px;font-weight:600;
+    margin-bottom:16px;text-align:center;line-height:1.5;
+    display:none;
+  }
+  .browser-warn.show{display:block}
+  .browser-warn strong{display:block;margin-bottom:4px;font-size:13px}
 </style>
 </head>
 <body>
@@ -73,11 +83,17 @@
   <h1>Điểm danh trực tuyến</h1>
   <p class="sub">Xác thực thiết bị · Chống điểm danh hộ</p>
 
+  <div id="browserWarn" class="browser-warn">
+    <strong>⚠️ Đang mở trong app</strong>
+    Vui lòng mở bằng <b>Safari</b> hoặc <b>Chrome</b> để điểm danh<br>
+    (Chạm ⋯ → chọn "Mở bằng trình duyệt")
+  </div>
+
   <div id="sessionBadge" class="badge">Đang kiểm tra phiên...</div>
 
   <form id="form" style="display:none">
     <label>Mã số sinh viên</label>
-    <input type="text" id="mssv" placeholder="Nhập MSSV..." autocomplete="off" required>
+    <input type="text" id="mssv" placeholder="Nhập MSSV..." autocomplete="off" required inputmode="numeric">
 
     <label>Họ và tên</label>
     <input type="text" id="name" readonly>
@@ -97,8 +113,9 @@
 </div>
 
 <script>
+/* ============ ĐỌC URL ============ */
 const url = new URLSearchParams(location.search);
-const session    = url.get('phien');
+const session    = (url.get('phien') || '').trim();
 const qrToken    = parseInt(url.get('token'), 10);
 const refreshSec = parseInt(url.get('refresh'), 10) || 20;
 
@@ -106,12 +123,27 @@ const badge = document.getElementById('sessionBadge');
 const msg   = document.getElementById('msg');
 const form  = document.getElementById('form');
 
+/* ============ DETECT IN-APP BROWSER ============ */
+(function detectInApp() {
+  const ua = navigator.userAgent || '';
+  const isZalo  = /Zalo/i.test(ua);
+  const isFB    = /FBAN|FBAV|FB_IAB|FBIOS/i.test(ua);
+  const isMess  = /Messenger/i.test(ua);
+  const isInsta = /Instagram/i.test(ua);
+  const isTikTok= /TikTok|BytedanceWebview/i.test(ua);
+  const isLine  = /Line\//i.test(ua);
+
+  if (isZalo || isFB || isMess || isInsta || isTikTok || isLine) {
+    document.getElementById('browserWarn').classList.add('show');
+  }
+})();
+
 function showMsg(t, type = 'err') {
   msg.innerText = t;
   msg.className = 'msg ' + type;
 }
 
-/* ============ DEVICE FINGERPRINT v2 ============ */
+/* ============ DEVICE FINGERPRINT ============ */
 function getDeviceId() {
   let cached = localStorage.getItem('lhu_device_id_v2');
   if (cached) return cached;
@@ -126,7 +158,6 @@ function getDeviceId() {
   parts.push(navigator.deviceMemory || '');
   parts.push(navigator.maxTouchPoints || '');
 
-  // Canvas fingerprint
   try {
     const c = document.createElement('canvas');
     const ctx = c.getContext('2d');
@@ -141,7 +172,6 @@ function getDeviceId() {
     parts.push(c.toDataURL().slice(-80));
   } catch(e) {}
 
-  // WebGL fingerprint
   try {
     const c = document.createElement('canvas');
     const gl = c.getContext('webgl') || c.getContext('experimental-webgl');
@@ -167,28 +197,54 @@ function getDeviceId() {
 
 /* ============ KHỞI TẠO ============ */
 (async function init() {
+  // 1. Không có tham số QR
   if (!session || !qrToken) {
     badge.className = 'badge err';
     badge.innerText = 'Vui lòng quét QR từ màn hình quản lý';
     return;
   }
 
+  // 2. Token hết hạn
   const nowToken = Math.floor(Date.now() / (refreshSec * 1000));
-  if (Math.abs(nowToken - qrToken) > 1) {
+  const tokenDiff = Math.abs(nowToken - qrToken);
+  if (tokenDiff > 1) {
     badge.className = 'badge err';
-    badge.innerText = 'Mã QR đã hết hạn, vui lòng quét lại';
+    badge.innerText = 'Mã QR đã hết hạn, vui lòng quét lại mã mới nhất';
     return;
   }
 
+  // 3. Load status từ GAS
+  badge.innerText = 'Đang kiểm tra phiên...';
   const status = await loadSessionStatus();
-  if (!status.isOpen || status.session !== session) {
-    badge.className = 'badge err';
-    badge.innerText = 'Phiên đã đóng hoặc không tồn tại';
-    return;
+
+  // 4. Xử lý kết quả
+  const sessionGAS = (status.session || '').trim();
+  const sessionURL = session.trim();
+  const gasLoaded = sessionGAS !== '' || status.isOpen === true;
+
+  if (!gasLoaded) {
+    // Không load được từ GAS (mất mạng / in-app browser chặn)
+    // → Vẫn cho vào form, GAS sẽ verify khi submit
+    console.warn('[checkin] Không load được status, bỏ qua check — GAS sẽ verify khi submit');
+    badge.className = 'badge';
+    badge.innerText = '⚠️ Không xác minh được phiên (mạng yếu)\nVẫn có thể thử điểm danh';
+  } else {
+    // Load được → check bình thường
+    if (!status.isOpen) {
+      badge.className = 'badge err';
+      badge.innerText = 'Phiên đã đóng, vui lòng liên hệ giảng viên';
+      return;
+    }
+    if (sessionGAS !== sessionURL) {
+      badge.className = 'badge err';
+      badge.innerText = 'Phiên không khớp!\n\nURL: ' + sessionURL + '\nServer: ' + sessionGAS;
+      return;
+    }
+    badge.className = 'badge';
+    badge.innerText = 'Phiên: ' + sessionURL;
   }
 
-  badge.innerText = 'Phiên: ' + session;
-
+  // 5. Load SV + fill category
   await loadStudents();
   const catSel = document.getElementById('category');
   CONFIG.CATEGORIES.forEach(c => {
@@ -206,7 +262,10 @@ document.getElementById('mssv').addEventListener('input', e => {
   const sv = validStudents.find(s => s.mssv === v);
   document.getElementById('name').value = sv ? sv.name : '';
   document.getElementById('submitBtn').disabled = !sv;
-  if (sv) msg.className = 'msg';
+  if (sv) {
+    msg.className = 'msg';
+    msg.style.display = 'none';
+  }
 });
 
 /* ============ SUBMIT ============ */
@@ -235,6 +294,7 @@ document.getElementById('form').addEventListener('submit', async e => {
 
     if (result.status === 'success') {
       form.style.display = 'none';
+      document.getElementById('browserWarn').classList.remove('show');
       badge.className = 'badge ok';
       badge.innerText = 'Đã điểm danh thành công';
       showMsg(`${name} đã điểm danh thành công`, 'ok');
@@ -256,7 +316,7 @@ document.getElementById('form').addEventListener('submit', async e => {
     }
 
   } catch (err) {
-    showMsg('Không kết nối được tới server. Vui lòng kiểm tra mạng và thử lại.', 'err');
+    showMsg('Không kết nối được tới server.\nVui lòng kiểm tra mạng và thử lại.', 'err');
     btn.disabled = false;
     btn.innerText = 'Xác nhận điểm danh';
   }
