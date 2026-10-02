@@ -6,6 +6,11 @@
 <title>Quản Lý Điểm Danh</title>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="config.js"></script>
+<script>
+  if (sessionStorage.getItem('admin_auth') !== '1') {
+    location.replace('index.html');
+  }
+</script>
 <style>
   *{margin:0;padding:0;box-sizing:border-box}
   body{
@@ -15,7 +20,6 @@
   }
   .wrapper{max-width:1200px;margin:auto}
 
-  /* ---------- HEADER ---------- */
   .topbar{
     background:#fff;border:1px solid #ece6d6;border-radius:16px;
     padding:20px 24px;margin-bottom:20px;
@@ -23,9 +27,9 @@
     flex-wrap:wrap;gap:14px;
   }
   .topbar-left{display:flex;align-items:center;gap:14px}
-  .topbar img{height:44px}
   .topbar h1{font-size:17px;font-weight:800;letter-spacing:-.2px}
   .topbar p{font-size:12px;color:#8896AB;margin-top:2px}
+  .topbar-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
   .status-badge{
     display:inline-flex;align-items:center;gap:8px;
     padding:8px 16px;border-radius:999px;font-size:12px;font-weight:600;
@@ -34,8 +38,13 @@
   .status-on{background:#eef6ec;color:#4e7a46}
   .pulse{width:8px;height:8px;background:#4e7a46;border-radius:50%;animation:pulse 1.5s infinite}
   @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+  .btn-logout{
+    background:#fff;color:#a44a44;border:1px solid #f3d4d1;
+    padding:8px 16px;border-radius:10px;font-size:12px;font-weight:600;
+    cursor:pointer;font-family:inherit;transition:.2s;
+  }
+  .btn-logout:hover{background:#f8ebea}
 
-  /* ---------- CARD ---------- */
   .card{
     background:#fff;border:1px solid #ece6d6;border-radius:16px;
     padding:22px;margin-bottom:20px;
@@ -43,7 +52,7 @@
   }
   .card-label{
     font-size:11px;font-weight:700;letter-spacing:1.5px;
-    text-transform:uppercase;color:#8896AB;margin-bottom:10px;
+    text-transform:uppercase;color:#8896AB;margin-bottom:14px;
   }
   .form-grid{
     display:grid;grid-template-columns:1.6fr 1fr 1fr;gap:12px;
@@ -56,6 +65,11 @@
     font-family:inherit;font-size:14px;outline:none;transition:.2s;
   }
   input:focus,select:focus{border-color:#D4A537;background:#fff}
+  .input-label{
+    font-size:10.5px;font-weight:700;letter-spacing:1.2px;
+    text-transform:uppercase;color:#8896AB;
+    display:block;margin-bottom:6px;
+  }
   .btn-row{display:flex;gap:10px;flex-wrap:wrap}
   button{
     padding:12px 22px;border-radius:10px;border:none;cursor:pointer;
@@ -69,11 +83,9 @@
   .btn-export:hover{background:#0a2547}
   .btn-full{background:#0B2E5C;color:#fff;width:100%;margin-top:14px}
 
-  /* ---------- MAIN LAYOUT ---------- */
   .main-layout{display:grid;grid-template-columns:340px 1fr;gap:20px}
   @media(max-width:900px){.main-layout{grid-template-columns:1fr}}
 
-  /* ---------- QR ---------- */
   .qr-section{text-align:center}
   .qr-title{font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#8896AB;margin-bottom:14px}
   #qrWrapper{
@@ -90,7 +102,6 @@
   .progress-bar{width:100%;max-width:252px;height:4px;background:#f1ebdc;border-radius:2px;margin:8px auto 0;overflow:hidden}
   .progress-fill{height:100%;background:#D4A537;border-radius:2px;transition:width 1s linear}
 
-  /* ---------- STATS ---------- */
   .stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
   .stat-box{background:#fbfaf6;border:1px solid #f1ebdc;border-radius:12px;padding:16px;text-align:center}
   .stat-label{font-size:10.5px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:#8896AB}
@@ -98,7 +109,6 @@
   .stat-green{color:#4e7a46}
   .stat-red{color:#a44a44}
 
-  /* ---------- TABLE ---------- */
   .table-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px}
   .table-header h3{font-size:14px;font-weight:700}
   .table-header input{width:220px;padding:9px 12px;font-size:13px}
@@ -127,38 +137,50 @@
 <body>
 <div class="wrapper">
 
-  <!-- TOPBAR -->
   <div class="topbar">
     <div class="topbar-left">
-      <img src="logo.png.md" alt="LHU">
+      <svg width="44" height="44" viewBox="0 0 120 120">
+        <defs>
+          <linearGradient id="lgGold2" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#E5B93C"/>
+            <stop offset="100%" stop-color="#B8860B"/>
+          </linearGradient>
+        </defs>
+        <circle cx="60" cy="60" r="56" fill="url(#lgGold2)"/>
+        <circle cx="60" cy="60" r="50" fill="none" stroke="#fff" stroke-width="2" opacity="0.5"/>
+        <path d="M30 52 L60 38 L90 52 L60 66 Z" fill="#fff"/>
+        <rect x="42" y="62" width="36" height="18" rx="2" fill="#fff" opacity="0.9"/>
+        <line x1="86" y1="50" x2="86" y2="72" stroke="#fff" stroke-width="2"/>
+        <circle cx="86" cy="75" r="3" fill="#fff"/>
+      </svg>
       <div>
         <h1>Quản lý điểm danh</h1>
         <p>Tạo phiên · QR động · Theo dõi realtime</p>
       </div>
     </div>
-    <div id="statusIndicator" class="status-badge status-off">
-      <span>Trạng thái: ĐÓNG</span>
+    <div class="topbar-right">
+      <div id="statusIndicator" class="status-badge status-off">
+        <span>Trạng thái: ĐÓNG</span>
+      </div>
+      <button class="btn-logout" onclick="logout()">Đăng xuất</button>
     </div>
   </div>
 
-  <!-- CẤU HÌNH -->
   <div class="card">
     <div class="card-label">Cấu hình phiên điểm danh</div>
     <div class="form-grid">
-      <input type="text" id="sessionName" placeholder="VD: Lập trình Web - Buổi 3">
-      <select id="qrRefreshTime">
-        <option value="15">QR đổi 15 giây</option>
-        <option value="20" selected>QR đổi 20 giây</option>
-        <option value="30">QR đổi 30 giây</option>
-        <option value="60">QR đổi 60 giây</option>
-      </select>
-      <select id="sessionDuration">
-        <option value="3">Mở 3 phút</option>
-        <option value="5" selected>Mở 5 phút</option>
-        <option value="10">Mở 10 phút</option>
-        <option value="30">Mở 30 phút</option>
-        <option value="999">Vô thời hạn</option>
-      </select>
+      <div>
+        <label class="input-label">Tên phiên</label>
+        <input type="text" id="sessionName" placeholder="VD: Lập trình Web - Buổi 3">
+      </div>
+      <div>
+        <label class="input-label">QR đổi mỗi (giây)</label>
+        <input type="number" id="qrRefreshTime" value="20" min="5" max="300">
+      </div>
+      <div>
+        <label class="input-label">Mở trong (phút)</label>
+        <input type="number" id="sessionDuration" value="5" min="1" max="1440">
+      </div>
     </div>
     <div class="btn-row">
       <button class="btn-on" onclick="turnOn()">Mở phiên</button>
@@ -167,10 +189,8 @@
     </div>
   </div>
 
-  <!-- MAIN -->
   <div class="main-layout">
 
-    <!-- QR -->
     <div class="card qr-section" id="qrContainer" style="display:none">
       <div class="qr-title">Mã QR động trực tiếp</div>
       <div id="qrWrapper">
@@ -184,7 +204,6 @@
       <button class="btn-full" onclick="toggleFullScreen()">Phóng to full màn hình</button>
     </div>
 
-    <!-- DANH SÁCH -->
     <div class="card">
       <div class="stats-grid">
         <div class="stat-box">
@@ -229,10 +248,14 @@ let progressInterval = null;
 let sessionTimer = null;
 let secondsRemaining = 20;
 let sessionSecondsLeft = 300;
-let currentRefreshSec = 20;
 let pollingInterval = null;
 
-/* ============ KHỞI TẠO ============ */
+function logout(){
+  if (!confirm('Đăng xuất khỏi trang quản lý?')) return;
+  sessionStorage.removeItem('admin_auth');
+  location.href = 'index.html';
+}
+
 async function initAdmin() {
   await loadStudents();
 
@@ -255,7 +278,6 @@ async function initAdmin() {
   document.getElementById('absentCount').innerText = classStudents.length;
   renderTable();
 
-  // Khôi phục trạng thái nếu F5 khi phiên đang mở
   const status = await loadSessionStatus();
   if (status.isOpen && status.session) {
     document.getElementById('sessionName').value = status.session || '';
@@ -265,7 +287,6 @@ async function initAdmin() {
   }
 }
 
-/* ============ RENDER BẢNG ============ */
 function renderTable() {
   const tbody = document.getElementById('studentList');
   tbody.innerHTML = '';
@@ -309,7 +330,6 @@ function filterTable() {
   });
 }
 
-/* ============ ĐỒNG BỘ TỪ SHEET ============ */
 async function syncAttendance() {
   const session = document.getElementById('sessionName').value.trim();
   if (!session) return;
@@ -329,7 +349,6 @@ async function syncAttendance() {
   renderTable();
 }
 
-/* ============ QR ============ */
 function generateQR(refreshSec) {
   const session = document.getElementById('sessionName').value.trim();
   const timeToken = Math.floor(Date.now() / (refreshSec * 1000));
@@ -338,7 +357,6 @@ function generateQR(refreshSec) {
     `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(link)}`;
 }
 
-/* ============ MỞ PHIÊN ============ */
 async function turnOn() {
   const session = document.getElementById('sessionName').value.trim();
   if (!session) { alert('Vui lòng nhập tên phiên học!'); return; }
@@ -346,7 +364,8 @@ async function turnOn() {
   const refreshSec  = parseInt(document.getElementById('qrRefreshTime').value) || 20;
   const durationMin = parseInt(document.getElementById('sessionDuration').value) || 5;
 
-  currentRefreshSec = refreshSec;
+  if (refreshSec < 5) { alert('Thời gian đổi QR tối thiểu 5 giây'); return; }
+  if (durationMin < 1) { alert('Thời gian mở phiên tối thiểu 1 phút'); return; }
 
   document.getElementById('qrContainer').style.display = 'block';
   document.getElementById('statusIndicator').innerHTML = '<span class="pulse"></span> Trạng thái: ĐANG MỞ';
@@ -369,28 +388,22 @@ async function turnOn() {
     }
   }, 1000);
 
-  if (durationMin !== 999) {
-    sessionSecondsLeft = durationMin * 60;
-    sessionTimer = setInterval(() => {
-      sessionSecondsLeft--;
-      const m = Math.floor(sessionSecondsLeft / 60);
-      const s = sessionSecondsLeft % 60;
-      document.getElementById('sessionCountdown').innerText = `${m}:${s < 10 ? '0' : ''}${s}`;
-      if (sessionSecondsLeft <= 0) {
-        turnOff();
-        alert('Đã hết thời gian phiên!');
-      }
-    }, 1000);
-  } else {
-    document.getElementById('sessionCountdown').innerText = 'Vô thời hạn';
-  }
+  sessionSecondsLeft = durationMin * 60;
+  sessionTimer = setInterval(() => {
+    sessionSecondsLeft--;
+    const m = Math.floor(sessionSecondsLeft / 60);
+    const s = sessionSecondsLeft % 60;
+    document.getElementById('sessionCountdown').innerText = `${m}:${s < 10 ? '0' : ''}${s}`;
+    if (sessionSecondsLeft <= 0) {
+      turnOff();
+      alert('Đã hết thời gian phiên!');
+    }
+  }, 1000);
 
-  // Polling đồng bộ mỗi 5s
   clearInterval(pollingInterval);
   pollingInterval = setInterval(syncAttendance, 5000);
   syncAttendance();
 
-  // Ghi trạng thái lên Sheet
   await saveSessionStatus({
     isOpen: true,
     session,
@@ -400,7 +413,6 @@ async function turnOn() {
   });
 }
 
-/* ============ ĐÓNG PHIÊN ============ */
 async function turnOff() {
   clearInterval(progressInterval);
   clearInterval(sessionTimer);
@@ -413,14 +425,12 @@ async function turnOff() {
   await saveSessionStatus({ isOpen: false });
 }
 
-/* ============ FULLSCREEN ============ */
 function toggleFullScreen() {
   const elem = document.getElementById('qrContainer');
   if (!document.fullscreenElement) elem.requestFullscreen?.();
   else document.exitFullscreen?.();
 }
 
-/* ============ EXPORT EXCEL ============ */
 function exportToExcel() {
   const session = document.getElementById('sessionName').value.trim() || 'Không xác định';
   let csv = 'Phiên,MSSV,Tên sinh viên,Trạng thái,Thời gian,Lĩnh vực,Ghi chú\n';
