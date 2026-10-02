@@ -1,5 +1,5 @@
 const CONFIG = {
-  GOOGLE_SHEET_API: 'https://script.google.com/macros/s/AKfycbxMN3KfzmnVNggqR6MVwQ4bsxc7MRrov1uj9XWqTVhOkQvCimLcQU7CkxFXu4JcYRsE/exec',
+  GOOGLE_SHEET_API: 'https://script.google.com/macros/s/AKfycby92QK-oUN096XaeWNtPEgzVey401FjSKeru60VBoaCStJdiapslVnuLY2EPRZLlhNxNA/exec',
   BASE_URL: 'https://123001058.github.io/DIEM_DANH',
   CATEGORIES: ['Thiết kế', 'Cơ khí', 'Điện', 'Lập trình'],
   FETCH_TIMEOUT: 10000
@@ -11,7 +11,7 @@ async function fetchWithTimeout(url, opts = {}, ms) {
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), ms || CONFIG.FETCH_TIMEOUT);
   try {
-    return await fetch(url, { ...opts, signal: ctrl.signal });
+    return await fetch(url, { ...opts, signal: ctrl.signal, cache: 'no-store' });
   } finally {
     clearTimeout(timer);
   }
@@ -19,7 +19,7 @@ async function fetchWithTimeout(url, opts = {}, ms) {
 
 async function loadStudents() {
   try {
-    const res = await fetchWithTimeout('./students.json?t=' + Date.now());
+    const res = await fetchWithTimeout('./students.json?t=' + Date.now() + '&_r=' + Math.random());
     if (!res.ok) throw new Error('Không load được students.json');
     const data = await res.json();
     validStudents = Array.isArray(data.students) ? data.students : [];
@@ -33,7 +33,9 @@ async function loadStudents() {
 
 async function loadSessionStatus() {
   try {
-    const res = await fetchWithTimeout(`${CONFIG.GOOGLE_SHEET_API}?action=getStatus&t=${Date.now()}`);
+    const res = await fetchWithTimeout(
+      `${CONFIG.GOOGLE_SHEET_API}?action=getStatus&t=${Date.now()}&_r=${Math.random()}`
+    );
     const data = await res.json();
     return {
       isOpen: !!data.isOpen,
@@ -50,7 +52,7 @@ async function loadSessionStatus() {
 
 async function fetchAttendance(sessionName) {
   try {
-    const url = `${CONFIG.GOOGLE_SHEET_API}?action=getAttendance&phien=${encodeURIComponent(sessionName)}&t=${Date.now()}`;
+    const url = `${CONFIG.GOOGLE_SHEET_API}?action=getAttendance&phien=${encodeURIComponent(sessionName)}&t=${Date.now()}&_r=${Math.random()}`;
     const res = await fetchWithTimeout(url);
     const data = await res.json();
     return Array.isArray(data.records) ? data.records : [];
@@ -60,11 +62,10 @@ async function fetchAttendance(sessionName) {
   }
 }
 
-/* POST QUA GET — đơn giản, không cần iframe */
 async function postToGAS(payload) {
   const params = new URLSearchParams();
   params.set('data', JSON.stringify(payload));
-  const url = CONFIG.GOOGLE_SHEET_API + '?' + params.toString();
+  const url = CONFIG.GOOGLE_SHEET_API + '?' + params.toString() + '&_r=' + Math.random();
 
   console.log('[postToGAS] URL length:', url.length);
 
