@@ -7,60 +7,30 @@
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
   *{margin:0;padding:0;box-sizing:border-box}
-  body{
-    font-family:'Plus Jakarta Sans',sans-serif;
-    background:#f7f6f2;color:#0B2E5C;
-    min-height:100vh;display:flex;align-items:center;justify-content:center;
-    padding:20px;
-  }
-  .card{
-    background:#fff;border:1px solid #ece6d6;border-radius:20px;
-    padding:48px 40px;max-width:440px;width:100%;text-align:center;
-    box-shadow:0 4px 40px rgba(11,46,92,.06);
-  }
+  body{font-family:'Plus Jakarta Sans',sans-serif;background:#f7f6f2;color:#0B2E5C;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;}
+  .card{background:#fff;border:1px solid #ece6d6;border-radius:20px;padding:48px 40px;max-width:440px;width:100%;text-align:center;box-shadow:0 4px 40px rgba(11,46,92,.06);}
   .logo{margin:0 auto 24px;display:block}
   h1{font-size:20px;font-weight:800;letter-spacing:-.3px;margin-bottom:8px}
   .sub{color:#8896AB;font-size:13px;margin-bottom:32px;line-height:1.5}
   .divider{width:40px;height:1px;background:#D4A537;margin:0 auto 32px}
-  .btn{
-    display:block;width:100%;padding:15px;border-radius:10px;font-weight:600;
-    font-size:14px;text-decoration:none;transition:.2s;
-    border:none;cursor:pointer;font-family:inherit;
-  }
+  .btn{display:block;width:100%;padding:15px;border-radius:10px;font-weight:600;font-size:14px;text-decoration:none;transition:.2s;border:none;cursor:pointer;font-family:inherit;}
   .btn-primary{background:#D4A537;color:#fff}
   .btn-primary:hover{background:#c09030}
   .btn-secondary{background:#fff;color:#0B2E5C;border:1px solid #ece6d6;margin-top:12px}
   .btn-secondary:hover{background:#fbfaf6}
   .note{color:#8896AB;font-size:11px;margin-top:14px}
   .footer{color:#B8BFC9;font-size:10.5px;margin-top:44px;letter-spacing:1.5px;text-transform:uppercase}
-
-  .modal-bg{
-    position:fixed;inset:0;background:rgba(11,46,92,.5);
-    backdrop-filter:blur(4px);z-index:100;
-    display:none;align-items:center;justify-content:center;padding:20px;
-  }
+  .modal-bg{position:fixed;inset:0;background:rgba(11,46,92,.5);backdrop-filter:blur(4px);z-index:100;display:none;align-items:center;justify-content:center;padding:20px;}
   .modal-bg.show{display:flex}
-  .modal{
-    background:#fff;border-radius:18px;padding:32px;
-    max-width:380px;width:100%;text-align:center;
-    box-shadow:0 20px 60px rgba(0,0,0,.2);
-    animation:pop .3s ease;
-  }
+  .modal{background:#fff;border-radius:18px;padding:32px;max-width:380px;width:100%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.2);animation:pop .3s ease;}
   @keyframes pop{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:scale(1)}}
   .modal h2{font-size:18px;font-weight:800;margin-bottom:6px}
   .modal p{color:#8896AB;font-size:13px;margin-bottom:20px}
-  .modal input{
-    width:100%;padding:14px;border:1px solid #ece6d6;border-radius:10px;
-    background:#fbfaf6;font-family:inherit;font-size:16px;
-    text-align:center;letter-spacing:8px;color:#0B2E5C;outline:none;
-  }
+  .modal input{width:100%;padding:14px;border:1px solid #ece6d6;border-radius:10px;background:#fbfaf6;font-family:inherit;font-size:16px;text-align:center;letter-spacing:8px;color:#0B2E5C;outline:none;}
   .modal input:focus{border-color:#D4A537;background:#fff}
   .modal-err{color:#a44a44;font-size:12.5px;font-weight:600;margin-top:10px;min-height:18px}
   .modal-actions{display:flex;gap:10px;margin-top:18px}
-  .modal-actions button{
-    flex:1;padding:12px;border-radius:10px;border:none;cursor:pointer;
-    font-weight:600;font-size:13px;font-family:inherit;
-  }
+  .modal-actions button{flex:1;padding:12px;border-radius:10px;border:none;cursor:pointer;font-weight:600;font-size:13px;font-family:inherit;}
   .btn-cancel{background:#f4f1e8;color:#0B2E5C}
   .btn-ok{background:#D4A537;color:#fff}
 </style>
@@ -82,17 +52,15 @@
       <circle cx="86" cy="75" r="3" fill="#fff"/>
       <text x="60" y="100" text-anchor="middle" font-size="13" font-weight="900" fill="#fff" font-family="'Plus Jakarta Sans',sans-serif" letter-spacing="3">LHU</text>
     </svg>
-
     <h1>Hệ thống điểm danh QR</h1>
     <p class="sub">Quét mã động · Xác thực thiết bị · Chống gian lận</p>
     <div class="divider"></div>
-
     <button class="btn btn-primary" onclick="openLogin()">Đăng nhập quản lý</button>
     <a class="btn btn-secondary" href="checkin.html">Sinh viên điểm danh</a>
     <p class="note">Dành cho giảng viên và quản trị viên</p>
     <p class="footer">Khơi nguồn sáng tạo · Làm chủ tương lai</p>
   </div>
-
+  
   <div class="modal-bg" id="modalBg">
     <div class="modal">
       <h2>Đăng nhập quản lý</h2>
@@ -105,8 +73,9 @@
       </div>
     </div>
   </div>
-
+  
 <script>
+// Mật khẩu tĩnh bảo vệ nhẹ phía Client
 const ADMIN_PWD = '272005';
 
 function openLogin(){
@@ -115,9 +84,7 @@ function openLogin(){
   document.getElementById('pwdInput').value = '';
   setTimeout(() => document.getElementById('pwdInput').focus(), 100);
 }
-function closeLogin(){
-  document.getElementById('modalBg').classList.remove('show');
-}
+function closeLogin(){ document.getElementById('modalBg').classList.remove('show'); }
 function submitLogin(){
   const v = document.getElementById('pwdInput').value.trim();
   if (v === ADMIN_PWD){
@@ -129,12 +96,8 @@ function submitLogin(){
     document.getElementById('pwdInput').focus();
   }
 }
-document.getElementById('pwdInput').addEventListener('keydown', e => {
-  if (e.key === 'Enter') submitLogin();
-});
-document.getElementById('modalBg').addEventListener('click', e => {
-  if (e.target.id === 'modalBg') closeLogin();
-});
+document.getElementById('pwdInput').addEventListener('keydown', e => { if (e.key === 'Enter') submitLogin(); });
+document.getElementById('modalBg').addEventListener('click', e => { if (e.target.id === 'modalBg') closeLogin(); });
 </script>
 </body>
 </html>
