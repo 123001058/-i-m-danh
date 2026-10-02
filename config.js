@@ -1,14 +1,12 @@
 const CONFIG = {
-  GOOGLE_SHEET_API: 'https://script.google.com/macros/s/AKfycbwC00ZagyAVE_LnBpCcel6n25rn0lEhHxkkmYXXGJ-IBdE5TUpyG843VKQSDgwGa07uLQ/exec',
+  GOOGLE_SHEET_API: 'https://script.google.com/macros/s/AKfycbxMN3KfzmnVNggqR6MVwQ4bsxc7MRrov1uj9XWqTVhOkQvCimLcQU7CkxFXu4JcYRsE/exec',
   BASE_URL: 'https://123001058.github.io/DIEM_DANH',
   CATEGORIES: ['Thiết kế', 'Cơ khí', 'Điện', 'Lập trình'],
-  FETCH_TIMEOUT: 8000,
-  POST_TIMEOUT: 12000
+  FETCH_TIMEOUT: 10000
 };
 
 let validStudents = [];
 
-/* ---------- Fetch có timeout ---------- */
 async function fetchWithTimeout(url, opts = {}, ms) {
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), ms || CONFIG.FETCH_TIMEOUT);
@@ -19,7 +17,6 @@ async function fetchWithTimeout(url, opts = {}, ms) {
   }
 }
 
-/* ---------- Load sinh viên ---------- */
 async function loadStudents() {
   try {
     const res = await fetchWithTimeout('./students.json?t=' + Date.now());
@@ -34,7 +31,6 @@ async function loadStudents() {
   }
 }
 
-/* ---------- Đọc trạng thái phiên ---------- */
 async function loadSessionStatus() {
   try {
     const res = await fetchWithTimeout(`${CONFIG.GOOGLE_SHEET_API}?action=getStatus&t=${Date.now()}`);
@@ -52,7 +48,6 @@ async function loadSessionStatus() {
   }
 }
 
-/* ---------- Lấy danh sách đã điểm danh ---------- */
 async function fetchAttendance(sessionName) {
   try {
     const url = `${CONFIG.GOOGLE_SHEET_API}?action=getAttendance&phien=${encodeURIComponent(sessionName)}&t=${Date.now()}`;
@@ -65,59 +60,18 @@ async function fetchAttendance(sessionName) {
   }
 }
 
-/* ---------- POST qua iframe — đọc được response thật ---------- */
-function postToGAS(payload) {
-  return new Promise((resolve, reject) => {
-    const iframeName = 'gas_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
-    const iframe = document.createElement('iframe');
-    iframe.name = iframeName;
-    iframe.style.cssText = 'position:absolute;width:0;height:0;border:0;visibility:hidden';
-    document.body.appendChild(iframe);
+/* ============ POST QUA GET — ĐƠN GIẢN & TIN CẬY ============ */
+async function postToGAS(payload) {
+  const params = new URLSearchParams();
+  params.set('data', JSON.stringify(payload));
+  const url = CONFIG.GOOGLE_SHEET_API + '?' + params.toString();
 
-    const form = document.createElement('form');
-    form.method = 'POST';
-    form.action = CONFIG.GOOGLE_SHEET_API + '?source=iframe';
-    form.target = iframeName;
-    form.style.display = 'none';
+  console.log('[postToGAS] URL length:', url.length);
 
-    const input = document.createElement('input');
-    input.type = 'hidden';
-    input.name = 'data';
-    input.value = JSON.stringify(payload);
-    form.appendChild(input);
-    document.body.appendChild(form);
+  const res = await fetchWithTimeout(url, {}, 15000);
+  if (!res.ok) throw new Error('HTTP ' + res.status);
 
-    let done = false;
-
-    const cleanup = () => {
-      window.removeEventListener('message', onMessage);
-      setTimeout(() => {
-        try { form.remove(); } catch(e) {}
-        try { iframe.remove(); } catch(e) {}
-      }, 500);
-    };
-
-    const onMessage = (e) => {
-      if (done) return;
-      try {
-        const result = typeof e.data === 'string' ? JSON.parse(e.data) : e.data;
-        if (result && result.status) {
-          done = true;
-          cleanup();
-          resolve(result);
-        }
-      } catch (err) {}
-    };
-
-    window.addEventListener('message', onMessage);
-    form.submit();
-
-    setTimeout(() => {
-      if (!done) {
-        done = true;
-        cleanup();
-        reject(new Error('GAS timeout'));
-      }
-    }, CONFIG.POST_TIMEOUT);
-  });
+  const data = await res.json();
+  console.log('[postToGAS] Response:', data);
+  return data;
 }
