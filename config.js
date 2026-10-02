@@ -1,5 +1,5 @@
 const CONFIG = {
-  GOOGLE_SHEET_API: 'https://script.google.com/macros/s/AKfycbxeE1Nv43wU2yGloY19KtgiMBy_T7JvZnH9xG9RInueWbDvd9DSc3tDB99sMji-Imb_Kg/exec',
+  GOOGLE_SHEET_API: 'https://script.google.com/macros/s/AKfycbwC00ZagyAVE_LnBpCcel6n25rn0lEhHxkkmYXXGJ-IBdE5TUpyG843VKQSDgwGa07uLQ/exec',
   BASE_URL: 'https://123001058.github.io/DIEM_DANH',
   CATEGORIES: ['Thiết kế', 'Cơ khí', 'Điện', 'Lập trình'],
   FETCH_TIMEOUT: 8000,
