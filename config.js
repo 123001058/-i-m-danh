@@ -3,7 +3,7 @@ const DYNAMIC_BASE_URL = CURRENT_HREF.substring(0, CURRENT_HREF.lastIndexOf('/')
 
 const CONFIG = {
   // Thay thế bằng link App Script thực tế của bạn
-  GOOGLE_SHEET_API: 'https://script.google.com/macros/s/AKfycbxMN3KfzmnVNggqR6MVwQ4bsxc7MRrov1uj9XWqTVhOkQvCimLcQU7CkxFXu4JcYRsE/exec',
+  GOOGLE_SHEET_API: 'https://script.google.com/macros/s/AKfycbxZJBUgdnJ0moJM52NFXcIpPmhQ6BS03OqSnbADbcwuW9xED2Z6NyMoLyfc-JJfZS9gug/exec',
   BASE_URL: DYNAMIC_BASE_URL, 
   CATEGORIES: ['Thiết kế', 'Cơ khí', 'Điện', 'Lập trình'],
   FETCH_TIMEOUT: 10000
