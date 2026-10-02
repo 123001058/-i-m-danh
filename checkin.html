@@ -97,6 +97,7 @@
         const urlParams = new URLSearchParams(window.location.search);
         const currentSession = urlParams.get('phien');
         const qrToken = parseInt(urlParams.get('token'), 10);
+        const refreshTime = parseInt(urlParams.get('refresh')) || 20; // Default 20 giây
         const errorBox = document.getElementById('errorMsg');
         const submitBtn = document.getElementById('submitBtn');
 
@@ -129,7 +130,8 @@
                 submitBtn.disabled = true;
                 return false;
             }
-            const currentToken = Math.floor(Date.now() / 20000);
+            // Kiểm tra token dựa trên thời gian QR thực tế từ admin
+            const currentToken = Math.floor(Date.now() / (refreshTime * 1000));
             if (Math.abs(currentToken - qrToken) > 1) {
                 showError('⚠️ QR đã hết hạn! Quét QR mới nhất.');
                 submitBtn.disabled = true;
