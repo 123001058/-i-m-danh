@@ -3,20 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hệ Thống Quản Lý Điểm Danh Thông Minh</title>
+    <title>Điểm Danh Trực Tuyến - Xác Thực Thiết Bị</title>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
             --primary: #4f46e5;
-            --primary-hover: #4338ca;
             --success: #10b981;
             --danger: #ef4444;
-            --warning: #f59e0b;
-            --bg: #0f172a;
-            --card-bg: #1e293b;
-            --text: #f8fafc;
-            --text-muted: #94a3b8;
-            --border: #334155;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
         }
 
         body {
@@ -24,340 +22,191 @@
             background: var(--bg);
             color: var(--text);
             margin: 0;
-            padding: 30px;
-            min-height: 100vh;
-        }
-
-        .wrapper { max-width: 1000px; margin: auto; }
-
-        .header-card {
-            background: var(--card-bg);
-            border: 1px solid var(--border);
-            padding: 30px;
-            border-radius: 20px;
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+            padding: 20px;
             display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 20px;
-        }
-
-        h1 { margin: 0; font-size: 24px; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 10px; }
-        p { margin: 5px 0 0 0; color: var(--text-muted); font-size: 14px; }
-
-        .control-group {
-            display: grid;
-            grid-template-columns: 2fr 1fr 1fr auto auto;
-            gap: 12px;
-            width: 100%;
-            margin-top: 15px;
-        }
-
-        @media(max-width: 768px) {
-            .control-group { grid-template-columns: 1fr; }
-        }
-
-        input, select {
-            background: #0f172a;
-            border: 1px solid var(--border);
-            padding: 12px 16px;
-            color: white;
-            font-size: 15px;
-            border-radius: 12px;
-            outline: none;
-            transition: 0.2s;
-        }
-        input:focus, select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2); }
-
-        button {
-            padding: 12px 20px;
-            font-size: 15px;
-            font-weight: 600;
-            border: none;
-            border-radius: 12px;
-            cursor: pointer;
-            transition: 0.2s;
-            display: inline-flex;
-            align-items: center;
             justify-content: center;
-            gap: 8px;
-        }
-        .btn-on { background: var(--success); color: white; }
-        .btn-on:hover { background: #059669; }
-        .btn-off { background: var(--danger); color: white; }
-        .btn-off:hover { background: #dc2626; }
-        .btn-fullscreen { background: var(--primary); color: white; margin-top: 15px; width: 100%; }
-
-        .main-grid {
-            display: grid;
-            grid-template-columns: 350px 1fr;
-            gap: 25px;
-            margin-top: 25px;
+            align-items: center;
+            min-height: 100vh;
+            box-sizing: border-box;
         }
 
-        @media(max-width: 768px) {
-            .main-grid { grid-template-columns: 1fr; }
-        }
-
-        .card {
+        .container {
             background: var(--card-bg);
-            border: 1px solid var(--border);
+            padding: 35px;
             border-radius: 20px;
-            padding: 25px;
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
-            text-align: center;
-        }
-
-        #qrWrapper { background: white; padding: 15px; border-radius: 14px; display: inline-block; margin-top: 10px; }
-        #qrImage { width: 240px; height: 240px; display: block; margin: auto; }
-        
-        .progress-bar-container { width: 100%; background: var(--border); height: 6px; border-radius: 3px; margin: 15px 0 8px; overflow: hidden; }
-        .progress-bar { width: 100%; height: 100%; background: var(--primary); transition: width 1s linear; }
-        .timer-text { font-size: 13px; color: var(--text-muted); }
-
-        .status-badge {
-            display: inline-block;
-            padding: 6px 14px;
-            border-radius: 20px;
-            font-weight: 600;
-            font-size: 13px;
-        }
-        .status-off { background: rgba(239, 68, 68, 0.15); color: var(--danger); }
-        .status-on { background: rgba(16, 185, 129, 0.15); color: var(--success); }
-
-        .table-card { padding: 25px; }
-        .table-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px; }
-        .table-header h3 { margin: 0; font-size: 18px; }
-
-        table { width: 100%; border-collapse: collapse; font-size: 14px; text-align: left; }
-        th, td { padding: 12px 14px; border-bottom: 1px solid var(--border); }
-        th { background: rgba(255,255,255,0.03); color: var(--text-muted); font-weight: 600; }
-        
-        select.status-select {
-            background: #0f172a;
-            color: white;
+            width: 100%;
+            max-width: 480px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+            box-sizing: border-box;
             border: 1px solid var(--border);
-            padding: 6px 10px;
-            border-radius: 8px;
-            font-size: 13px;
-            cursor: pointer;
-            outline: none;
+            text-align: left;
         }
-        .badge-present { color: var(--success); font-weight: 600; }
-        .badge-excused { color: var(--warning); font-weight: 600; }
-        .badge-absent { color: var(--danger); font-weight: 600; }
+
+        h2 { margin-top: 0; font-size: 22px; color: var(--text); text-align: center; }
+        .badge { background: #e0f2fe; color: #0369a1; padding: 6px 14px; border-radius: 20px; font-weight: 600; font-size: 13px; display: block; text-align: center; margin-bottom: 20px; }
+
+        label { font-size: 13px; font-weight: 600; color: var(--text-muted); display: block; margin-top: 12px; margin-bottom: 4px; }
+        input, select, textarea {
+            padding: 12px 14px; font-size: 15px; width: 100%; box-sizing: border-box; border-radius: 10px; border: 1px solid var(--border); outline: none; background: #fff; color: var(--text);
+        }
+        input:focus, select:focus, textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15); }
+        input[readonly] { background-color: #f1f5f9; color: #64748b; cursor: not-allowed; }
+        textarea { resize: vertical; height: 60px; }
+
+        button { background: var(--primary); color: white; border: none; cursor: pointer; font-weight: 600; font-size: 16px; width: 100%; padding: 14px; border-radius: 10px; margin-top: 20px; transition: 0.2s; }
+        button:hover { background: #4338ca; }
+        button:disabled { background: #cbd5e1; cursor: not-allowed; }
+
+        .error-msg { color: var(--danger); font-size: 14px; font-weight: 600; margin: 15px 0; padding: 12px; background: #fee2e2; border-radius: 10px; display: none; text-align: center; }
+        .success-msg { color: var(--success); font-size: 15px; font-weight: 600; margin-top: 15px; text-align: center; }
     </style>
 </head>
 <body>
-    <div class="wrapper">
-        <div class="header-card">
-            <div>
-                <h1>🎓 Quản Lý Điểm Danh Thông Minh</h1>
-                <p>Cấu hình thời gian mở phiên và đổi mã chống gian lận.</p>
-            </div>
-            <div id="statusIndicator" class="status-badge status-off">Trạng thái: ĐÃ ĐÓNG</div>
+    <div class="container">
+        <h2>🎓 Điểm Danh Trực Tuyến</h2>
+        <div id="sessionBadge" class="badge">Đang kết nối phiên học...</div>
+
+        <div id="errorMsg" class="error-msg"></div>
+
+        <form id="attendanceForm">
+            <label>Mã số sinh viên (MSSV)</label>
+            <input type="text" id="mssv" placeholder="Nhập MSSV của bạn..." required autocomplete="off">
             
-            <div class="control-group">
-                <input type="text" id="sessionName" placeholder="Tên phiên (VD: Thực hành CNC)">
-                
-                <select id="qrRefreshTime" title="Thời gian đổi mã QR">
-                    <option value="15">QR đổi mỗi 15 giây</option>
-                    <option value="20" selected>QR đổi mỗi 20 giây</option>
-                    <option value="30">QR đổi mỗi 30 giây</option>
-                </select>
+            <label>Họ và Tên</label>
+            <input type="text" id="studentName" placeholder="Tự động điền theo MSSV" readonly required>
 
-                <select id="sessionDuration" title="Thời gian mở điểm danh">
-                    <option value="3">Mở trong 3 phút</option>
-                    <option value="5" selected>Mở trong 5 phút</option>
-                    <option value="10">Mở trong 10 phút</option>
-                    <option value="999">Mở vô thời hạn</option>
-                </select>
+            <label>Lĩnh vực / Bộ phận</label>
+            <select id="category" required>
+                <option value="" disabled selected>-- Chọn lĩnh vực --</option>
+                <option value="Thiết kế">Thiết kế</option>
+                <option value="Cơ khí">Cơ khí</option>
+                <option value="Điện">Điện</option>
+                <option value="Lập trình">Lập trình</option>
+            </select>
 
-                <button class="btn-on" onclick="turnOn()">🟢 Mở</button>
-                <button class="btn-off" onclick="turnOff()">🔴 Đóng</button>
-            </div>
-        </div>
+            <label>Ghi chú công việc</label>
+            <textarea id="note" placeholder="Nhập ngắn gọn nội dung..." required></textarea>
 
-        <div class="main-grid">
-            <div class="card" id="qrContainerCard" style="display: none;">
-                <h3 style="margin-top:0; font-size: 16px;">Mã QR & Thời Gian</h3>
-                <div id="qrWrapper">
-                    <img id="qrImage" src="" alt="QR Code">
-                </div>
-                <div class="progress-bar-container">
-                    <div id="progressBar" class="progress-bar"></div>
-                </div>
-                <div class="timer-text">Đổi mã QR sau: <span id="secondsLeft" style="font-weight: bold; color: var(--primary);">20</span>s</div>
-                <div class="timer-text" style="margin-top: 8px; color: var(--warning);">⏳ Tổng thời gian phiên: <span id="sessionCountdown" style="font-weight: bold;">--:--</span></div>
-                <button class="btn-fullscreen" onclick="toggleFullScreen()">🔲 Phóng To Máy Chiếu</button>
-            </div>
+            <button type="submit" id="submitBtn">✓ Xác nhận điểm danh</button>
+        </form>
 
-            <div class="card table-card" style="text-align: left;" id="fullTableContainer">
-                <div class="table-header">
-                    <h3>📋 Danh Sách Điểm Danh Lớp</h3>
-                    <input type="text" id="searchStudent" placeholder="Tìm kiếm sinh viên..." style="width: 200px; padding: 8px 12px; font-size: 13px;" onkeyup="filterTable()">
-                </div>
-                <div style="overflow-x: auto; max-height: 400px;">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>MSSV</th>
-                                <th>Họ và Tên</th>
-                                <th>Trạng Thái</th>
-                                <th>Thời Gian</th>
-                            </tr>
-                        </thead>
-                        <tbody id="adminStudentList"></tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
+        <div id="message" class="success-msg"></div>
     </div>
 
     <script>
-        const BASE_LINK = "https://123001058.github.io/DIEM_DANH/"; 
-        let qrInterval = null, progressInterval = null, sessionTimerInterval = null;
-        let secondsRemaining = 20;
-        let sessionSecondsLeft = 300;
+        // Dán link Google Apps Script Web App của bạn vào đây
+        const scriptURL = 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE';
 
-        const classStudents = [
-            { mssv: '123000555', name: 'Nguyễn Lê Vũ Duy', status: 'Chưa điểm danh', time: '-' },
-            { mssv: '123000078', name: 'Trần Hải Nam', status: 'Chưa điểm danh', time: '-' },
-            { mssv: '125001579', name: 'Nguyễn Thiện Nhân', status: 'Chưa điểm danh', time: '-' },
-            { mssv: '124000534', name: 'Nguyễn Ngọc Bình An', status: 'Chưa điểm danh', time: '-' },
-            { mssv: '125001875', name: 'Nguyễn Hoàng Phi Hùng', status: 'Chưa điểm danh', time: '-' },
-            { mssv: '124000737', name: 'Phạm tuấn phát', status: 'Chưa điểm danh', time: '-' },
-            { mssv: '125001809', name: 'Nguyễn Thanh Thái', status: 'Chưa điểm danh', time: '-' },
-            { mssv: '124001238', name: 'Nguyễn Đức Huy', status: 'Chưa điểm danh', time: '-' },
-            { mssv: '124001851', name: 'Nguyễn Thị Thùy', status: 'Chưa điểm danh', time: '-' },
-            { mssv: '124000354', name: 'Phan Công Thịnh', status: 'Chưa điểm danh', time: '-' },
-            { mssv: '124001589', name: 'Nguyễn Hồng Hiệp', status: 'Chưa điểm danh', time: '-' },
-            { mssv: '125000568', name: 'Phan Quốc Bảo', status: 'Chưa điểm danh', time: '-' },
-            { mssv: '125002381', name: 'Cao thế phi', status: 'Chưa điểm danh', time: '-' },
-            { mssv: '123000651', name: 'Cao Thanh Nghĩa', status: 'Chưa điểm danh', time: '-' },
-            { mssv: '125001648', name: 'Nguyễn Thanh Tiến', status: 'Chưa điểm danh', time: '-' },
-            { mssv: '125000372', name: 'Nguyễn Huỳnh Minh Thông', status: 'Chưa điểm danh', time: '-' },
-            { mssv: '123000722', name: 'Bùi Trần Thanh Sang', status: 'Chưa điểm danh', time: '-' },
-            { mssv: '125000287', name: 'Nguyễn Duy Phúc', status: 'Chưa điểm danh', time: '-' },
-            { mssv: '123001058', name: 'Nguyễn Khánh Hoà', status: 'Chưa điểm danh', time: '-' },
-            { mssv: '123000185', name: 'Lê Văn Minh', status: 'Chưa điểm danh', time: '-' },
-            { mssv: '123000872', name: 'Nguyễn Đình Hậu', status: 'Chưa điểm danh', time: '-' },
-            { mssv: '125000798', name: 'Nguyễn Minh Khang', status: 'Chưa điểm danh', time: '-' },
-            { mssv: '123001188', name: 'Phạm Anh Tuấn', status: 'Chưa điểm danh', time: '-' },
-            { mssv: '125000550', name: 'Nguyễn Duy Tiến', status: 'Chưa điểm danh', time: '-' },
-            { mssv: '123000432', name: 'Trần Thành Long', status: 'Chưa điểm danh', time: '-' },
-            { mssv: '123000375', name: 'Phạm Đinh Tài Lộc', status: 'Chưa điểm danh', time: '-' },
-            { mssv: '123001394', name: 'Đỗ Văn Quyền', status: 'Chưa điểm danh', time: '-' }
+        const validStudents = [
+            { mssv: '123000555', name: 'Nguyễn Lê Vũ Duy' }, { mssv: '123000078', name: 'Trần Hải Nam' },
+            { mssv: '125001579', name: 'Nguyễn Thiện Nhân' }, { mssv: '124000534', name: 'Nguyễn Ngọc Bình An' },
+            { mssv: '125001875', name: 'Nguyễn Hoàng Phi Hùng' }, { mssv: '124000737', name: 'Phạm tuấn phát' },
+            { mssv: '125001809', name: 'Nguyễn Thanh Thái' }, { mssv: '124001238', name: 'Nguyễn Đức Huy' },
+            { mssv: '124001851', name: 'Nguyễn Thị Thùy' }, { mssv: '124000354', name: 'Phan Công Thịnh' },
+            { mssv: '124001589', name: 'Nguyễn Hồng Hiệp' }, { mssv: '125000568', name: 'Phan Quốc Bảo' },
+            { mssv: '125002381', name: 'Cao thế phi' }, { mssv: '123000651', name: 'Cao Thanh Nghĩa' },
+            { mssv: '125001648', name: 'Nguyễn Thanh Tiến' }, { mssv: '125000372', name: 'Nguyễn Huỳnh Minh Thông' },
+            { mssv: '123000722', name: 'Bùi Trần Thanh Sang' }, { mssv: '125000287', name: 'Nguyễn Duy Phúc' },
+            { mssv: '123001058', name: 'Nguyễn Khánh Hoà' }, { mssv: '123000185', name: 'Lê Văn Minh' },
+            { mssv: '123000872', name: 'Nguyễn Đình Hậu' }, { mssv: '125000798', name: 'Nguyễn Minh Khang' },
+            { mssv: '123001188', name: 'Phạm Anh Tuấn' }, { mssv: '125000550', name: 'Nguyễn Duy Tiến' },
+            { mssv: '123000432', name: 'Trần Thành Long' }, { mssv: '123000375', name: 'Phạm Đinh Tài Lộc' },
+            { mssv: '123001394', name: 'Đỗ Văn Quyền' }
         ];
 
-        function renderAdminTable() {
-            const tbody = document.getElementById('adminStudentList');
-            tbody.innerHTML = '';
-            classStudents.forEach((s, idx) => {
-                tbody.innerHTML += `
-                    <tr>
-                        <td><b>${s.mssv}</b></td>
-                        <td>${s.name}</td>
-                        <td>
-                            <select class="status-select" onchange="updateStatus(${idx}, this.value)">
-                                <option value="Chưa điểm danh" ${s.status === 'Chưa điểm danh' ? 'selected' : ''}>Chưa điểm danh</option>
-                                <option value="Có mặt" ${s.status === 'Có mặt' ? 'selected' : ''}>Có mặt</option>
-                                <option value="Vắng có phép" ${s.status === 'Vắng có phép' ? 'selected' : ''}>Vắng có phép</option>
-                                <option value="Vắng không phép" ${s.status === 'Vắng không phép' ? 'selected' : ''}>Vắng không phép</option>
-                            </select>
-                        </td>
-                        <td>${s.time}</td>
-                    </tr>`;
-            });
+        const urlParams = new URLSearchParams(window.location.search);
+        const currentSession = urlParams.get('phien');
+        const qrToken = parseInt(urlParams.get('token'), 10);
+        const errorBox = document.getElementById('errorMsg');
+        const submitBtn = document.getElementById('submitBtn');
+
+        if (currentSession) {
+            document.getElementById('sessionBadge').innerText = "Phiên: " + currentSession;
+        } else {
+            document.getElementById('sessionBadge').innerText = "⚠️ Chưa chọn phiên học từ mã QR";
         }
 
-        function updateStatus(index, newStatus) {
-            classStudents[index].status = newStatus;
-            classStudents[index].time = newStatus !== 'Chưa điểm danh' ? new Date().toLocaleTimeString('vi-VN') : '-';
-            renderAdminTable();
-        }
-
-        function filterTable() {
-            let keyword = document.getElementById('searchStudent').value.toLowerCase();
-            let rows = document.getElementById('adminStudentList').getElementsByTagName('tr');
-            for (let row of rows) {
-                let text = row.innerText.toLowerCase();
-                row.style.display = text.includes(keyword) ? '' : 'none';
+        function verifyToken() {
+            if (!qrToken) {
+                showError("⚠️ Vui lòng quét mã QR trực tiếp từ màn hình quản lý!");
+                submitBtn.disabled = true;
+                return false;
             }
+            const currentToken = Math.floor(Date.now() / 20000);
+            if (Math.abs(currentToken - qrToken) > 1) {
+                showError("⚠️ Mã QR đã hết hạn! Vui lòng quét mã mới nhất.");
+                submitBtn.disabled = true;
+                return false;
+            }
+            return true;
         }
-        renderAdminTable();
 
-        function generateQR(refreshSec) {
-            let session = document.getElementById('sessionName').value.trim();
-            let timeToken = Math.floor(Date.now() / (refreshSec * 1000));
-            let fullLink = `${BASE_LINK}?phien=${encodeURIComponent(session)}&token=${timeToken}`;
-            document.getElementById('qrImage').src = "https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=" + encodeURIComponent(fullLink);
+        function showError(msg) {
+            errorBox.innerText = msg;
+            errorBox.style.display = 'block';
         }
 
-        function turnOn() {
-            let session = document.getElementById('sessionName').value.trim();
-            if(!session) { alert("Vui lòng nhập tên phiên điểm danh!"); return; }
+        verifyToken();
 
-            const refreshSec = parseInt(document.getElementById('qrRefreshTime').value, 10);
-            const durationMin = parseInt(document.getElementById('sessionDuration').value, 10);
+        document.getElementById('mssv').addEventListener('input', function() {
+            const val = this.value.trim();
+            const student = validStudents.find(s => s.mssv === val);
+            
+            if (student) {
+                document.getElementById('studentName').value = student.name;
+                errorBox.style.display = 'none';
 
-            document.getElementById('qrContainerCard').style.display = "block";
-            let indicator = document.getElementById('statusIndicator');
-            indicator.innerText = "Trạng thái: ĐANG MỞ";
-            indicator.className = "status-badge status-on";
-
-            clearInterval(qrInterval);
-            clearInterval(progressInterval);
-            clearInterval(sessionTimerInterval);
-
-            secondsRemaining = refreshSec;
-            generateQR(refreshSec);
-
-            progressInterval = setInterval(() => {
-                secondsRemaining--;
-                document.getElementById('secondsLeft').innerText = secondsRemaining;
-                document.getElementById('progressBar').style.width = (secondsRemaining / refreshSec * 100) + '%';
-                if (secondsRemaining <= 0) { 
-                    secondsRemaining = refreshSec; 
-                    generateQR(refreshSec); 
+                let localHistory = JSON.parse(localStorage.getItem('checked_sessions') || "{}");
+                if (currentSession && localHistory[currentSession]) {
+                    showError(`⚠️ Thiết bị này đã dùng để điểm danh cho MSSV (${localHistory[currentSession]}) trong phiên này. Không thể điểm danh hộ!`);
+                    submitBtn.disabled = true;
+                } else {
+                    submitBtn.disabled = false;
                 }
-            }, 1000);
-
-            if (durationMin !== 999) {
-                sessionSecondsLeft = durationMin * 60;
-                sessionTimerInterval = setInterval(() => {
-                    sessionSecondsLeft--;
-                    let m = Math.floor(sessionSecondsLeft / 60);
-                    let s = sessionSecondsLeft % 60;
-                    document.getElementById('sessionCountdown').innerText = `${m}:${s < 10 ? '0' : ''}${s}`;
-
-                    if (sessionSecondsLeft <= 0) {
-                        turnOff();
-                        alert("⏰ Đã hết thời gian mở điểm danh của phiên này!");
-                    }
-                }, 1000);
             } else {
-                document.getElementById('sessionCountdown').innerText = "Không giới hạn";
+                document.getElementById('studentName').value = '';
             }
-        }
+        });
 
-        function turnOff() {
-            clearInterval(qrInterval);
-            clearInterval(progressInterval);
-            clearInterval(sessionTimerInterval);
-            document.getElementById('qrContainerCard').style.display = "none";
-            let indicator = document.getElementById('statusIndicator');
-            indicator.innerText = "Trạng thái: ĐÃ ĐÓNG";
-            indicator.className = "status-badge status-off";
-            if (document.fullscreenElement) document.exitFullscreen();
-        }
+        document.getElementById('attendanceForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            if (!verifyToken()) return;
 
-        function toggleFullScreen() {
-            let elem = document.getElementById("qrWrapper");
-            if (!document.fullscreenElement) elem.requestFullscreen?.();
-            else document.exitFullscreen?.();
-        }
+            const inputMssv = document.getElementById('mssv').value.trim();
+            const inputName = document.getElementById('studentName').value.trim();
+            const category = document.getElementById('category').value;
+            const note = document.getElementById('note').value.trim();
+            const msg = document.getElementById('message');
+
+            if (!inputName) {
+                showError("❌ MSSV không hợp lệ hoặc không có trong danh sách lớp!");
+                return;
+            }
+
+            submitBtn.disabled = true;
+            submitBtn.innerText = 'Đang xử lý...';
+
+            fetch(scriptURL, { 
+                method: 'POST', 
+                mode: 'no-cors',
+                body: JSON.stringify({ phien: currentSession || 'Mặc định', mssv: inputMssv, name: inputName, category, note }) 
+            })
+            .then(() => {
+                let localHistory = JSON.parse(localStorage.getItem('checked_sessions') || "{}");
+                if(currentSession) {
+                    localHistory[currentSession] = inputMssv;
+                    localStorage.setItem('checked_sessions', JSON.stringify(localHistory));
+                }
+
+                msg.innerText = `✓ Tuyệt vời! ${inputName} đã điểm danh thành công.`;
+                document.getElementById('attendanceForm').style.display = 'none';
+            })
+            .catch(() => {
+                showError("⚠️ Lỗi kết nối mạng, vui lòng thử lại!");
+                submitBtn.disabled = false;
+                submitBtn.innerText = '✓ Xác nhận điểm danh';
+            });
+        });
     </script>
 </body>
 </html>
