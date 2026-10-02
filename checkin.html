@@ -7,7 +7,185 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="config.js"></script>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Điểm Danh</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="config.js"></script>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Plus Jakarta Sans',sans-serif;background:#f7f6f2;color:#0B2E5C;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+  .card{background:#fff;border:1px solid #ece6d6;border-radius:18px;padding:32px;max-width:440px;width:100%;box-shadow:0 4px 30px rgba(11,46,92,.05)}
+  h1{font-size:20px;font-weight:700;text-align:center;margin-bottom:6px}
+  .sub{text-align:center;color:#8896AB;font-size:13px;margin-bottom:22px}
+  .badge{background:#faf6ea;border:1px solid #f1e7c7;color:#a37b18;font-size:12px;font-weight:600;padding:9px 14px;border-radius:10px;margin-bottom:16px;text-align:center}
+  .badge.err{background:#f8ebea;border-color:#f3d4d1;color:#a44a44}
+  label{font-size:11px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;color:#8896AB;display:block;margin:14px 0 6px}
+  input,select,textarea{width:100%;padding:13px 14px;border:1px solid #ece6d6;border-radius:10px;background:#fbfaf6;font-family:inherit;font-size:14px;outline:none;color:#0B2E5C}
+  input:focus,select:focus,textarea:focus{border-color:#D4A537;background:#fff}
+  input[readonly]{background:#f4f1e8;color:#64748b}
+  button{width:100%;padding:15px;background:#D4A537;color:#fff;border:none;border-radius:10px;font-weight:600;font-size:14px;margin-top:20px;cursor:pointer;font-family:inherit}
+  button:disabled{background:#cbd5e1;cursor:not-allowed}
+  .msg{padding:12px 14px;border-radius:10px;font-size:13px;font-weight:600;margin-top:14px;text-align:center}
+  .msg.err{background:#f8ebea;color:#a44a44}
+  .msg.ok{background:#eef6ec;color:#4e7a46}
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>Điểm danh trực tuyến</h1>
+  <p class="sub">Xác thực thiết bị &amp; vị trí</p>
+
+  <div id="sessionBadge" class="badge">Đang kiểm tra phiên...</div>
+
+  <form id="form" style="display:none">
+    <label>Mã số sinh viên</label>
+    <input type="text" id="mssv" placeholder="Nhập MSSV..." autocomplete="off" required>
+
+    <label>Họ và tên</label>
+    <input type="text" id="name" readonly>
+
+    <label>Lĩnh vực / Bộ phận</label>
+    <select id="category" required>
+      <option value="">-- Chọn --</option>
+    </select>
+
+    <label>Ghi chú</label>
+    <textarea id="note" placeholder="Ngắn gọn..."></textarea>
+
+    <button type="submit" id="submitBtn">Xác nhận điểm danh</button>
+  </form>
+
+  <div id="msg" class="msg" style="display:none"></div>
+</div>
+
+<script>
+const url = new URLSearchParams(location.search);
+const session = url.get('phien');
+const qrToken = parseInt(url.get('token'), 10);
+const refreshSec = parseInt(url.get('refresh'), 10) || 20;
+
+const badge = document.getElementById('sessionBadge');
+const msg = document.getElementById('msg');
+const form = document.getElementById('form');
+
+function showMsg(t, type = 'err') {
+  msg.innerText = t;
+  msg.className = 'msg ' + type;
+  msg.style.display = 'block';
+}
+
+/* ---------- Lấy GPS ---------- */
+function getLocation() {
+  return new Promise(resolve => {
+    if (!navigator.geolocation) return resolve('');
+    navigator.geolocation.getCurrentPosition(
+      pos => resolve(`${pos.coords.latitude},${pos.coords.longitude}`),
+      () => resolve(''),
+      { timeout: 5000, enableHighAccuracy: true }
+    );
+  });
+}
+
+/* ---------- Khởi tạo ---------- */
+(async function init() {
+  if (!session || !qrToken) {
+    badge.className = 'badge err';
+    badge.innerText = '⚠ Vui lòng quét QR từ màn hình quản lý';
+    return;
+  }
+
+  const nowToken = Math.floor(Date.now() / (refreshSec * 1000));
+  if (Math.abs(nowToken - qrToken) > 1) {
+    badge.className = 'badge err';
+    badge.innerText = '⚠ Mã QR đã hết hạn, vui lòng quét lại';
+    return;
+  }
+
+  const status = await loadSessionStatus();
+  if (!status.isOpen || status.session !== session) {
+    badge.className = 'badge err';
+    badge.innerText = '⚠ Phiên đã đóng hoặc không tồn tại';
+    return;
+  }
+
+  badge.innerText = 'Phiên: ' + session;
+
+  await loadStudents();
+  const catSel = document.getElementById('category');
+  CONFIG.CATEGORIES.forEach(c => {
+    const o = document.createElement('option');
+    o.value = o.textContent = c;
+    catSel.appendChild(o);
+  });
+
+  form.style.display = 'block';
+})();
+
+/* ---------- Autofill MSSV ---------- */
+document.getElementById('mssv').addEventListener('input', e => {
+  const sv = validStudents.find(s => s.mssv === e.target.value.trim());
+  document.getElementById('name').value = sv ? sv.name : '';
+
+  const history = JSON.parse(localStorage.getItem('checked_sessions') || '{}');
+  if (sv && history[session]) {
+    showMsg(`⚠ Thiết bị này đã điểm danh cho ${history[session]} trong phiên này`);
+    document.getElementById('submitBtn').disabled = true;
+  } else {
+    document.getElementById('submitBtn').disabled = !sv;
+    if (!sv) msg.style.display = 'none';
+  }
+});
+
+/* ---------- Submit ---------- */
+document.getElementById('form').addEventListener('submit', async e => {
+  e.preventDefault();
+  const mssv = document.getElementById('mssv').value.trim();
+  const name = document.getElementById('name').value.trim();
+  if (!name) { showMsg('MSSV không hợp lệ'); return; }
+
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = true;
+  btn.innerText = 'Đang lấy vị trí...';
+
+  const location = await getLocation();
+  btn.innerText = 'Đang gửi...';
+
+  const payload = {
+    phien: session,
+    mssv,
+    name,
+    category: document.getElementById('category').value,
+    note: document.getElementById('note').value.trim(),
+    location
+  };
+
+  try {
+    await fetch(CONFIG.GOOGLE_SHEET_API, {
+      method: 'POST',
+      mode: 'no-cors',
+      body: JSON.stringify(payload)
+    });
+
+    const history = JSON.parse(localStorage.getItem('checked_sessions') || '{}');
+    history[session] = mssv;
+    localStorage.setItem('checked_sessions', JSON.stringify(history));
+
+    form.style.display = 'none';
+    badge.innerText = 'Đã điểm danh thành công';
+    showMsg(`✓ ${name} đã điểm danh thành công`, 'ok');
+  } catch (err) {
+    showMsg('Lỗi kết nối, thử lại sau');
+    btn.disabled = false;
+    btn.innerText = 'Xác nhận điểm danh';
+  }
+});
+</script>
+</body>
+</html>
         body {
             font-family: 'Plus Jakarta Sans', sans-serif;
             background: #090d16;
