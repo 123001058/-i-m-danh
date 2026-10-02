@@ -1,15 +1,11 @@
-/* ============================================================
-   CONFIG CHUNG
-   ============================================================ */
 const CONFIG = {
-  GOOGLE_SHEET_API: 'https://script.google.com/macros/s/AKfycbxudUK0oM-9Z5VUGv_WdpXLinjMTDyb5wVMwouGWMhtjFFQoFhZ1x4OXyUjq9YPDgUArg/exec',
+  GOOGLE_SHEET_API: 'https://script.google.com/macros/s/AKfycby6XDYL3besdFVXS6hD0IirL_IAyZbwXGEPakwzPf2I7DGCoifLeLpiT2b7JLjqrf2Xpg/exec',
   BASE_URL: 'https://123001058.github.io/DIEM_DANH',
   CATEGORIES: ['Thiết kế', 'Cơ khí', 'Điện', 'Lập trình']
 };
 
 let validStudents = [];
 
-/* ---------- Load danh sách sinh viên ---------- */
 async function loadStudents() {
   try {
     const res = await fetch('./students.json?t=' + Date.now());
@@ -24,7 +20,6 @@ async function loadStudents() {
   }
 }
 
-/* ---------- Đọc trạng thái phiên từ GAS ---------- */
 async function loadSessionStatus() {
   try {
     const res = await fetch(`${CONFIG.GOOGLE_SHEET_API}?action=getStatus&t=${Date.now()}`);
@@ -42,7 +37,6 @@ async function loadSessionStatus() {
   }
 }
 
-/* ---------- Ghi trạng thái phiên lên GAS ---------- */
 async function saveSessionStatus(status) {
   try {
     await fetch(CONFIG.GOOGLE_SHEET_API, {
@@ -55,7 +49,6 @@ async function saveSessionStatus(status) {
   }
 }
 
-/* ---------- Lấy danh sách điểm danh từ GAS ---------- */
 async function fetchAttendance(sessionName) {
   try {
     const url = `${CONFIG.GOOGLE_SHEET_API}?action=getAttendance&phien=${encodeURIComponent(sessionName)}&t=${Date.now()}`;
