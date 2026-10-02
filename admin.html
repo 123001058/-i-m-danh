@@ -247,12 +247,26 @@ async function initAdmin() {
   document.getElementById('absentCount').innerText = classStudents.length;
   renderTable();
 
-  const status = await loadSessionStatus();
+    const status = await loadSessionStatus();
   if (status.isOpen && status.session) {
     document.getElementById('sessionName').value = status.session || '';
     document.getElementById('qrRefreshTime').value = status.refresh || 20;
     document.getElementById('sessionDuration').value = status.durationMin || 5;
-    turnOn();
+
+    // Hiện thông báo cho admin biết có phiên đang mở
+    const notice = confirm(
+      'Có phiên đang mở: "' + status.session + '"\n\n' +
+      'Bấm OK để TIẾP TỤC phiên cũ\n' +
+      'Bấm Cancel để TẠO PHIÊN MỚI'
+    );
+    if (notice) {
+      turnOn();
+    } else {
+      // Đóng phiên cũ trên server
+      try { await postToGAS({ action: 'updateStatus', isOpen: false }); } catch(e) {}
+      document.getElementById('statusIndicator').innerHTML = '<span>Trạng thái: ĐÓNG</span>';
+      document.getElementById('statusIndicator').className = 'status-badge status-off';
+    }
   }
 }
 
