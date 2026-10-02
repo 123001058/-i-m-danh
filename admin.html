@@ -225,11 +225,12 @@ let sessionSecondsLeft = 300;
 let pollingInterval = null;
 
 function logout(){
-  if (!confirm('Đăng xuất khỏi trang quản lý?')) return;
+  if (!confirm('Đăng xuất?')) return;
   sessionStorage.removeItem('admin_auth');
   location.href = 'index.html';
 }
 
+/* ============ KHỞI TẠO ============ */
 async function initAdmin() {
   await loadStudents();
 
@@ -246,30 +247,9 @@ async function initAdmin() {
   document.getElementById('totalCount').innerText = classStudents.length;
   document.getElementById('absentCount').innerText = classStudents.length;
   renderTable();
-
-    const status = await loadSessionStatus();
-  if (status.isOpen && status.session) {
-    document.getElementById('sessionName').value = status.session || '';
-    document.getElementById('qrRefreshTime').value = status.refresh || 20;
-    document.getElementById('sessionDuration').value = status.durationMin || 5;
-
-    // Hiện thông báo cho admin biết có phiên đang mở
-    const notice = confirm(
-      'Có phiên đang mở: "' + status.session + '"\n\n' +
-      'Bấm OK để TIẾP TỤC phiên cũ\n' +
-      'Bấm Cancel để TẠO PHIÊN MỚI'
-    );
-    if (notice) {
-      turnOn();
-    } else {
-      // Đóng phiên cũ trên server
-      try { await postToGAS({ action: 'updateStatus', isOpen: false }); } catch(e) {}
-      document.getElementById('statusIndicator').innerHTML = '<span>Trạng thái: ĐÓNG</span>';
-      document.getElementById('statusIndicator').className = 'status-badge status-off';
-    }
-  }
 }
 
+/* ============ RENDER ============ */
 function renderTable() {
   const tbody = document.getElementById('studentList');
   tbody.innerHTML = '';
@@ -383,6 +363,46 @@ async function turnOn() {
   if (refreshSec < 5) { alert('Thời gian đổi QR tối thiểu 5 giây'); return; }
   if (durationMin < 1) { alert('Thời gian mở phiên tối thiểu 1 phút'); return; }
 
+  const btn = event?.target;
+  if (btn) { btn.disabled = true; btn.innerText = 'Đang ghi...'; }
+
+  // BƯỚC 1: Ghi status lên GAS TRƯỚC
+  let gasResult = null;
+  try {
+    gasResult = await postToGAS({
+      action: 'updateStatus',
+      isOpen: true,
+      session: session,
+      refresh: refreshSec,
+      durationMin: durationMin,
+      startedAt: Date.now()
+    });
+    console.log('[turnOn] GAS ghi status:', gasResult);
+  } catch (e) {
+    console.error('[turnOn] LỖI ghi status:', e);
+    alert('❌ Không ghi được trạng thái phiên lên server!\n\n' + e.message + '\n\nVui lòng kiểm tra GAS đã Deploy version mới chưa.');
+    if (btn) { btn.disabled = false; btn.innerText = 'Mở phiên'; }
+    return;
+  }
+
+  if (!gasResult || gasResult.status !== 'success') {
+    alert('❌ Server từ chối!\n\n' + JSON.stringify(gasResult));
+    if (btn) { btn.disabled = false; btn.innerText = 'Mở phiên'; }
+    return;
+  }
+
+  // BƯỚC 2: Verify đã ghi đúng chưa
+  await new Promise(r => setTimeout(r, 800));
+  const check = await loadSessionStatus();
+  console.log('[turnOn] Verify sau khi ghi:', check);
+
+  if (check.session !== session) {
+    alert('⚠️ Server ghi chưa kịp!\n\nMong đợi: ' + session + '\nNhận được: ' + check.session + '\n\nThử lại sau 2 giây.');
+    if (btn) { btn.disabled = false; btn.innerText = 'Mở phiên'; }
+    return;
+  }
+
+  // BƯỚC 3: OK — hiện QR
   recentCheckins = [];
 
   document.getElementById('qrContainer').style.display = 'block';
@@ -422,15 +442,7 @@ async function turnOn() {
   pollingInterval = setInterval(syncAttendance, 3000);
   syncAttendance();
 
-  try {
-    await postToGAS({
-      action: 'updateStatus',
-      isOpen: true, session, refresh: refreshSec, durationMin,
-      startedAt: Date.now()
-    });
-  } catch (e) {
-    console.warn('[turnOn] không ghi được status', e);
-  }
+  if (btn) { btn.disabled = false; btn.innerText = 'Mở phiên'; }
 }
 
 async function turnOff() {
@@ -443,9 +455,10 @@ async function turnOff() {
   if (document.fullscreenElement) document.exitFullscreen();
 
   try {
-    await postToGAS({ action: 'updateStatus', isOpen: false });
+    const r = await postToGAS({ action: 'updateStatus', isOpen: false });
+    console.log('[turnOff] GAS:', r);
   } catch (e) {
-    console.warn('[turnOff] không ghi được status', e);
+    console.error('[turnOff]', e);
   }
 }
 
