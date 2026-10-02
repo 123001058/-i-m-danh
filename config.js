@@ -1,10 +1,13 @@
-const CURRENT_HREF = window.location.href.split('?')[0];
-const DYNAMIC_BASE_URL = CURRENT_HREF.substring(0, CURRENT_HREF.lastIndexOf('/'));
+(function(){
+  if (typeof window === 'undefined') return;
+  const loc = window.location;
+  const path = loc.pathname.substring(0, loc.pathname.lastIndexOf('/'));
+  window.__DETECTED_BASE_URL__ = loc.origin + path;
+})();
 
 const CONFIG = {
-  // Thay thế bằng link App Script thực tế của bạn
-  GOOGLE_SHEET_API: 'https://script.google.com/macros/s/AKfycbxZJBUgdnJ0moJM52NFXcIpPmhQ6BS03OqSnbADbcwuW9xED2Z6NyMoLyfc-JJfZS9gug/exec',
-  BASE_URL: DYNAMIC_BASE_URL, 
+  GOOGLE_SHEET_API: 'https://script.google.com/macros/s/AKfycbwsC38XQBFx_sTYI0bR2brCbM2f9G4hkm4R-zAUCdhtN_9hbD2d_AbVxjpuT0WBjKJFhg/exec',
+  BASE_URL: window.__DETECTED_BASE_URL__,
   CATEGORIES: ['Thiết kế', 'Cơ khí', 'Điện', 'Lập trình'],
   FETCH_TIMEOUT: 10000
 };
@@ -15,7 +18,12 @@ async function fetchWithTimeout(url, opts = {}, ms) {
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), ms || CONFIG.FETCH_TIMEOUT);
   try {
-    return await fetch(url, { ...opts, signal: ctrl.signal, cache: 'no-store' });
+    return await fetch(url, {
+      ...opts,
+      signal: ctrl.signal,
+      cache: 'no-store',
+      headers: { 'Cache-Control': 'no-cache', ...(opts.headers || {}) }
+    });
   } finally {
     clearTimeout(timer);
   }
@@ -37,8 +45,9 @@ async function loadStudents() {
 
 async function loadSessionStatus() {
   try {
-    const url = `${CONFIG.GOOGLE_SHEET_API}?action=getStatus&t=${Date.now()}&_r=${Math.random()}`;
-    const res = await fetchWithTimeout(url);
+    const res = await fetchWithTimeout(
+      `${CONFIG.GOOGLE_SHEET_API}?action=getStatus&t=${Date.now()}&_r=${Math.random()}`
+    );
     const data = await res.json();
     return {
       isOpen: !!data.isOpen,
@@ -68,9 +77,11 @@ async function fetchAttendance(sessionName) {
 async function postToGAS(payload) {
   const params = new URLSearchParams();
   params.set('data', JSON.stringify(payload));
-  const url = `${CONFIG.GOOGLE_SHEET_API}?${params.toString()}&_r=${Math.random()}`;
+  params.set('_r', Date.now() + '_' + Math.random());
+
+  const url = CONFIG.GOOGLE_SHEET_API + '?' + params.toString();
   const res = await fetchWithTimeout(url, {}, 15000);
+
   if (!res.ok) throw new Error('HTTP ' + res.status);
-  const data = await res.json();
-  return data;
+  return await res.json();
 }
