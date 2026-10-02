@@ -60,7 +60,7 @@ async function fetchAttendance(sessionName) {
   }
 }
 
-/* ============ POST QUA GET — ĐƠN GIẢN & TIN CẬY ============ */
+/* POST QUA GET — đơn giản, không cần iframe */
 async function postToGAS(payload) {
   const params = new URLSearchParams();
   params.set('data', JSON.stringify(payload));
