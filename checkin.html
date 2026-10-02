@@ -113,7 +113,6 @@
 </div>
 
 <script>
-/* ============ ĐỌC URL ============ */
 const url = new URLSearchParams(location.search);
 const session    = (url.get('phien') || '').trim();
 const qrToken    = parseInt(url.get('token'), 10);
@@ -197,39 +196,28 @@ function getDeviceId() {
 
 /* ============ KHỞI TẠO ============ */
 (async function init() {
-  // 1. Không có tham số QR
   if (!session || !qrToken) {
     badge.className = 'badge err';
     badge.innerText = 'Vui lòng quét QR từ màn hình quản lý';
     return;
   }
 
-  // 2. Token hết hạn
   const nowToken = Math.floor(Date.now() / (refreshSec * 1000));
-  const tokenDiff = Math.abs(nowToken - qrToken);
-  if (tokenDiff > 1) {
+  if (Math.abs(nowToken - qrToken) > 1) {
     badge.className = 'badge err';
     badge.innerText = 'Mã QR đã hết hạn, vui lòng quét lại mã mới nhất';
     return;
   }
 
-  // 3. Load status từ GAS
-  badge.innerText = 'Đang kiểm tra phiên...';
   const status = await loadSessionStatus();
-
-  // 4. Xử lý kết quả
   const sessionGAS = (status.session || '').trim();
   const sessionURL = session.trim();
   const gasLoaded = sessionGAS !== '' || status.isOpen === true;
 
   if (!gasLoaded) {
-    // Không load được từ GAS (mất mạng / in-app browser chặn)
-    // → Vẫn cho vào form, GAS sẽ verify khi submit
-    console.warn('[checkin] Không load được status, bỏ qua check — GAS sẽ verify khi submit');
     badge.className = 'badge';
     badge.innerText = '⚠️ Không xác minh được phiên (mạng yếu)\nVẫn có thể thử điểm danh';
   } else {
-    // Load được → check bình thường
     if (!status.isOpen) {
       badge.className = 'badge err';
       badge.innerText = 'Phiên đã đóng, vui lòng liên hệ giảng viên';
@@ -244,7 +232,6 @@ function getDeviceId() {
     badge.innerText = 'Phiên: ' + sessionURL;
   }
 
-  // 5. Load SV + fill category
   await loadStudents();
   const catSel = document.getElementById('category');
   CONFIG.CATEGORIES.forEach(c => {
