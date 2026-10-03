@@ -3,12 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Điểm Danh Sinh Viên</title>
+<title>Điểm Danh Sinh Viên - Supabase</title>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<script src="config.js?v=20250104"></script>
+<!-- BẮT BUỘC phải có thư viện Supabase trước config.js -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
 <style>
   *{margin:0;padding:0;box-sizing:border-box}
-  body{font-family:'Plus Jakarta Sans',sans-serif;background:#f7f6f2;color:#0B2E5C;min-height:100vh;padding:20px;display:flex;align-items:center;justify-content:center}
+  body{font-family:'Plus Jakarta Sans',sans-serif;background:#f7f6f2;color:#0B2E5C;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
   .wrap{max-width:460px;width:100%}
   .card{background:#fff;border:1px solid #ece6d6;border-radius:20px;padding:32px 28px;box-shadow:0 4px 40px rgba(11,46,92,.06)}
   h1{font-size:20px;font-weight:800;letter-spacing:-.3px;margin-bottom:6px;text-align:center}
@@ -70,11 +72,11 @@
 </div>
 
 <script>
-let currentSession = '';
+let currentSessionId = '';
 let currentRefresh = 20;
 let sessionToken = null;
 let deviceId = '';
-let sessionStatus = { isOpen: false, session: '', refresh: 20 };
+let sessionStatus = { is_open: false };
 
 function getDeviceId(){
   let id = localStorage.getItem('device_id');
@@ -108,7 +110,7 @@ async function init(){
   const qrToken = url.searchParams.get('t');
 
   if (qrToken) sessionToken = Number(qrToken);
-  if (qrSession) currentSession = qrSession;
+  if (qrSession) currentSessionId = qrSession;
 
   await loadStudents();
   await refreshStatus();
@@ -116,23 +118,25 @@ async function init(){
 }
 
 async function refreshStatus(){
-  const st = await loadSessionStatus();
-  sessionStatus = st;
+  const { data, error } = await supabase.from('sessions').select('*').single();
+  if (error || !data) {
+      document.getElementById('sessionInfo').innerHTML = 'Lỗi kết nối server.';
+      return;
+  }
+  sessionStatus = data;
   const box = document.getElementById('sessionInfo');
-  if (st.isOpen && st.session){
-    currentSession = st.session;
-    currentRefresh = st.refresh || 20;
-    box.innerHTML = `<b>Phiên đang mở:</b> ${st.session}<br>QR đổi mỗi <b>${currentRefresh}s</b> · Thời lượng <b>${st.durationMin} phút</b>`;
+  if (data.is_open){
+    currentRefresh = data.refresh_time || 20;
+    box.innerHTML = `<b>Phiên đang mở:</b> ${data.session_name}<br>QR đổi mỗi <b>${currentRefresh}s</b>`;
   } else {
-    currentSession = '';
-    box.innerHTML = '<b>Chưa có phiên điểm danh nào đang mở.</b><br>Vui lòng chờ giảng viên mở phiên.';
+    box.innerHTML = '<b>Chưa có phiên điểm danh nào đang mở.</b>';
   }
 }
 
 async function doCheckin(){
   hideBadge();
 
-  if (!sessionStatus.isOpen || !currentSession){
+  if (!sessionStatus.is_open){
     showBadge('err', 'Phiên điểm danh hiện đang ĐÓNG. Vui lòng quét lại mã QR.');
     return;
   }
@@ -146,7 +150,7 @@ async function doCheckin(){
     return;
   }
   if (!category){
-    showBadge('err', 'Vui lòng chọn <b>Lĩnh vực</b>!');
+    showBadge('err', 'Vui lòng chọn Lĩnh vực!');
     document.getElementById('category').focus();
     return;
   }
@@ -157,51 +161,79 @@ async function doCheckin(){
     return;
   }
 
-  // Client-side check token — 60s tolerance
+  // Check token chống gian lận
   if (sessionToken !== null && !isNaN(sessionToken)){
     const cycleMs = currentRefresh * 1000;
     const nowMs = Date.now();
     const tokenStartMs = sessionToken * cycleMs;
     const tokenEndMs = tokenStartMs + cycleMs;
-    const TOL = 60000;
+    const TOL = 60000; // 60s dung sai
 
     if (nowMs < tokenStartMs - TOL || nowMs > tokenEndMs + TOL){
       showBadge('err', 'Mã QR đã hết hạn, vui lòng quét lại mã mới nhất');
       return;
     }
-  } else {
-    sessionToken = Math.floor(Date.now() / (currentRefresh * 1000));
   }
 
   setBtnDisabled(true);
   showLoader(true);
+
   try {
-    const res = await postToGAS({
-      phien: currentSession,
-      mssv: mssv,
-      name: stu.name || '',
-      category: category,
-      note: document.getElementById('note').value.trim() || '',
-      deviceId: deviceId,
-      token: sessionToken
-    });
+    // 1. Kiểm tra trùng MSSV trong phiên này
+    const { data: existing } = await supabase
+        .from('attendance')
+        .select('id')
+        .eq('session_id', currentSessionId)
+        .eq('mssv', mssv)
+        .maybeSingle();
+
+    if (existing) {
+        showLoader(false);
+        setBtnDisabled(false);
+        showBadge('info', 'Bạn đã điểm danh phiên này rồi.');
+        return;
+    }
+
+    // 2. Kiểm tra trùng thiết bị (Anti-cheat)
+    const { data: deviceUsed } = await supabase
+        .from('attendance')
+        .select('mssv')
+        .eq('session_id', currentSessionId)
+        .eq('device_id', deviceId)
+        .maybeSingle();
+
+    if (deviceUsed) {
+        showLoader(false);
+        setBtnDisabled(false);
+        showBadge('err', `Thiết bị này đã được dùng để điểm danh cho MSSV ${deviceUsed.mssv}`);
+        return;
+    }
+
+    // 3. Lưu vào Supabase
+    const { error: insertError } = await supabase
+        .from('attendance')
+        .insert([
+            {
+                session_id: currentSessionId,
+                mssv: mssv,
+                full_name: stu.name,
+                category: category,
+                note: document.getElementById('note').value.trim(),
+                device_id: deviceId
+            }
+        ]);
 
     showLoader(false);
     setBtnDisabled(false);
 
-    if (res.status === 'success'){
-      showBadge('ok', `✓ Điểm danh thành công!<br>${stu.name} — ${mssv}<br>Lúc ${res.time || ''}`);
-      document.getElementById('mssv').value = '';
-      document.getElementById('note').value = '';
-    } else if (res.status === 'duplicate'){
-      showBadge('info', 'Bạn đã điểm danh phiên này rồi.');
-    } else if (res.status === 'device_used'){
-      showBadge('err', res.message || 'Thiết bị này đã được dùng để điểm danh.');
-    } else if (res.status === 'busy'){
-      showBadge('info', 'Hệ thống đang bận, vui lòng thử lại sau 3 giây.');
+    if (insertError) {
+        showBadge('err', 'Lỗi: ' + insertError.message);
     } else {
-      showBadge('err', res.message || 'Có lỗi xảy ra, vui lòng thử lại.');
+        showBadge('ok', `✓ Điểm danh thành công!<br>${stu.name} — ${mssv}`);
+        document.getElementById('mssv').value = '';
+        document.getElementById('note').value = '';
     }
+
   } catch (e){
     showLoader(false);
     setBtnDisabled(false);
