@@ -17,6 +17,11 @@ const supabaseClient = supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABAS
 // Gán lại biến toàn cục để các file khác gọi là 'supabase' cho tiện
 window.supabase = supabaseClient;
 
+// Escape dữ liệu từ DB trước khi chèn vào innerHTML (chống XSS)
+function escapeHtml(v) {
+  return String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
 // 3. Quản lý danh sách sinh viên từ file JSON
 let validStudents = [];
 

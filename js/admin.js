@@ -5,7 +5,7 @@ let progressInterval = null, sessionTimer = null;
 let secondsRemaining = 20, currentSessionId = null, isOpen = false, lastToken = null;
 
 async function initAdmin(){
-    if (sessionStorage.getItem('admin_auth') !== '1') location.replace('index.html');
+    if (sessionStorage.getItem('admin_auth') !== '1') return location.replace('index.html');
     await loadStudents();
     classStudents = validStudents.map(s => ({ mssv: s.mssv, name: s.name, status: 'Chưa điểm danh', time: '-' }));
 
@@ -64,7 +64,7 @@ function startSessionUI(st){
     document.getElementById('dashboardArea').classList.add('show');
     document.getElementById('emptyState').style.display = 'none';
     document.getElementById('statusIndicator').className = 'status-badge status-on';
-    document.getElementById('statusIndicator').innerHTML = '<span class="pulse"></span><span>Trạng thái: MỞ — ' + st.session_name + '</span>';
+    document.getElementById('statusIndicator').innerHTML = '<span class="pulse"></span><span>Trạng thái: MỞ — ' + escapeHtml(st.session_name) + '</span>';
 
     const refresh = st.refresh_time || 20;
     const startedMs = new Date(st.started_at).getTime();
@@ -125,7 +125,7 @@ async function pollAttendance(){
 function renderStudents(){
     document.getElementById('studentList').innerHTML = classStudents.map(s => `
         <tr>
-            <td><div class="student-cell"><div class="avatar">${s.name[0]}</div><div>${s.name}</div></div></td>
+            <td><div class="student-cell"><div class="avatar">${escapeHtml(s.name[0])}</div><div>${escapeHtml(s.name)}</div></div></td>
             <td>${s.mssv}</td>
             <td>${s.status === 'Đã điểm danh' ? '<span style="color:#4e7a46;font-weight:700">✓ Xong</span>' : '<span style="color:#a44a44">— Chưa</span>'}</td>
             <td>${s.time}</td>
@@ -134,7 +134,7 @@ function renderStudents(){
 
 function renderRecent(){
     document.getElementById('recentList').innerHTML = recentCheckins.slice(0,10).map(r => `
-        <div class="recent-item"><div class="avatar">${r.name[0]}</div><div class="info"><div class="name">${r.name}</div><div class="time">${r.time}</div></div></div>
+        <div class="recent-item"><div class="avatar">${escapeHtml(r.name[0])}</div><div class="info"><div class="name">${escapeHtml(r.name)}</div><div class="time">${r.time}</div></div></div>
     `).join('') || '<div class="recent-empty">Chưa có ai điểm danh</div>';
 }
 

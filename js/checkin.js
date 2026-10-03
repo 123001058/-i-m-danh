@@ -69,7 +69,7 @@ async function refreshStatus(){
   currentSessionId = String(data.id);
   sessionStatus = data;
   currentRefresh = data.refresh_time || 20;
-  box.innerHTML = `<b>Phiên đang mở:</b> ${data.session_name}<br>QR đổi mỗi <b>${currentRefresh}s</b>`;
+  box.innerHTML = `<b>Phiên đang mở:</b> ${escapeHtml(data.session_name)}<br>QR đổi mỗi <b>${currentRefresh}s</b>`;
 }
 
 async function doCheckin(){
@@ -100,18 +100,23 @@ async function doCheckin(){
     return;
   }
 
-  // Check token chống gian lận
-  if (sessionToken !== null && !isNaN(sessionToken)){
-    const cycleMs = currentRefresh * 1000;
-    const nowMs = Date.now();
-    const tokenStartMs = sessionToken * cycleMs;
-    const tokenEndMs = tokenStartMs + cycleMs;
-    const TOL = 60000; // 60s dung sai
+  // Bắt buộc vào bằng mã QR (có đủ tham số s và t), không cho mở thẳng checkin.html
+  const qs = new URLSearchParams(location.search);
+  if (!qs.get('s') || !qs.get('t') || isNaN(sessionToken)){
+    showBadge('err', 'Vui lòng quét mã QR để điểm danh');
+    return;
+  }
 
-    if (nowMs < tokenStartMs - TOL || nowMs > tokenEndMs + TOL){
-      showBadge('err', 'Mã QR đã hết hạn, vui lòng quét lại mã mới nhất');
-      return;
-    }
+  // Check token chống gian lận
+  const cycleMs = currentRefresh * 1000;
+  const nowMs = Date.now();
+  const tokenStartMs = sessionToken * cycleMs;
+  const tokenEndMs = tokenStartMs + cycleMs;
+  const TOL = 15000; // 15s dung sai (càng nhỏ càng khó gian lận)
+
+  if (nowMs < tokenStartMs - TOL || nowMs > tokenEndMs + TOL){
+    showBadge('err', 'Mã QR đã hết hạn, vui lòng quét lại mã mới nhất');
+    return;
   }
 
   setBtnDisabled(true);
@@ -144,7 +149,7 @@ async function doCheckin(){
     if (deviceUsed) {
         showLoader(false);
         setBtnDisabled(false);
-        showBadge('err', `Thiết bị này đã được dùng để điểm danh cho MSSV ${deviceUsed.mssv}`);
+        showBadge('err', `Thiết bị này đã được dùng để điểm danh cho MSSV ${escapeHtml(deviceUsed.mssv)}`);
         return;
     }
 
@@ -166,7 +171,8 @@ async function doCheckin(){
     setBtnDisabled(false);
 
     if (insertError) {
-        showBadge('err', 'Lỗi: ' + insertError.message);
+        // 23505 = vi phạm UNIQUE(session_id, mssv) / UNIQUE(session_id, device_id) trên DB
+        showBadge('err', insertError.code === '23505' ? 'MSSV hoặc thiết bị này đã điểm danh phiên này rồi.' : 'Lỗi: ' + escapeHtml(insertError.message));
     } else {
         showBadge('ok', `✓ Điểm danh thành công!<br>${stu.name} — ${mssv}`);
         document.getElementById('mssv').value = '';
