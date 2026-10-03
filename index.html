@@ -5,26 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Hệ Thống Điểm Danh QR</title>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<style>
-  *{margin:0;padding:0;box-sizing:border-box}
-  body{font-family:'Plus Jakarta Sans',sans-serif;background:#f7f6f2;color:#0B2E5C;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
-  .card{background:#fff;border:1px solid #ece6d6;border-radius:20px;padding:48px 40px;max-width:440px;width:100%;text-align:center;box-shadow:0 4px 40px rgba(11,46,92,.06)}
-  .logo{margin:0 auto 24px;display:block}
-  h1{font-size:20px;font-weight:800;margin-bottom:8px}
-  .sub{color:#8896AB;font-size:13px;margin-bottom:32px;line-height:1.5}
-  .divider{width:40px;height:1px;background:#D4A537;margin:0 auto 32px}
-  .btn{display:block;width:100%;padding:15px;border-radius:10px;font-weight:600;font-size:14px;text-decoration:none;transition:.2s;border:none;cursor:pointer;font-family:inherit}
-  .btn-primary{background:#D4A537;color:#fff}
-  .btn-primary:hover{background:#c09030}
-  .footer{color:#B8BFC9;font-size:10.5px;margin-top:44px;letter-spacing:1.5px;text-transform:uppercase}
-  .modal-bg{position:fixed;inset:0;background:rgba(11,46,92,.5);backdrop-filter:blur(4px);z-index:100;display:none;align-items:center;justify-content:center;padding:20px}
-  .modal-bg.show{display:flex}
-  .modal{background:#fff;border-radius:18px;padding:32px;max-width:380px;width:100%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.2)}
-  .modal input{width:100%;padding:14px;border:1px solid #ece6d6;border-radius:10px;text-align:center;font-size:16px;margin-bottom:10px}
-  .modal-actions{display:flex;gap:10px;margin-top:18px}
-  .modal-actions button{flex:1;padding:12px;border-radius:10px;border:none;cursor:pointer;font-weight:600}
-  .btn-ok{background:#D4A537;color:#fff}
-</style>
+<link rel="stylesheet" href="css/index.css">
 </head>
 <body>
   <div class="card">
@@ -47,16 +28,6 @@
       </div>
     </div>
   </div>
-<script>
-const ADMIN_PWD = '272005';
-function openLogin(){ document.getElementById('modalBg').classList.add('show'); }
-function closeLogin(){ document.getElementById('modalBg').classList.remove('show'); }
-function submitLogin(){
-  if (document.getElementById('pwdInput').value === ADMIN_PWD){
-    sessionStorage.setItem('admin_auth', '1');
-    location.href = 'admin.html';
-  } else { document.getElementById('errBox').innerText = 'Sai mật khẩu!'; }
-}
-</script>
+<script src="js/auth.js"></script>
 </body>
 </html>
