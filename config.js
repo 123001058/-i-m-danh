@@ -5,11 +5,15 @@
   window.__DETECTED_BASE_URL__ = loc.origin + path;
 })();
 
+// config.js
 const CONFIG = {
-  GOOGLE_SHEET_API: 'https://script.google.com/macros/s/AKfycbxPVBGjgRKEHEEVneZCswxfvWn0cx_UGmfEAgc0WQMwhUXq2FCdlTBZRXEf23MSUINRHw/exec',
-  BASE_URL: window.__DETECTED_BASE_URL__,
-  CATEGORIES: ['Thiết kế', 'Cơ khí', 'Điện', 'Lập trình'],
-  FETCH_TIMEOUT: 10000
+    SUPABASE_URL: 'https://nhjkpknhybenkxwadvzv.supabase.co', // THAY BẰNG URL CỦA BẠN
+    SUPABASE_KEY: 'sb_publishable_h1nRwciz_rOgnD88ZCnkIw_v0Czf1L8',            // THAY BẰNG PUBLISHABLE KEY CỦA BẠN
+    CATEGORIES: ['Thiết kế', 'Cơ khí', 'Điện', 'Lập trình'],
+};
+
+// Khởi tạo client Supabase
+const supabase = supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_KEY);
 };
 
 let validStudents = [];
