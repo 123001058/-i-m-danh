@@ -1,19 +1,27 @@
-/* Giao diện trang chủ (index.html) */
+/* Trang chủ — theme "Vibrant Modern" (012) */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'Plus Jakarta Sans',sans-serif;background:#f7f6f2;color:#0B2E5C;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
-.card{background:#fff;border:1px solid #ece6d6;border-radius:20px;padding:48px 40px;max-width:440px;width:100%;text-align:center;box-shadow:0 4px 40px rgba(11,46,92,.06)}
-.logo{margin:0 auto 24px;display:block}
-h1{font-size:20px;font-weight:800;margin-bottom:8px}
-.sub{color:#8896AB;font-size:13px;margin-bottom:32px;line-height:1.5}
-.divider{width:40px;height:1px;background:#D4A537;margin:0 auto 32px}
-.btn{display:block;width:100%;padding:15px;border-radius:10px;font-weight:600;font-size:14px;text-decoration:none;transition:.2s;border:none;cursor:pointer;font-family:inherit}
-.btn-primary{background:#D4A537;color:#fff}
-.btn-primary:hover{background:#c09030}
-.footer{color:#B8BFC9;font-size:10.5px;margin-top:44px;letter-spacing:1.5px;text-transform:uppercase}
-.modal-bg{position:fixed;inset:0;background:rgba(11,46,92,.5);backdrop-filter:blur(4px);z-index:100;display:none;align-items:center;justify-content:center;padding:20px}
+body{font-family:'Inter',sans-serif;background:#f7f9fb;color:#191c1e;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+.card{background:#fff;border:1px solid rgba(199,196,216,.4);border-radius:16px;padding:48px 40px;max-width:440px;width:100%;text-align:center;box-shadow:0 1px 8px rgba(0,0,0,.02)}
+.logo{margin:0 auto 24px;display:block;filter:drop-shadow(0 6px 16px rgba(53,37,205,.18))}
+h1{font-size:22px;font-weight:700;letter-spacing:-.02em;margin-bottom:8px}
+.sub{color:#464555;font-size:13px;margin-bottom:32px;line-height:1.5}
+.divider{width:40px;height:3px;background:#4f46e5;border-radius:99px;margin:0 auto 32px}
+.btn{display:block;width:100%;padding:14px;border-radius:12px;font-weight:600;font-size:14px;text-decoration:none;transition:.2s;border:none;cursor:pointer;font-family:inherit}
+.btn-primary{background:#3525cd;color:#fff;box-shadow:0 8px 24px rgba(53,37,205,.2)}
+.btn-primary:hover{filter:brightness(1.12)}
+.btn-primary:active{transform:scale(.98)}
+.footer{color:#777587;font-size:10.5px;margin-top:44px;letter-spacing:1.5px;text-transform:uppercase}
+.modal-bg{position:fixed;inset:0;background:rgba(25,28,30,.45);backdrop-filter:blur(6px);z-index:100;display:none;align-items:center;justify-content:center;padding:20px}
 .modal-bg.show{display:flex}
-.modal{background:#fff;border-radius:18px;padding:32px;max-width:380px;width:100%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.2)}
-.modal input{width:100%;padding:14px;border:1px solid #ece6d6;border-radius:10px;text-align:center;font-size:16px;margin-bottom:10px}
+.modal{background:#fff;border:1px solid rgba(199,196,216,.4);border-radius:16px;padding:32px;max-width:380px;width:100%;text-align:center;box-shadow:0 20px 60px rgba(25,28,30,.25)}
+.modal h2{font-size:18px;font-weight:700;letter-spacing:-.01em}
+.modal p{color:#464555;font-size:13px;margin:6px 0 16px}
+.modal input{width:100%;padding:14px;border:1px solid rgba(199,196,216,.6);border-radius:12px;background:#f2f4f6;text-align:center;font-size:16px;margin-bottom:10px;font-family:inherit;outline:none;transition:.2s}
+.modal input:focus{border-color:#4f46e5;background:#fff;box-shadow:0 0 0 3px rgba(79,70,229,.15)}
 .modal-actions{display:flex;gap:10px;margin-top:18px}
-.modal-actions button{flex:1;padding:12px;border-radius:10px;border:none;cursor:pointer;font-weight:600}
-.btn-ok{background:#D4A537;color:#fff}
+.modal-actions button{flex:1;padding:12px;border-radius:12px;border:none;cursor:pointer;font-weight:600;font-family:inherit;transition:.2s}
+.modal-actions button:first-child{background:#e6e8ea;color:#191c1e}
+.modal-actions button:first-child:hover{filter:brightness(.96)}
+.btn-ok{background:#3525cd;color:#fff;box-shadow:0 6px 18px rgba(53,37,205,.22)}
+.btn-ok:hover{filter:brightness(1.12)}
