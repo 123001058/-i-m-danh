@@ -5,87 +5,32 @@
   window.__DETECTED_BASE_URL__ = loc.origin + path;
 })();
 
-// config.js
+// 1. Cấu hình Supabase
 const CONFIG = {
-    SUPABASE_URL: 'https://nhjkpknhybenkxwadvzv.supabase.co', // THAY BẰNG URL CỦA BẠN
-    SUPABASE_KEY: 'sb_publishable_h1nRwciz_rOgnD88ZCnkIw_v0Czf1L8',            // THAY BẰNG PUBLISHABLE KEY CỦA BẠN
+    SUPABASE_URL: 'https://nhjkpknhybenkxwadvzv.supabase.co',
+    SUPABASE_KEY: 'sb_publishable_h1nRwciz_rOgnD88ZCnkIw_v0Czf1L8',
     CATEGORIES: ['Thiết kế', 'Cơ khí', 'Điện', 'Lập trình'],
 };
 
-// Khởi tạo client Supabase
-const supabase = supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_KEY);
-};
+// 2. Khởi tạo client Supabase (Sử dụng thư viện từ CDN)
+const supabaseClient = supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_KEY);
+// Gán lại biến toàn cục để các file khác gọi là 'supabase' cho tiện
+window.supabase = supabaseClient;
 
+// 3. Quản lý danh sách sinh viên từ file JSON
 let validStudents = [];
-
-async function fetchWithTimeout(url, opts = {}, ms) {
-  const ctrl = new AbortController();
-  const timer = setTimeout(() => ctrl.abort(), ms || CONFIG.FETCH_TIMEOUT);
-  try {
-    return await fetch(url, {
-      ...opts,
-      signal: ctrl.signal,
-      cache: 'no-store',
-      headers: { 'Cache-Control': 'no-cache', ...(opts.headers || {}) }
-    });
-  } finally {
-    clearTimeout(timer);
-  }
-}
 
 async function loadStudents() {
   try {
-    const res = await fetchWithTimeout('./students.json?t=' + Date.now() + '&_r=' + Math.random());
+    // Thêm timestamp để tránh cache trình duyệt
+    const res = await fetch('./students.json?t=' + Date.now());
     if (!res.ok) throw new Error('Không load được students.json');
     const data = await res.json();
     validStudents = Array.isArray(data.students) ? data.students : [];
     return validStudents;
   } catch (e) {
-    console.error('[loadStudents]', e);
+    console.error('[loadStudents] Lỗi:', e);
     validStudents = [];
     return [];
   }
-}
-
-async function loadSessionStatus() {
-  try {
-    const res = await fetchWithTimeout(
-      `${CONFIG.GOOGLE_SHEET_API}?action=getStatus&t=${Date.now()}&_r=${Math.random()}`
-    );
-    const data = await res.json();
-    return {
-      isOpen: !!data.isOpen,
-      session: data.session || '',
-      refresh: data.refresh || 20,
-      startedAt: data.startedAt || null,
-      durationMin: data.durationMin || 5
-    };
-  } catch (e) {
-    console.warn('[loadSessionStatus]', e);
-    return { isOpen: false, session: '', refresh: 20, startedAt: null, durationMin: 5 };
-  }
-}
-
-async function fetchAttendance(sessionName) {
-  try {
-    const url = `${CONFIG.GOOGLE_SHEET_API}?action=getAttendance&phien=${encodeURIComponent(sessionName)}&t=${Date.now()}&_r=${Math.random()}`;
-    const res = await fetchWithTimeout(url);
-    const data = await res.json();
-    return Array.isArray(data.records) ? data.records : [];
-  } catch (e) {
-    console.warn('[fetchAttendance]', e);
-    return [];
-  }
-}
-
-async function postToGAS(payload) {
-  const params = new URLSearchParams();
-  params.set('data', JSON.stringify(payload));
-  params.set('_r', Date.now() + '_' + Math.random());
-
-  const url = CONFIG.GOOGLE_SHEET_API + '?' + params.toString();
-  const res = await fetchWithTimeout(url, {}, 15000);
-
-  if (!res.ok) throw new Error('HTTP ' + res.status);
-  return await res.json();
 }
