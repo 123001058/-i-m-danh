@@ -265,7 +265,7 @@ function stopSessionUI(){
 
 function renderQR(refresh){
     const token = Math.floor(Date.now() / (refresh * 1000));
-    const url = `${window.location.origin}/checkin.html?s=${currentSessionId}&t=${token}`;
+    const url = `./checkin.html?s=${currentSessionId}&t=${token}`;
     document.getElementById('qrCanvas').innerHTML = '';
     new QRCode(document.getElementById('qrCanvas'), { text: url, width: 220, height: 220 });
 }
