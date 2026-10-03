@@ -6,7 +6,7 @@
 })();
 
 const CONFIG = {
-  GOOGLE_SHEET_API: 'https://script.google.com/macros/s/AKfycbzZ0zYi2E4zkpP2hPpXPab7CdQORVi3FgO5HL9SzcP8f1F8XjjhkCRWqmrlq8UceustxA/exec',
+  GOOGLE_SHEET_API: 'https://script.google.com/macros/s/AKfycbxPVBGjgRKEHEEVneZCswxfvWn0cx_UGmfEAgc0WQMwhUXq2FCdlTBZRXEf23MSUINRHw/exec',
   BASE_URL: window.__DETECTED_BASE_URL__,
   CATEGORIES: ['Thiết kế', 'Cơ khí', 'Điện', 'Lập trình'],
   FETCH_TIMEOUT: 10000
